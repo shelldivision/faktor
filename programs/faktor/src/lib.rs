@@ -7,6 +7,10 @@ use {
     std::{clone::Clone, cmp::min},
 };
 
+///////////////
+/// Program ///
+///////////////
+
 declare_id!("9LjA6DjxKDB2uEQPH1kipq5L7Z2hRKGz2yd9EQD9fGhU");
 
 #[program]
@@ -64,6 +68,11 @@ pub mod faktor {
     }
 }
 
+
+////////////////////
+/// Instructions ///
+////////////////////
+
 #[derive(Accounts)]
 #[instruction(bump: u8, amount: u64, memo: String)]
 pub struct Issue<'info> {
@@ -102,6 +111,10 @@ pub struct Pay<'info> {
 }
 
 
+////////////////
+/// Accounts ///
+////////////////
+
 #[account]
 pub struct Invoice {
     pub creditor: Pubkey,
@@ -112,6 +125,10 @@ pub struct Invoice {
     pub bump: u8,
 }
 
+
+//////////////
+/// Errors ///
+//////////////
 
 #[error]
 pub enum ErrorCode {
