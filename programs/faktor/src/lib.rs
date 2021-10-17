@@ -7,17 +7,51 @@ use {
     std::{clone::Clone, cmp::min},
 };
 
+declare_id!("9LjA6DjxKDB2uEQPH1kipq5L7Z2hRKGz2yd9EQD9fGhU");
+
+
 ///////////////
 /// Program ///
 ///////////////
-
-declare_id!("9LjA6DjxKDB2uEQPH1kipq5L7Z2hRKGz2yd9EQD9fGhU");
 
 #[program]
 pub mod faktor {
     use anchor_lang::AccountsClose;
 
     use super::*;
+    
+    pub fn create_outflow(
+        ctx: Context<CreateOutflow>, 
+        name: String,
+        description: String,
+        delta_value: u64,
+        delta_time: u64,
+        balance: u64,
+        bump: u8,
+    ) -> ProgramResult {
+        // Get accounts
+        let outflow = &mut ctx.accounts.outflow;
+        let debtor = &mut ctx.accounts.debtor;
+        let creditor = &ctx.accounts.creditor;
+        let clock = &ctx.accounts.clock;
+
+        // Initialize outflow
+        outflow.name = name;
+        outflow.description = description;
+        outflow.debtor = debtor.key();
+        outflow.creditor = creditor.key();
+        outflow.delta_value = delta_value;
+        outflow.delta_time = delta_time;
+        outflow.next_transfer_at = clock.unix_timestamp as u64;
+        outflow.bump = bump;
+
+        // Transfer balance from debtor to outflow
+        **debtor.to_account_info().try_borrow_mut_lamports()? -= balance;
+        **outflow.to_account_info().try_borrow_mut_lamports()? += balance;
+
+        return Ok(())
+    }
+
     pub fn issue(ctx: Context<Issue>, bump: u8, balance: u64, memo: String) -> ProgramResult {
         // Parse accounts from context
         let invoice = &mut ctx.accounts.invoice;
@@ -74,6 +108,32 @@ pub mod faktor {
 ////////////////////
 
 #[derive(Accounts)]
+#[instruction(
+    name: String, 
+    description: String, 
+    delta_value: u64, 
+    delta_time: u64, 
+    balance: u64,
+    bump: u8,
+)]
+pub struct CreateOutflow<'info> {
+    #[account(
+        init,
+        seeds = [creditor.key().as_ref(), debtor.key().as_ref()],
+        bump = bump,
+        payer = debtor,
+        space = 8 + (4 + name.len()) + (4 + description.len()) + 32 + 32 + 8 + 8 + 8 + 1,
+    )]
+    pub outflow: Account<'info, Outflow>,
+    #[account(mut)]
+    pub debtor: Signer<'info>,
+    pub creditor: AccountInfo<'info>,
+    #[account(address = system_program::ID)]
+    pub system_program: Program<'info, System>,
+    pub clock: Sysvar<'info, Clock>,
+}
+
+#[derive(Accounts)]
 #[instruction(bump: u8, amount: u64, memo: String)]
 pub struct Issue<'info> {
     #[account(
@@ -125,6 +185,17 @@ pub struct Invoice {
     pub bump: u8,
 }
 
+#[account]
+pub struct Outflow {
+    pub name: String,
+    pub description: String,
+    pub debtor: Pubkey,
+    pub creditor: Pubkey,
+    pub delta_value: u64,
+    pub delta_time: u64,
+    pub next_transfer_at: u64,
+    pub bump: u8,
+}
 
 //////////////
 /// Errors ///
