@@ -20,8 +20,12 @@ describe("faktor", () => {
   async function generateAccounts() {
     const alice = Keypair.generate();
     const bob = Keypair.generate();
-    const [invoiceAddress, bump] = await PublicKey.findProgramAddress(
+    const [invoiceAddress, invoiceBump] = await PublicKey.findProgramAddress(
       [alice.publicKey.toBuffer(), bob.publicKey.toBuffer()],
+      program.programId
+    );
+    const [outflowAddress, outflowBump] = await PublicKey.findProgramAddress(
+      ["outflow", bob.publicKey.toBuffer(), alice.publicKey.toBuffer()],
       program.programId
     );
     await airdrop(alice.publicKey);
@@ -29,7 +33,8 @@ describe("faktor", () => {
     return {
       alice,
       bob,
-      invoice: { address: invoiceAddress, bump: bump },
+      invoice: { address: invoiceAddress, bump: invoiceBump },
+      outflow: { address: outflowAddress, bump: outflowBump },
     };
   }
 
@@ -54,8 +59,11 @@ describe("faktor", () => {
       alice: await provider.connection.getBalance(accounts.alice.publicKey),
       bob: await provider.connection.getBalance(accounts.bob.publicKey),
       invoice: await provider.connection.getBalance(accounts.invoice.address),
+      outflow: await provider.connection.getBalance(accounts.outflow.address),
     };
   }
+
+  /** Invoices **/
 
   /**
    * issueInvoice - Issues an invoice with Alice as creditor and Bob as debtor.
@@ -205,5 +213,74 @@ describe("faktor", () => {
     );
     assert.ok(finalBalances.bob === initialBalances.bob - amount);
     assert.ok(finalBalances.invoice === 0);
+  });
+
+  /** Outflows **/
+
+  /**
+   * createOutflow - Creates an outflow with Alice as debtor and Bob as creditor.
+   *
+   * @param {object} accounts The accounts of the test case
+   * @param {number} balance The invoice balance
+   */
+  async function createOutflow(
+    accounts,
+    name,
+    memo,
+    balance,
+    deltaBalance,
+    deltaTime
+  ) {
+    await program.rpc.createOutflow(
+      name,
+      memo,
+      new BN(balance),
+      new BN(deltaBalance),
+      new BN(deltaTime),
+      accounts.outflow.bump,
+      {
+        accounts: {
+          outflow: accounts.outflow.address,
+          creditor: accounts.bob.publicKey,
+          debtor: accounts.alice.publicKey,
+          systemProgram: SystemProgram.programId,
+          clock: SYSVAR_CLOCK_PUBKEY,
+        },
+        signers: [accounts.alice],
+      }
+    );
+  }
+
+  it("Alice creates an outflow", async () => {
+    // Setup
+    const accounts = await generateAccounts();
+
+    // Test
+    const initialBalances = await getBalances(accounts);
+    const name = "Name";
+    const memo = "Memo";
+    const balance = 1000;
+    const deltaBalance = 100;
+    const deltaTime = 50;
+    await createOutflow(accounts, name, memo, balance, deltaBalance, deltaTime);
+
+    // Validate
+    const outflow = await program.account.outflow.fetch(
+      accounts.outflow.address
+    );
+    const finalBalances = await getBalances(accounts);
+    assert.ok(outflow.name === "Name");
+    assert.ok(outflow.memo === "Memo");
+    assert.ok(
+      outflow.creditor.toString() === accounts.bob.publicKey.toString()
+    );
+    assert.ok(
+      outflow.debtor.toString() === accounts.alice.publicKey.toString()
+    );
+    assert.ok(outflow.deltaBalance.toString() === deltaBalance.toString());
+    assert.ok(outflow.deltaTime.toString() === deltaTime.toString());
+    assert.ok(finalBalances.alice <= initialBalances.alice - balance);
+    assert.ok(finalBalances.bob === initialBalances.bob);
+    assert.ok(finalBalances.outflow >= initialBalances.outflow + balance);
   });
 });
