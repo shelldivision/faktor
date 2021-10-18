@@ -28,26 +28,26 @@ pub mod faktor {
     ) -> ProgramResult {
         // Get accounts
         let cashflow = &mut ctx.accounts.cashflow;
-        let creditor = &ctx.accounts.creditor;
-        let debitor = &mut ctx.accounts.debitor;
+        let receiver = &ctx.accounts.receiver;
+        let sender = &mut ctx.accounts.sender;
         let system_program = &mut ctx.accounts.system_program;
         let clock = &ctx.accounts.clock;
 
         // Initialize cashflow
         cashflow.name = name;
         cashflow.memo = memo;
-        cashflow.debitor = debitor.key();
-        cashflow.creditor = creditor.key();
+        cashflow.sender = sender.key();
+        cashflow.receiver = receiver.key();
         cashflow.delta_balance = delta_balance;
         cashflow.delta_time = delta_time;
         cashflow.next_transfer_at = clock.unix_timestamp as u64;
         cashflow.bump = bump;
 
-        // Transfer balance from debitor to cashflow
+        // Transfer balance from sender to cashflow
         invoke(
-            &system_instruction::transfer(&debitor.key(), &cashflow.key(), balance),
+            &system_instruction::transfer(&sender.key(), &cashflow.key(), balance),
             &[
-                debitor.to_account_info().clone(),
+                sender.to_account_info().clone(),
                 cashflow.to_account_info().clone(),
                 system_program.to_account_info().clone(),
             ],
@@ -59,7 +59,7 @@ pub mod faktor {
     pub fn distribute_cashflow(ctx: Context<DistributeCashflow>) -> ProgramResult {
         // Get accounts
         let cashflow = &mut ctx.accounts.cashflow;
-        let creditor = &ctx.accounts.creditor;
+        let receiver = &ctx.accounts.receiver;
         let distributor = &ctx.accounts.distributor;
         let clock = &ctx.accounts.clock;
 
@@ -77,26 +77,16 @@ pub mod faktor {
             ErrorCode::NotEnoughSOL
         );
         
-        // Transfer balance from cashflow to creditor
+        // Transfer balance from cashflow to receiver
         **cashflow.to_account_info().try_borrow_mut_lamports()? -= cashflow.delta_balance;
-        **creditor.to_account_info().try_borrow_mut_lamports()? += cashflow.delta_balance;
+        **receiver.to_account_info().try_borrow_mut_lamports()? += cashflow.delta_balance;
 
         // Transfer bounty from cashflow to distributor
         **cashflow.to_account_info().try_borrow_mut_lamports()? -= bounty;
         **distributor.to_account_info().try_borrow_mut_lamports()? += bounty;
 
         return Ok(());
-    }
-
-    pub fn tokenize_cashflow(ctx: Context<TokenizeCashflow>) -> ProgramResult {
-        // Get accounts
-        let _cashflow = &mut ctx.accounts.cashflow;
-        let _creditor = &mut ctx.accounts.creditor;
-
-        return Ok(());
-    }
-
-    
+    }    
 }
 
 
@@ -116,15 +106,15 @@ pub mod faktor {
 pub struct CreateCashflow<'info> {
     #[account(
         init,
-        seeds = [b"cashflow", creditor.key().as_ref(), debitor.key().as_ref()],
+        seeds = [b"cashflow", sender.key().as_ref(), receiver.key().as_ref()],
         bump = bump,
-        payer = debitor,
+        payer = sender,
         space = 8 + (4 + name.len()) + (4 + memo.len()) + 32 + 32 + 8 + 8 + 8 + 1,
     )]
     pub cashflow: Account<'info, Cashflow>,
-    pub creditor: AccountInfo<'info>,
     #[account(mut)]
-    pub debitor: Signer<'info>,
+    pub sender: Signer<'info>,
+    pub receiver: AccountInfo<'info>,
     #[account(address = system_program::ID)]
     pub system_program: Program<'info, System>,
     pub clock: Sysvar<'info, Clock>,
@@ -134,37 +124,19 @@ pub struct CreateCashflow<'info> {
 pub struct DistributeCashflow<'info> {
     #[account(
         mut,
-        seeds = [b"cashflow", creditor.key().as_ref(), debitor.key().as_ref()],
+        seeds = [b"cashflow", sender.key().as_ref(), receiver.key().as_ref()],
         bump = cashflow.bump,
     )]
     pub cashflow: Account<'info, Cashflow>,
+    pub sender: AccountInfo<'info>,
     #[account(mut)]
-    pub creditor: AccountInfo<'info>,
-    pub debitor: AccountInfo<'info>,
+    pub receiver: AccountInfo<'info>,
     #[account(mut)]
     pub distributor: Signer<'info>,
     #[account(address = system_program::ID)]
     pub system_program: Program<'info, System>,
     pub clock: Sysvar<'info, Clock>,
 }
-
-#[derive(Accounts)]
-pub struct TokenizeCashflow<'info> {
-    #[account(
-        mut,
-        seeds = [b"cashflow", creditor.key().as_ref(), debitor.key().as_ref()],
-        bump = cashflow.bump,
-    )]
-    pub cashflow: Account<'info, Cashflow>,
-    #[account(mut)]
-    pub creditor: Signer<'info>,
-    pub debitor: AccountInfo<'info>,
-    #[account(address = system_program::ID)]
-    pub system_program: Program<'info, System>,
-    pub clock: Sysvar<'info, Clock>,
-}
-
-
 
 
 ////////////////
@@ -175,13 +147,14 @@ pub struct TokenizeCashflow<'info> {
 pub struct Cashflow {
     pub name: String,
     pub memo: String,
-    pub creditor: Pubkey,
-    pub debitor: Pubkey,
+    pub receiver: Pubkey,
+    pub sender: Pubkey,
     pub delta_balance: u64,
     pub delta_time: u64,
     pub next_transfer_at: u64,
     pub bump: u8,
 }
+
 
 //////////////
 /// Errors ///

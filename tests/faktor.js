@@ -21,9 +21,8 @@ describe("faktor", () => {
     const alice = Keypair.generate();
     const bob = Keypair.generate();
     const charlie = Keypair.generate();
-    const charlie = Keypair.generate();
     const [cashflowAddress, cashflowBump] = await PublicKey.findProgramAddress(
-      ["cashflow", bob.publicKey.toBuffer(), alice.publicKey.toBuffer()],
+      ["cashflow", alice.publicKey.toBuffer(), bob.publicKey.toBuffer()],
       program.programId
     );
     await airdrop(alice.publicKey);
@@ -65,7 +64,7 @@ describe("faktor", () => {
   /** Outflows **/
 
   /**
-   * createCashflow - Creates an cashflow with Alice as debtor and Bob as creditor.
+   * createCashflow - Creates an cashflow with Alice as sender and Bob as receiver.
    *
    * @param {object} accounts The accounts of the test case
    * @param {number} balance The invoice balance
@@ -88,8 +87,8 @@ describe("faktor", () => {
       {
         accounts: {
           cashflow: accounts.cashflow.address,
-          creditor: accounts.bob.publicKey,
-          debtor: accounts.alice.publicKey,
+          sender: accounts.alice.publicKey,
+          receiver: accounts.bob.publicKey,
           systemProgram: SystemProgram.programId,
           clock: SYSVAR_CLOCK_PUBKEY,
         },
@@ -126,10 +125,10 @@ describe("faktor", () => {
     assert.ok(cashflow.name === "Name");
     assert.ok(cashflow.memo === "Memo");
     assert.ok(
-      cashflow.creditor.toString() === accounts.bob.publicKey.toString()
+      cashflow.sender.toString() === accounts.alice.publicKey.toString()
     );
     assert.ok(
-      cashflow.debtor.toString() === accounts.alice.publicKey.toString()
+      cashflow.receiver.toString() === accounts.bob.publicKey.toString()
     );
     assert.ok(cashflow.deltaBalance.toString() === deltaBalance.toString());
     assert.ok(cashflow.deltaTime.toString() === deltaTime.toString());
