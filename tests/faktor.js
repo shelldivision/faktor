@@ -21,6 +21,7 @@ describe("faktor", () => {
     const alice = Keypair.generate();
     const bob = Keypair.generate();
     const charlie = Keypair.generate();
+    const dana = Keypair.generate();
     const [cashflowAddress, cashflowBump] = await PublicKey.findProgramAddress(
       ["cashflow", alice.publicKey.toBuffer(), bob.publicKey.toBuffer()],
       program.programId
@@ -28,10 +29,12 @@ describe("faktor", () => {
     await airdrop(alice.publicKey);
     await airdrop(bob.publicKey);
     await airdrop(charlie.publicKey);
+    await airdrop(dana.publicKey);
     return {
       alice,
       bob,
       charlie,
+      dana,
       cashflow: { address: cashflowAddress, bump: cashflowBump },
     };
   }
@@ -57,6 +60,7 @@ describe("faktor", () => {
       alice: await provider.connection.getBalance(accounts.alice.publicKey),
       bob: await provider.connection.getBalance(accounts.bob.publicKey),
       charlie: await provider.connection.getBalance(accounts.charlie.publicKey),
+      dana: await provider.connection.getBalance(accounts.dana.publicKey),
       cashflow: await provider.connection.getBalance(accounts.cashflow.address),
     };
   }
@@ -75,7 +79,8 @@ describe("faktor", () => {
     memo,
     balance,
     deltaBalance,
-    deltaTime
+    deltaTime,
+    bounty
   ) {
     await program.rpc.createCashflow(
       name,
@@ -83,6 +88,7 @@ describe("faktor", () => {
       new BN(balance),
       new BN(deltaBalance),
       new BN(deltaTime),
+      new BN(bounty),
       accounts.cashflow.bump,
       {
         accounts: {
@@ -103,18 +109,20 @@ describe("faktor", () => {
 
     // Test
     const initialBalances = await getBalances(accounts);
-    const name = "Name";
-    const memo = "Memo";
+    const name = "Abc";
+    const memo = "123";
     const balance = 1000;
     const deltaBalance = 100;
     const deltaTime = 50;
+    const bounty = 3;
     await createCashflow(
       accounts,
       name,
       memo,
       balance,
       deltaBalance,
-      deltaTime
+      deltaTime,
+      bounty
     );
 
     // Validate
@@ -122,8 +130,8 @@ describe("faktor", () => {
       accounts.cashflow.address
     );
     const finalBalances = await getBalances(accounts);
-    assert.ok(cashflow.name === "Name");
-    assert.ok(cashflow.memo === "Memo");
+    assert.ok(cashflow.name === "Abc");
+    assert.ok(cashflow.memo === "123");
     assert.ok(
       cashflow.sender.toString() === accounts.alice.publicKey.toString()
     );
@@ -132,9 +140,70 @@ describe("faktor", () => {
     );
     assert.ok(cashflow.deltaBalance.toString() === deltaBalance.toString());
     assert.ok(cashflow.deltaTime.toString() === deltaTime.toString());
+    assert.ok(cashflow.bounty.toString() === bounty.toString());
     assert.ok(finalBalances.alice <= initialBalances.alice - balance);
     assert.ok(finalBalances.bob === initialBalances.bob);
-    assert.ok(finalBalances.cashflow >= initialBalances.cashflow + balance);
     assert.ok(finalBalances.charlie === initialBalances.charlie);
+    assert.ok(finalBalances.dana === initialBalances.dana);
+    assert.ok(finalBalances.cashflow >= initialBalances.cashflow + balance);
+  });
+
+  it("Dana distributes a cashflow", async () => {
+    // Setup
+    const accounts = await generateAccounts();
+    const name = "Abc";
+    const memo = "123";
+    const balance = 1000;
+    const deltaBalance = 100;
+    const deltaTime = 50;
+    const bounty = 3;
+    await createCashflow(
+      accounts,
+      name,
+      memo,
+      balance,
+      deltaBalance,
+      deltaTime,
+      bounty
+    );
+
+    // Test
+    const initialBalances = await getBalances(accounts);
+    await program.rpc.distributeCashflow({
+      accounts: {
+        cashflow: accounts.cashflow.address,
+        sender: accounts.alice.publicKey,
+        receiver: accounts.bob.publicKey,
+        distributor: accounts.dana.publicKey,
+        systemProgram: SystemProgram.programId,
+        clock: SYSVAR_CLOCK_PUBKEY,
+      },
+      signers: [accounts.dana],
+    });
+
+    // Validate
+    const cashflow = await program.account.cashflow.fetch(
+      accounts.cashflow.address
+    );
+    const finalBalances = await getBalances(accounts);
+    assert.ok(cashflow.name === "Abc");
+    assert.ok(cashflow.memo === "123");
+    assert.ok(
+      cashflow.sender.toString() === accounts.alice.publicKey.toString()
+    );
+    assert.ok(
+      cashflow.receiver.toString() === accounts.bob.publicKey.toString()
+    );
+    assert.ok(cashflow.deltaBalance.toString() === deltaBalance.toString());
+    assert.ok(cashflow.deltaTime.toString() === deltaTime.toString());
+    assert.ok(cashflow.bounty.toString() === bounty.toString());
+    assert.ok(finalBalances.alice === initialBalances.alice);
+    assert.ok(finalBalances.bob === initialBalances.bob + deltaBalance);
+    assert.ok(finalBalances.charlie === initialBalances.charlie);
+    assert.ok(finalBalances.dana === initialBalances.dana + bounty);
+    assert.ok(
+      finalBalances.cashflow ===
+        initialBalances.cashflow - deltaBalance - bounty
+    );
   });
 });

@@ -24,6 +24,7 @@ pub mod faktor {
         balance: u64,
         delta_balance: u64,
         delta_time: u64,
+        bounty: u64,
         bump: u8,
     ) -> ProgramResult {
         // Get accounts
@@ -41,6 +42,7 @@ pub mod faktor {
         cashflow.delta_balance = delta_balance;
         cashflow.delta_time = delta_time;
         cashflow.next_transfer_at = clock.unix_timestamp as u64;
+        cashflow.bounty = bounty;
         cashflow.bump = bump;
 
         // Transfer balance from sender to cashflow
@@ -70,10 +72,12 @@ pub mod faktor {
             ErrorCode::TooEarly
         );
 
+
+        // TODO update the next_transfer_at
+
         // Validate cashflow lamport balance
-        let bounty = 50; // TODO bounty should be a function of gas
         require!(
-            cashflow.to_account_info().lamports() >= cashflow.delta_balance + bounty,
+            cashflow.to_account_info().lamports() >= cashflow.delta_balance + cashflow.bounty,
             ErrorCode::NotEnoughSOL
         );
         
@@ -82,8 +86,8 @@ pub mod faktor {
         **receiver.to_account_info().try_borrow_mut_lamports()? += cashflow.delta_balance;
 
         // Transfer bounty from cashflow to distributor
-        **cashflow.to_account_info().try_borrow_mut_lamports()? -= bounty;
-        **distributor.to_account_info().try_borrow_mut_lamports()? += bounty;
+        **cashflow.to_account_info().try_borrow_mut_lamports()? -= cashflow.bounty;
+        **distributor.to_account_info().try_borrow_mut_lamports()? += cashflow.bounty;
 
         return Ok(());
     }    
@@ -101,6 +105,7 @@ pub mod faktor {
     balance: u64,
     delta_balance: u64, 
     delta_time: u64,
+    bounty: u64,
     bump: u8,
 )]
 pub struct CreateCashflow<'info> {
@@ -109,7 +114,7 @@ pub struct CreateCashflow<'info> {
         seeds = [b"cashflow", sender.key().as_ref(), receiver.key().as_ref()],
         bump = bump,
         payer = sender,
-        space = 8 + (4 + name.len()) + (4 + memo.len()) + 32 + 32 + 8 + 8 + 8 + 1,
+        space = 8 + (4 + name.len()) + (4 + memo.len()) + 32 + 32 + 8 + 8 + 8 + 8 + 1,
     )]
     pub cashflow: Account<'info, Cashflow>,
     #[account(mut)]
@@ -152,6 +157,7 @@ pub struct Cashflow {
     pub delta_balance: u64,
     pub delta_time: u64,
     pub next_transfer_at: u64,
+    pub bounty: u64,
     pub bump: u8,
 }
 
