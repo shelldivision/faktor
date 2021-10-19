@@ -3,7 +3,7 @@ const anchor = require("@project-serum/anchor");
 const solana = require("@solana/web3.js");
 
 const { LAMPORTS_PER_SOL, SYSVAR_CLOCK_PUBKEY } = solana;
-const { BN, Provider, utils } = anchor;
+const { BN, Provider } = anchor;
 const { Keypair, SystemProgram, PublicKey } = anchor.web3;
 
 describe("faktor", () => {
@@ -80,7 +80,8 @@ describe("faktor", () => {
     bounty,
     deltaBalance,
     deltaBounty,
-    deltaTime
+    deltaTime,
+    isFactorable
   ) {
     await program.rpc.createCashflow(
       name,
@@ -90,6 +91,7 @@ describe("faktor", () => {
       new BN(deltaBalance),
       new BN(deltaBounty),
       new BN(deltaTime),
+      isFactorable,
       accounts.cashflow.bump,
       {
         accounts: {
@@ -136,6 +138,7 @@ describe("faktor", () => {
     const deltaBalance = 100;
     const deltaBounty = 3;
     const deltaTime = 50;
+    const isFactorable = true;
     await createCashflow(
       accounts,
       name,
@@ -144,7 +147,8 @@ describe("faktor", () => {
       bounty,
       deltaBalance,
       deltaBounty,
-      deltaTime
+      deltaTime,
+      isFactorable
     );
 
     // Validate
@@ -165,6 +169,7 @@ describe("faktor", () => {
     assert.ok(cashflow.deltaBalance.toString() === deltaBalance.toString());
     assert.ok(cashflow.deltaBounty.toString() === deltaBounty.toString());
     assert.ok(cashflow.deltaTime.toString() === deltaTime.toString());
+    assert.ok(cashflow.isFactorable === isFactorable);
     assert.ok(finalBalances.alice <= initialBalances.alice - balance);
     assert.ok(finalBalances.bob === initialBalances.bob);
     assert.ok(finalBalances.charlie === initialBalances.charlie);
@@ -182,6 +187,7 @@ describe("faktor", () => {
     const deltaBalance = 100;
     const deltaBounty = 3;
     const deltaTime = 50;
+    const isFactorable = true;
     await createCashflow(
       accounts,
       name,
@@ -190,7 +196,8 @@ describe("faktor", () => {
       bounty,
       deltaBalance,
       deltaBounty,
-      deltaTime
+      deltaTime,
+      isFactorable
     );
 
     // Test
@@ -215,6 +222,7 @@ describe("faktor", () => {
     assert.ok(cashflow.deltaBalance.toString() === deltaBalance.toString());
     assert.ok(cashflow.deltaBounty.toString() === deltaBounty.toString());
     assert.ok(cashflow.deltaTime.toString() === deltaTime.toString());
+    assert.ok(cashflow.isFactorable === isFactorable);
     assert.ok(finalBalances.alice === initialBalances.alice);
     assert.ok(finalBalances.bob === initialBalances.bob + deltaBalance);
     assert.ok(finalBalances.charlie === initialBalances.charlie);
