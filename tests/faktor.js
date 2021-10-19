@@ -12,6 +12,8 @@ describe("faktor", () => {
   const program = anchor.workspace.Faktor;
   anchor.setProvider(provider);
 
+  /** Helper functions **/
+
   /**
    * generateAccounts - Generates keypairs and PDAs for participants and program accounts needed in a test case
    *
@@ -65,30 +67,29 @@ describe("faktor", () => {
     };
   }
 
-  /** Outflows **/
+  /** Common RPCs **/
 
   /**
-   * createCashflow - Creates an cashflow with Alice as sender and Bob as receiver.
-   *
-   * @param {object} accounts The accounts of the test case
-   * @param {number} balance The invoice balance
+   * createCashflow - Alice creates a cashflow to send SOL to Bob.
    */
   async function createCashflow(
     accounts,
     name,
     memo,
     balance,
+    bounty,
     deltaBalance,
-    deltaTime,
-    bounty
+    deltaBounty,
+    deltaTime
   ) {
     await program.rpc.createCashflow(
       name,
       memo,
       new BN(balance),
-      new BN(deltaBalance),
-      new BN(deltaTime),
       new BN(bounty),
+      new BN(deltaBalance),
+      new BN(deltaBounty),
+      new BN(deltaTime),
       accounts.cashflow.bump,
       {
         accounts: {
@@ -103,6 +104,25 @@ describe("faktor", () => {
     );
   }
 
+  /**
+   * distributeCashflow - Dana distributes a cashflow from Alice to Bob.
+   */
+  async function distributeCashflow(accounts) {
+    await program.rpc.distributeCashflow({
+      accounts: {
+        cashflow: accounts.cashflow.address,
+        sender: accounts.alice.publicKey,
+        receiver: accounts.bob.publicKey,
+        distributor: accounts.dana.publicKey,
+        systemProgram: SystemProgram.programId,
+        clock: SYSVAR_CLOCK_PUBKEY,
+      },
+      signers: [accounts.dana],
+    });
+  }
+
+  /** Test cases **/
+
   it("Alice creates a cashflow", async () => {
     // Setup
     const accounts = await generateAccounts();
@@ -112,17 +132,19 @@ describe("faktor", () => {
     const name = "Abc";
     const memo = "123";
     const balance = 1000;
-    const deltaBalance = 100;
-    const deltaTime = 50;
     const bounty = 3;
+    const deltaBalance = 100;
+    const deltaBounty = 3;
+    const deltaTime = 50;
     await createCashflow(
       accounts,
       name,
       memo,
       balance,
+      bounty,
       deltaBalance,
-      deltaTime,
-      bounty
+      deltaBounty,
+      deltaTime
     );
 
     // Validate
@@ -138,9 +160,11 @@ describe("faktor", () => {
     assert.ok(
       cashflow.receiver.toString() === accounts.bob.publicKey.toString()
     );
-    assert.ok(cashflow.deltaBalance.toString() === deltaBalance.toString());
-    assert.ok(cashflow.deltaTime.toString() === deltaTime.toString());
+    assert.ok(cashflow.balance.toString() === balance.toString());
     assert.ok(cashflow.bounty.toString() === bounty.toString());
+    assert.ok(cashflow.deltaBalance.toString() === deltaBalance.toString());
+    assert.ok(cashflow.deltaBounty.toString() === deltaBounty.toString());
+    assert.ok(cashflow.deltaTime.toString() === deltaTime.toString());
     assert.ok(finalBalances.alice <= initialBalances.alice - balance);
     assert.ok(finalBalances.bob === initialBalances.bob);
     assert.ok(finalBalances.charlie === initialBalances.charlie);
@@ -154,32 +178,24 @@ describe("faktor", () => {
     const name = "Abc";
     const memo = "123";
     const balance = 1000;
-    const deltaBalance = 100;
-    const deltaTime = 50;
     const bounty = 3;
+    const deltaBalance = 100;
+    const deltaBounty = 3;
+    const deltaTime = 50;
     await createCashflow(
       accounts,
       name,
       memo,
       balance,
+      bounty,
       deltaBalance,
-      deltaTime,
-      bounty
+      deltaBounty,
+      deltaTime
     );
 
     // Test
     const initialBalances = await getBalances(accounts);
-    await program.rpc.distributeCashflow({
-      accounts: {
-        cashflow: accounts.cashflow.address,
-        sender: accounts.alice.publicKey,
-        receiver: accounts.bob.publicKey,
-        distributor: accounts.dana.publicKey,
-        systemProgram: SystemProgram.programId,
-        clock: SYSVAR_CLOCK_PUBKEY,
-      },
-      signers: [accounts.dana],
-    });
+    await distributeCashflow(accounts);
 
     // Validate
     const cashflow = await program.account.cashflow.fetch(
@@ -194,9 +210,11 @@ describe("faktor", () => {
     assert.ok(
       cashflow.receiver.toString() === accounts.bob.publicKey.toString()
     );
-    assert.ok(cashflow.deltaBalance.toString() === deltaBalance.toString());
-    assert.ok(cashflow.deltaTime.toString() === deltaTime.toString());
+    assert.ok(cashflow.balance.toString() === balance.toString());
     assert.ok(cashflow.bounty.toString() === bounty.toString());
+    assert.ok(cashflow.deltaBalance.toString() === deltaBalance.toString());
+    assert.ok(cashflow.deltaBounty.toString() === deltaBounty.toString());
+    assert.ok(cashflow.deltaTime.toString() === deltaTime.toString());
     assert.ok(finalBalances.alice === initialBalances.alice);
     assert.ok(finalBalances.bob === initialBalances.bob + deltaBalance);
     assert.ok(finalBalances.charlie === initialBalances.charlie);

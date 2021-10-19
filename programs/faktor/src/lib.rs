@@ -22,9 +22,10 @@ pub mod faktor {
         name: String,
         memo: String,
         balance: u64,
-        delta_balance: u64,
-        delta_time: u64,
         bounty: u64,
+        delta_balance: u64,
+        delta_bounty: u64,
+        delta_time: u64,
         bump: u8,
     ) -> ProgramResult {
         // Get accounts
@@ -39,15 +40,28 @@ pub mod faktor {
         cashflow.memo = memo;
         cashflow.sender = sender.key();
         cashflow.receiver = receiver.key();
-        cashflow.delta_balance = delta_balance;
-        cashflow.delta_time = delta_time;
-        cashflow.next_transfer_at = clock.unix_timestamp as u64;
+        cashflow.balance = balance;
         cashflow.bounty = bounty;
+        cashflow.delta_balance = delta_balance;
+        cashflow.delta_bounty = delta_bounty;
+        cashflow.delta_time = delta_time;
+        cashflow.next_transfer_at = clock.unix_timestamp as u64; // TODO this should be a user variable
+        cashflow.created_at = clock.unix_timestamp as u64;
         cashflow.bump = bump;
 
         // Transfer balance from sender to cashflow
         invoke(
             &system_instruction::transfer(&sender.key(), &cashflow.key(), balance),
+            &[
+                sender.to_account_info().clone(),
+                cashflow.to_account_info().clone(),
+                system_program.to_account_info().clone(),
+            ],
+        )?;
+
+        // Transfer bounty from sender to cashflow
+        invoke(
+            &system_instruction::transfer(&sender.key(), &cashflow.key(), bounty),
             &[
                 sender.to_account_info().clone(),
                 cashflow.to_account_info().clone(),
@@ -72,22 +86,33 @@ pub mod faktor {
             ErrorCode::TooEarly
         );
 
+        // Set the timestamp for the next attempted transfer
+        cashflow.next_transfer_at += cashflow.delta_time;
 
-        // TODO update the next_transfer_at
-
-        // Validate cashflow lamport balance
+        // Validate balances
         require!(
-            cashflow.to_account_info().lamports() >= cashflow.delta_balance + cashflow.bounty,
-            ErrorCode::NotEnoughSOL
+            cashflow.balance >= cashflow.delta_balance,
+            ErrorCode::InsufficientBalance
+        );
+        require!(
+            cashflow.bounty >= cashflow.delta_bounty,
+            ErrorCode::InsufficientBounty
+        );
+        require!(
+            cashflow.to_account_info().lamports() >= cashflow.delta_balance + cashflow.delta_bounty,
+            ErrorCode::InsufficientLamports
         );
         
-        // Transfer balance from cashflow to receiver
+        // Transfer Δ balance from cashflow to receiver
         **cashflow.to_account_info().try_borrow_mut_lamports()? -= cashflow.delta_balance;
         **receiver.to_account_info().try_borrow_mut_lamports()? += cashflow.delta_balance;
 
-        // Transfer bounty from cashflow to distributor
-        **cashflow.to_account_info().try_borrow_mut_lamports()? -= cashflow.bounty;
-        **distributor.to_account_info().try_borrow_mut_lamports()? += cashflow.bounty;
+        // Transfer Δ bounty from cashflow to distributor
+        **cashflow.to_account_info().try_borrow_mut_lamports()? -= cashflow.delta_bounty;
+        **distributor.to_account_info().try_borrow_mut_lamports()? += cashflow.delta_bounty;
+        
+        // TODO if bounty is below Δ bounty, close the cash account and transfer remaining lamports/tokens back to sender
+
 
         return Ok(());
     }    
@@ -103,9 +128,10 @@ pub mod faktor {
     name: String, 
     memo: String, 
     balance: u64,
-    delta_balance: u64, 
-    delta_time: u64,
     bounty: u64,
+    delta_balance: u64, 
+    delta_bounty: u64,
+    delta_time: u64,
     bump: u8,
 )]
 pub struct CreateCashflow<'info> {
@@ -114,7 +140,7 @@ pub struct CreateCashflow<'info> {
         seeds = [b"cashflow", sender.key().as_ref(), receiver.key().as_ref()],
         bump = bump,
         payer = sender,
-        space = 8 + (4 + name.len()) + (4 + memo.len()) + 32 + 32 + 8 + 8 + 8 + 8 + 1,
+        space = 8 + (4 + name.len()) + (4 + memo.len()) + 32 + 32 + 8 + 8 + 8 + 8 + 8 + 8 + 8 + 1,
     )]
     pub cashflow: Account<'info, Cashflow>,
     #[account(mut)]
@@ -152,12 +178,15 @@ pub struct DistributeCashflow<'info> {
 pub struct Cashflow {
     pub name: String,
     pub memo: String,
-    pub receiver: Pubkey,
     pub sender: Pubkey,
+    pub receiver: Pubkey,
+    pub balance: u64,
+    pub bounty: u64,
     pub delta_balance: u64,
+    pub delta_bounty: u64,
     pub delta_time: u64,
     pub next_transfer_at: u64,
-    pub bounty: u64,
+    pub created_at: u64,
     pub bump: u8,
 }
 
@@ -168,8 +197,12 @@ pub struct Cashflow {
 
 #[error]
 pub enum ErrorCode {
-    #[msg("Not enough SOL")]
-    NotEnoughSOL,
-    #[msg("It's too early to distribute this cashflow")]
+    #[msg("Insufficient balance")]
+    InsufficientBalance,
+    #[msg("Insufficient bounty")]
+    InsufficientBounty,
+    #[msg("Insufficient lamports")]
+    InsufficientLamports,
+    #[msg("Too early to distribute")]
     TooEarly,
 }
