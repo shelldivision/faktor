@@ -10,6 +10,7 @@ use {
 declare_id!("9LjA6DjxKDB2uEQPH1kipq5L7Z2hRKGz2yd9EQD9fGhU");
 
 
+
 ///////////////
 /// Program ///
 ///////////////
@@ -113,12 +114,10 @@ pub mod faktor {
         **cashflow.to_account_info().try_borrow_mut_lamports()? -= cashflow.delta_bounty;
         **distributor.to_account_info().try_borrow_mut_lamports()? += cashflow.delta_bounty;
         
-        // TODO if balance is below Δ balance, should we close the account and transfer remaining lamports/tokens back to sender?
-        // TODO if bounty is below Δ bounty, should we close the account and transfer remaining lamports/tokens back to sender?
-
         return Ok(());
     } 
 }
+
 
 
 ////////////////////
@@ -194,6 +193,7 @@ pub struct Cashflow {
     pub created_at: u64,
     pub bump: u8,
 }
+
 
 
 //////////////
