@@ -7,7 +7,7 @@ A program for issuing invoices on Solana.
 Clone the repo and build:
 
 ```sh
-git clone https://github.com/ampersand-xyz/faktor
+git clone https://github.com/ampersand-xyz/faktor-cashflows
 cd faktor
 cargo build
 ```
