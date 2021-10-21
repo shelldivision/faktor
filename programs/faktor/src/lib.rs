@@ -1,17 +1,16 @@
 use {
     anchor_lang::{
         prelude::*,
-        solana_program::{program::invoke, system_instruction, system_program},
-        AccountsClose,
+        solana_program::system_program::ID as SYSTEM_PROGRAM_ID,
         AnchorSerialize,
     },
-    anchor_spl::token::{Mint, Token, TokenAccount, ID as TokenProgramID},
+    anchor_spl::token::{ID as TOKEN_PROGRAM_ID, Approve, Mint, Token, TokenAccount, Transfer, approve, transfer},
     std::clone::Clone,
 };
 
 declare_id!("9LjA6DjxKDB2uEQPH1kipq5L7Z2hRKGz2yd9EQD9fGhU");
 
-
+static PROGRAM_AUTHORITY_SEED: &[u8] = b"faktor";
 
 ///////////////
 /// Program ///
@@ -20,6 +19,15 @@ declare_id!("9LjA6DjxKDB2uEQPH1kipq5L7Z2hRKGz2yd9EQD9fGhU");
 #[program]
 pub mod faktor {
     use super::*;
+    pub fn initialize_program_authority(
+        ctx: Context<InitializeProgramAuthority>, 
+        bump: u8
+    ) -> ProgramResult {
+        let program_authority = &mut ctx.accounts.program_authority;
+        program_authority.bump = bump;
+        return Ok(());
+    }
+
     pub fn create_cashflow(
         ctx: Context<CreateCashflow>, 
         name: String,
@@ -30,20 +38,31 @@ pub mod faktor {
         delta_bounty: u64,
         delta_time: u64,
         is_factorable: bool,
-        bump: u8,
+        bump: u8
     ) -> ProgramResult {
-        // Get accounts
+        // Get accounts.
         let cashflow = &mut ctx.accounts.cashflow;
-        let receiver = &ctx.accounts.receiver;
         let sender = &mut ctx.accounts.sender;
-        let system_program = &mut ctx.accounts.system_program;
+        let sender_tokens = &mut ctx.accounts.sender_tokens;
+        let receiver = &ctx.accounts.receiver;
+        let receiver_tokens = &ctx.accounts.receiver_tokens;
+        let program_authority = &mut ctx.accounts.program_authority;
+        let token_program = &ctx.accounts.token_program;
         let clock = &ctx.accounts.clock;
 
-        // Initialize cashflow
+        // Validate request.
+        require!(
+            balance >= delta_balance, 
+            ErrorCode::InsufficientApproval
+        );
+
+        // Initialize cashflow account.
         cashflow.name = name;
         cashflow.memo = memo;
         cashflow.sender = sender.key();
+        cashflow.sender_tokens = sender_tokens.key();
         cashflow.receiver = receiver.key();
+        cashflow.receiver_tokens = receiver_tokens.key();
         cashflow.balance = balance;
         cashflow.bounty = bounty;
         cashflow.delta_balance = delta_balance;
@@ -54,64 +73,33 @@ pub mod faktor {
         cashflow.created_at = clock.unix_timestamp as u64;
         cashflow.bump = bump;
 
-        // Transfer balance from sender to cashflow
-        invoke(
-            &system_instruction::transfer(&sender.key(), &cashflow.key(), balance),
-            &[
-                sender.to_account_info().clone(),
-                cashflow.to_account_info().clone(),
-                system_program.to_account_info().clone(),
-            ],
+        // Approve program authority to transfer from the sender's token account.
+        approve(
+            CpiContext::new(
+                token_program.to_account_info(),
+                Approve {
+                    authority: sender.to_account_info(),
+                    delegate: program_authority.to_account_info(),
+                    to: sender_tokens.to_account_info(),
+                }
+            ),
+            balance,
         )?;
 
-        // Transfer bounty from sender to cashflow
-        invoke(
-            &system_instruction::transfer(&sender.key(), &cashflow.key(), bounty),
-            &[
-                sender.to_account_info().clone(),
-                cashflow.to_account_info().clone(),
-                system_program.to_account_info().clone(),
-            ],
-        )?;
+        // TODO Collect bounty (FKTR tokens) from sender.
+        // TODO Burn FKTR tokens.
 
         return Ok(());
-    }
-
-    pub fn cancel_cashflow(ctx: Context<CancelCashflow>, amount: u64) -> ProgramResult {
-        // Get accounts.
-        let cashflow = &mut ctx.accounts.cashflow;
-        let sender = &ctx.accounts.sender;
-
-        // Verify balances.
-        require!(
-            cashflow.balance >= amount,
-            ErrorCode::InsufficientBalance
-        );
-        require!(
-            cashflow.to_account_info().lamports() >= amount,
-            ErrorCode::InsufficientLamports
-        );
-
-        // Transfer lamports from cashflow account to sender.
-        **cashflow.to_account_info().try_borrow_mut_lamports()? -= amount;
-        **sender.to_account_info().try_borrow_mut_lamports()? += amount;
-
-        // Draw down the balance.
-        cashflow.balance -= amount;
-
-        // If balance is less than or equal to zero, close the account.
-        if cashflow.balance <= 0 {
-            cashflow.close(sender.to_account_info())?;
-        }
-
-        return Ok(())
     }
 
     pub fn distribute_cashflow(ctx: Context<DistributeCashflow>) -> ProgramResult {
         // Get accounts.
         let cashflow = &mut ctx.accounts.cashflow;
-        let receiver = &ctx.accounts.receiver;
-        let distributor = &ctx.accounts.distributor;
+        let sender_tokens = &ctx.accounts.sender_tokens;
+        let receiver_tokens = &ctx.accounts.receiver_tokens;
+        let _distributor = &ctx.accounts.distributor;
+        let program_authority = &ctx.accounts.program_authority;
+        let token_program = &ctx.accounts.token_program;
         let clock = &ctx.accounts.clock;
 
         // Validate current timestamp.
@@ -121,7 +109,7 @@ pub mod faktor {
             ErrorCode::TooEarly
         );
 
-        // Set the timestamp for the next attempted transfer.
+        // Set timestamp for next transfer attempt.
         cashflow.next_transfer_at += cashflow.delta_time;
 
         // Validate balances.
@@ -129,22 +117,27 @@ pub mod faktor {
             cashflow.balance >= cashflow.delta_balance,
             ErrorCode::InsufficientBalance
         );
-        require!(
-            cashflow.bounty >= cashflow.delta_bounty,
-            ErrorCode::InsufficientBounty
-        );
-        require!(
-            cashflow.to_account_info().lamports() >= cashflow.delta_balance + cashflow.delta_bounty,
-            ErrorCode::InsufficientLamports
-        );
-        
-        // Transfer Δbalance from cashflow to receiver.
-        **cashflow.to_account_info().try_borrow_mut_lamports()? -= cashflow.delta_balance;
-        **receiver.to_account_info().try_borrow_mut_lamports()? += cashflow.delta_balance;
 
-        // Transfer Δbounty from cashflow to distributor.
-        **cashflow.to_account_info().try_borrow_mut_lamports()? -= cashflow.delta_bounty;
-        **distributor.to_account_info().try_borrow_mut_lamports()? += cashflow.delta_bounty;
+        // Transfer Δbalance from cashflow to receiver.
+        transfer(
+            CpiContext::new_with_signer(
+                token_program.to_account_info(),
+                Transfer {
+                    from: sender_tokens.to_account_info(),
+                    to: receiver_tokens.to_account_info(),
+                    authority: program_authority.to_account_info(),
+                },
+                &[&[PROGRAM_AUTHORITY_SEED, &[program_authority.bump]]]
+            ),
+            cashflow.delta_balance,
+        )?;
+
+        // Draw down the balance
+        cashflow.balance -= cashflow.delta_balance;
+
+        // TODO Transfer Δbounty from cashflow to distributor.
+        // **cashflow.to_account_info().try_borrow_mut_lamports()? -= cashflow.delta_bounty;
+        // **distributor.to_account_info().try_borrow_mut_lamports()? += cashflow.delta_bounty;
         
         return Ok(());
     } 
@@ -155,6 +148,18 @@ pub mod faktor {
 ////////////////////
 /// Instructions ///
 ////////////////////
+
+
+#[derive(Accounts)]
+#[instruction(bump: u8)]
+pub struct InitializeProgramAuthority<'info> {
+    #[account(init, seeds = [PROGRAM_AUTHORITY_SEED], bump = bump, payer = signer, space = 8 + 1)]
+    pub program_authority: Account<'info, ProgramAuthority>,
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    #[account(address = SYSTEM_PROGRAM_ID)]
+    pub system_program: Program<'info, System>,
+}
 
 #[derive(Accounts)]
 #[instruction(
@@ -174,15 +179,21 @@ pub struct CreateCashflow<'info> {
         seeds = [b"cashflow", sender.key().as_ref(), receiver.key().as_ref()],
         bump = bump,
         payer = sender,
-        space = 8 + (4 + name.len()) + (4 + memo.len()) + 32 + 32 + 8 + 8 + 8 + 8 + 8 + 1 + 8 + 8 + 1,
+        space = 8 + (4 + name.len()) + (4 + memo.len()) + 32 + 32 + 32 + 32 + 8 + 8 + 8 + 8 + 8 + 1 + 8 + 8 + 1,
     )]
     pub cashflow: Account<'info, Cashflow>,
     #[account(mut)]
     pub sender: Signer<'info>,
+    #[account(mut)]
+    pub sender_tokens: Account<'info, TokenAccount>,
     pub receiver: AccountInfo<'info>,
-    #[account(address = system_program::ID)]
+    pub receiver_tokens: Account<'info, TokenAccount>,
+    pub mint: Account<'info, Mint>,
+    #[account(mut, seeds = [PROGRAM_AUTHORITY_SEED], bump = program_authority.bump)]
+    pub program_authority: Account<'info, ProgramAuthority>,
+    #[account(address = SYSTEM_PROGRAM_ID)]
     pub system_program: Program<'info, System>,
-    #[account(address = TokenProgramID)]
+    #[account(address = TOKEN_PROGRAM_ID)]
     pub token_program: Program<'info, Token>,
     pub clock: Sysvar<'info, Clock>,
 }
@@ -199,27 +210,19 @@ pub struct DistributeCashflow<'info> {
     pub cashflow: Account<'info, Cashflow>,
     pub sender: AccountInfo<'info>,
     #[account(mut)]
+    pub sender_tokens: Account<'info, TokenAccount>,
+    #[account(mut)]
     pub receiver: AccountInfo<'info>,
+    #[account(mut)]
+    pub receiver_tokens: Account<'info, TokenAccount>,
     #[account(mut)]
     pub distributor: Signer<'info>,
+    #[account(mut, seeds = [PROGRAM_AUTHORITY_SEED], bump = program_authority.bump)]
+    pub program_authority: Account<'info, ProgramAuthority>,
+    #[account(address = TOKEN_PROGRAM_ID)]
+    pub token_program: Program<'info, Token>,
     pub clock: Sysvar<'info, Clock>,
 }
-
-#[derive(Accounts)]
-pub struct CancelCashflow<'info> {
-    #[account(
-        mut,
-        seeds = [b"cashflow", sender.key().as_ref(), receiver.key().as_ref()],
-        bump = cashflow.bump,
-        has_one = sender,
-        has_one = receiver,
-    )]
-    pub cashflow: Account<'info, Cashflow>,
-    #[account(mut)]
-    pub sender: Signer<'info>,
-    pub receiver: AccountInfo<'info>,
-}
-
 
 
 ////////////////
@@ -231,7 +234,9 @@ pub struct Cashflow {
     pub name: String,
     pub memo: String,
     pub sender: Pubkey,
+    pub sender_tokens: Pubkey,
     pub receiver: Pubkey,
+    pub receiver_tokens: Pubkey,
     pub balance: u64,
     pub bounty: u64,
     pub delta_balance: u64,
@@ -243,6 +248,10 @@ pub struct Cashflow {
     pub bump: u8,
 }
 
+#[account]
+pub struct ProgramAuthority {
+    pub bump: u8,
+}
 
 
 //////////////
@@ -251,6 +260,8 @@ pub struct Cashflow {
 
 #[error]
 pub enum ErrorCode {
+    #[msg("Inssufficient approval")]
+    InsufficientApproval,
     #[msg("Insufficient balance")]
     InsufficientBalance,
     #[msg("Insufficient bounty")]
