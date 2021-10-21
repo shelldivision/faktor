@@ -129,9 +129,7 @@ describe("faktor", () => {
     name,
     memo,
     balance,
-    bounty,
     deltaBalance,
-    deltaBounty,
     deltaTime,
     isFactorable
   ) {
@@ -139,9 +137,7 @@ describe("faktor", () => {
       name,
       memo,
       new BN(balance),
-      new BN(bounty),
       new BN(deltaBalance),
-      new BN(deltaBounty),
       new BN(deltaTime),
       isFactorable,
       accounts.cashflow.bump,
@@ -213,9 +209,7 @@ describe("faktor", () => {
     const name = "Abc";
     const memo = "123";
     const balance = 1000;
-    const bounty = 3;
     const deltaBalance = 100;
-    const deltaBounty = 3;
     const deltaTime = 50;
     const isFactorable = true;
     await createCashflow(
@@ -223,15 +217,13 @@ describe("faktor", () => {
       name,
       memo,
       balance,
-      bounty,
       deltaBalance,
-      deltaBounty,
       deltaTime,
       isFactorable
     );
 
     // Validate cashflow data.
-    let expectedRent = 2338560;
+    let expectedRent = 2227200;
     const cashflow = await program.account.cashflow.fetch(
       accounts.cashflow.keys.publicKey
     );
@@ -244,9 +236,7 @@ describe("faktor", () => {
       cashflow.receiver.toString() === accounts.bob.keys.publicKey.toString()
     );
     assert.ok(cashflow.balance.toString() === balance.toString());
-    assert.ok(cashflow.bounty.toString() === bounty.toString());
     assert.ok(cashflow.deltaBalance.toString() === deltaBalance.toString());
-    assert.ok(cashflow.deltaBounty.toString() === deltaBounty.toString());
     assert.ok(cashflow.deltaTime.toString() === deltaTime.toString());
     assert.ok(cashflow.isFactorable === isFactorable);
 
@@ -276,9 +266,7 @@ describe("faktor", () => {
     const name = "Abc";
     const memo = "123";
     const balance = 1000;
-    const bounty = 3;
     const deltaBalance = 100;
-    const deltaBounty = 3;
     const deltaTime = 50;
     const isFactorable = true;
     await createCashflow(
@@ -286,9 +274,7 @@ describe("faktor", () => {
       name,
       memo,
       balance,
-      bounty,
       deltaBalance,
-      deltaBounty,
       deltaTime,
       isFactorable
     );
@@ -310,9 +296,7 @@ describe("faktor", () => {
       cashflow.receiver.toString() === accounts.bob.keys.publicKey.toString()
     );
     assert.ok(cashflow.balance.toNumber() === balance - deltaBalance);
-    assert.ok(cashflow.bounty.toNumber() === bounty);
     assert.ok(cashflow.deltaBalance.toNumber() === deltaBalance);
-    assert.ok(cashflow.deltaBounty.toNumber() === deltaBounty);
     assert.ok(cashflow.deltaTime.toNumber() === deltaTime);
     assert.ok(cashflow.isFactorable === isFactorable);
 

@@ -33,9 +33,7 @@ pub mod faktor {
         name: String,
         memo: String,
         balance: u64,
-        bounty: u64,
         delta_balance: u64,
-        delta_bounty: u64,
         delta_time: u64,
         is_factorable: bool,
         bump: u8
@@ -64,9 +62,7 @@ pub mod faktor {
         cashflow.receiver = receiver.key();
         cashflow.receiver_tokens = receiver_tokens.key();
         cashflow.balance = balance;
-        cashflow.bounty = bounty;
         cashflow.delta_balance = delta_balance;
-        cashflow.delta_bounty = delta_bounty;
         cashflow.delta_time = delta_time;
         cashflow.is_factorable = is_factorable;
         cashflow.next_transfer_at = clock.unix_timestamp as u64; // TODO this should be a user variable
@@ -166,9 +162,7 @@ pub struct InitializeProgramAuthority<'info> {
     name: String, 
     memo: String, 
     balance: u64,
-    bounty: u64,
     delta_balance: u64, 
-    delta_bounty: u64,
     delta_time: u64,
     is_factorable: bool,
     bump: u8,
@@ -179,7 +173,7 @@ pub struct CreateCashflow<'info> {
         seeds = [b"cashflow", sender.key().as_ref(), receiver.key().as_ref()],
         bump = bump,
         payer = sender,
-        space = 8 + (4 + name.len()) + (4 + memo.len()) + 32 + 32 + 32 + 32 + 8 + 8 + 8 + 8 + 8 + 1 + 8 + 8 + 1,
+        space = 8 + (4 + name.len()) + (4 + memo.len()) + 32 + 32 + 32 + 32 + 8 + 8 + 8 + 1 + 8 + 8 + 1,
     )]
     pub cashflow: Account<'info, Cashflow>,
     #[account(mut)]
@@ -238,9 +232,7 @@ pub struct Cashflow {
     pub receiver: Pubkey,
     pub receiver_tokens: Pubkey,
     pub balance: u64,
-    pub bounty: u64,
     pub delta_balance: u64,
-    pub delta_bounty: u64,
     pub delta_time: u64,
     pub is_factorable: bool,
     pub next_transfer_at: u64,
