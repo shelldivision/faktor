@@ -2,8 +2,10 @@ use {
     anchor_lang::{
         prelude::*,
         solana_program::{program::invoke, system_instruction, system_program},
+        AccountsClose,
         AnchorSerialize,
     },
+    anchor_spl::token::{Mint, Token, TokenAccount, ID as TokenProgramID},
     std::clone::Clone,
 };
 
@@ -75,24 +77,54 @@ pub mod faktor {
         return Ok(());
     }
 
+    pub fn cancel_cashflow(ctx: Context<CancelCashflow>, amount: u64) -> ProgramResult {
+        // Get accounts.
+        let cashflow = &mut ctx.accounts.cashflow;
+        let sender = &ctx.accounts.sender;
+
+        // Verify balances.
+        require!(
+            cashflow.balance >= amount,
+            ErrorCode::InsufficientBalance
+        );
+        require!(
+            cashflow.to_account_info().lamports() >= amount,
+            ErrorCode::InsufficientLamports
+        );
+
+        // Transfer lamports from cashflow account to sender.
+        **cashflow.to_account_info().try_borrow_mut_lamports()? -= amount;
+        **sender.to_account_info().try_borrow_mut_lamports()? += amount;
+
+        // Draw down the balance.
+        cashflow.balance -= amount;
+
+        // If balance is less than or equal to zero, close the account.
+        if cashflow.balance <= 0 {
+            cashflow.close(sender.to_account_info())?;
+        }
+
+        return Ok(())
+    }
+
     pub fn distribute_cashflow(ctx: Context<DistributeCashflow>) -> ProgramResult {
-        // Get accounts
+        // Get accounts.
         let cashflow = &mut ctx.accounts.cashflow;
         let receiver = &ctx.accounts.receiver;
         let distributor = &ctx.accounts.distributor;
         let clock = &ctx.accounts.clock;
 
-        // Validate current timestamp
+        // Validate current timestamp.
         let now = clock.unix_timestamp as u64;
         require!(
             cashflow.next_transfer_at <= now,
             ErrorCode::TooEarly
         );
 
-        // Set the timestamp for the next attempted transfer
+        // Set the timestamp for the next attempted transfer.
         cashflow.next_transfer_at += cashflow.delta_time;
 
-        // Validate balances
+        // Validate balances.
         require!(
             cashflow.balance >= cashflow.delta_balance,
             ErrorCode::InsufficientBalance
@@ -106,11 +138,11 @@ pub mod faktor {
             ErrorCode::InsufficientLamports
         );
         
-        // Transfer Δ balance from cashflow to receiver
+        // Transfer Δbalance from cashflow to receiver.
         **cashflow.to_account_info().try_borrow_mut_lamports()? -= cashflow.delta_balance;
         **receiver.to_account_info().try_borrow_mut_lamports()? += cashflow.delta_balance;
 
-        // Transfer Δ bounty from cashflow to distributor
+        // Transfer Δbounty from cashflow to distributor.
         **cashflow.to_account_info().try_borrow_mut_lamports()? -= cashflow.delta_bounty;
         **distributor.to_account_info().try_borrow_mut_lamports()? += cashflow.delta_bounty;
         
@@ -150,6 +182,8 @@ pub struct CreateCashflow<'info> {
     pub receiver: AccountInfo<'info>,
     #[account(address = system_program::ID)]
     pub system_program: Program<'info, System>,
+    #[account(address = TokenProgramID)]
+    pub token_program: Program<'info, Token>,
     pub clock: Sysvar<'info, Clock>,
 }
 
@@ -159,6 +193,8 @@ pub struct DistributeCashflow<'info> {
         mut,
         seeds = [b"cashflow", sender.key().as_ref(), receiver.key().as_ref()],
         bump = cashflow.bump,
+        has_one = sender,
+        has_one = receiver,
     )]
     pub cashflow: Account<'info, Cashflow>,
     pub sender: AccountInfo<'info>,
@@ -166,9 +202,22 @@ pub struct DistributeCashflow<'info> {
     pub receiver: AccountInfo<'info>,
     #[account(mut)]
     pub distributor: Signer<'info>,
-    #[account(address = system_program::ID)]
-    pub system_program: Program<'info, System>,
     pub clock: Sysvar<'info, Clock>,
+}
+
+#[derive(Accounts)]
+pub struct CancelCashflow<'info> {
+    #[account(
+        mut,
+        seeds = [b"cashflow", sender.key().as_ref(), receiver.key().as_ref()],
+        bump = cashflow.bump,
+        has_one = sender,
+        has_one = receiver,
+    )]
+    pub cashflow: Account<'info, Cashflow>,
+    #[account(mut)]
+    pub sender: Signer<'info>,
+    pub receiver: AccountInfo<'info>,
 }
 
 

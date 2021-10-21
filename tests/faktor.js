@@ -1,6 +1,7 @@
 const assert = require("assert");
 const anchor = require("@project-serum/anchor");
 const solana = require("@solana/web3.js");
+const spl = require("@solana/spl-token");
 
 const { LAMPORTS_PER_SOL, SYSVAR_CLOCK_PUBKEY } = solana;
 const { BN, Provider } = anchor;
@@ -67,7 +68,7 @@ describe("faktor", () => {
     };
   }
 
-  /** Common RPCs **/
+  /** API **/
 
   /**
    * createCashflow - Alice creates a cashflow to send SOL to Bob.
@@ -99,11 +100,26 @@ describe("faktor", () => {
           sender: accounts.alice.publicKey,
           receiver: accounts.bob.publicKey,
           systemProgram: SystemProgram.programId,
+          tokenProgram: spl.TOKEN_PROGRAM_ID,
           clock: SYSVAR_CLOCK_PUBKEY,
         },
         signers: [accounts.alice],
       }
     );
+  }
+
+  /**
+   * cancelCashflow - Alice cancels an open cashflow to Bob.
+   */
+  async function cancelCashflow(accounts, amount) {
+    await program.rpc.cancelCashflow(new BN(amount), {
+      accounts: {
+        cashflow: accounts.cashflow.address,
+        sender: accounts.alice.publicKey,
+        receiver: accounts.bob.publicKey,
+      },
+      signers: [accounts.alice],
+    });
   }
 
   /**
@@ -175,6 +191,48 @@ describe("faktor", () => {
     assert.ok(finalBalances.charlie === initialBalances.charlie);
     assert.ok(finalBalances.dana === initialBalances.dana);
     assert.ok(finalBalances.cashflow >= initialBalances.cashflow + balance);
+  });
+
+  it("Alice cancels a cashflow", async () => {
+    // Setup
+    const accounts = await generateAccounts();
+    const name = "Abc";
+    const memo = "123";
+    const balance = 1000;
+    const bounty = 3;
+    const deltaBalance = 100;
+    const deltaBounty = 3;
+    const deltaTime = 50;
+    const isFactorable = true;
+    await createCashflow(
+      accounts,
+      name,
+      memo,
+      balance,
+      bounty,
+      deltaBalance,
+      deltaBounty,
+      deltaTime,
+      isFactorable
+    );
+
+    // Test
+    const initialBalances = await getBalances(accounts);
+    await cancelCashflow(accounts, balance);
+
+    // Validate
+    await assert.rejects(
+      program.account.cashflow.fetch(accounts.cashflow.address),
+      {
+        message: `Account does not exist ${accounts.cashflow.address.toString()}`,
+      }
+    );
+    const finalBalances = await getBalances(accounts);
+    assert.ok(finalBalances.alice >= initialBalances.alice + balance);
+    assert.ok(finalBalances.bob === initialBalances.bob);
+    assert.ok(finalBalances.charlie === initialBalances.charlie);
+    assert.ok(finalBalances.dana === initialBalances.dana);
+    assert.ok(finalBalances.cashflow === 0);
   });
 
   it("Dana distributes a cashflow", async () => {
