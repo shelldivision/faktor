@@ -59,6 +59,62 @@ pub mod faktor {
         return Ok(());
     }
 
+    pub fn approve_cashflow(
+        ctx: Context<ApproveCashflow>,
+        additional_balance: u64
+    ) -> ProgramResult {
+        // Get accounts.
+        let cashflow = &mut ctx.accounts.cashflow;
+        let sender = &ctx.accounts.sender;
+        let sender_tokens = &mut ctx.accounts.sender_tokens;
+        let token_program = &ctx.accounts.token_program;
+        let program_authority = &ctx.accounts.program_authority;
+        let system_program = &ctx.accounts.system_program;
+
+        // Validate request data.
+        require!(
+            additional_balance >= cashflow.delta_balance, 
+            ErrorCode::InvalidRequest
+        );
+
+        // Validate sender has sufficient lamports to cover transfer fee.
+        let num_transfers = additional_balance / cashflow.delta_balance;
+        let transfer_fee = num_transfers * (TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_TREASURY);
+        require!(
+            sender.to_account_info().lamports() >= transfer_fee,
+            ErrorCode::InsufficientLamports
+        );
+
+        // Approve program authority to initiate transfers from the sender's token account.
+        let new_balance = cashflow.balance + additional_balance;
+        approve(
+            CpiContext::new(
+                token_program.to_account_info(),
+                Approve {
+                    authority: sender.to_account_info(),
+                    delegate: program_authority.to_account_info(),
+                    to: sender_tokens.to_account_info(),
+                }
+            ),
+            new_balance,
+        )?;
+
+        // Update cashflow balance.
+        cashflow.balance = new_balance;
+
+        // Collect transfer fee from sender.
+        invoke(
+            &system_instruction::transfer(&sender.key(), &cashflow.key(), transfer_fee),
+            &[
+                sender.to_account_info().clone(),
+                cashflow.to_account_info().clone(),
+                system_program.to_account_info().clone(),
+            ],
+        )?;
+
+        return Ok(())
+    }
+
     pub fn create_cashflow(
         ctx: Context<CreateCashflow>, 
         name: String,
@@ -83,14 +139,14 @@ pub mod faktor {
         // Validate request data.
         require!(
             balance >= delta_balance, 
-            ErrorCode::InsufficientApproval
+            ErrorCode::InvalidRequest
         );
         
         // Validate sender has sufficient lamports to cover total fee.
         let num_transfers = balance / delta_balance;
-        let total_transfer_fee = num_transfers * (TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_TREASURY);
+        let transfer_fee = num_transfers * (TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_TREASURY);
         require!(
-            sender.to_account_info().lamports() >= total_transfer_fee,
+            sender.to_account_info().lamports() >= transfer_fee,
             ErrorCode::InsufficientLamports
         );
 
@@ -124,7 +180,7 @@ pub mod faktor {
 
         // Collect total transfer fee from sender.
         invoke(
-            &system_instruction::transfer(&sender.key(), &cashflow.key(), total_transfer_fee),
+            &system_instruction::transfer(&sender.key(), &cashflow.key(), transfer_fee),
             &[
                 sender.to_account_info().clone(),
                 cashflow.to_account_info().clone(),
@@ -223,6 +279,29 @@ pub struct Initialize<'info> {
     pub treasury: Account<'info, Treasury>,
     #[account(address = SYSTEM_PROGRAM_ID)]
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct ApproveCashflow<'info> {
+    #[account(
+        mut,
+        seeds = [b"cashflow", sender.key().as_ref(), receiver.key().as_ref()],
+        bump = cashflow.bump,
+        has_one = sender,
+        has_one = receiver,
+    )]
+    pub cashflow: Account<'info, Cashflow>,
+    #[account(mut)]
+    pub sender: Signer<'info>,
+    #[account(mut)]
+    pub sender_tokens: Account<'info, TokenAccount>,
+    pub receiver: AccountInfo<'info>,
+    #[account(mut, seeds = [PROGRAM_AUTHORITY_SEED], bump = program_authority.bump)]
+    pub program_authority: Account<'info, ProgramAuthority>,
+    #[account(address = SYSTEM_PROGRAM_ID)]
+    pub system_program: Program<'info, System>,
+    #[account(address = TOKEN_PROGRAM_ID)]
+    pub token_program: Program<'info, Token>,
 }
 
 #[derive(Accounts)]
@@ -329,14 +408,14 @@ pub struct Treasury {
 
 #[error]
 pub enum ErrorCode {
-    #[msg("Inssufficient approval")]
-    InsufficientApproval,
     #[msg("Insufficient balance")]
     InsufficientBalance,
     #[msg("Insufficient bounty")]
     InsufficientBounty,
     #[msg("Insufficient lamports")]
     InsufficientLamports,
+    #[msg("Invalid request")]
+    InvalidRequest,
     #[msg("Too early to distribute")]
     TooEarly,
 }

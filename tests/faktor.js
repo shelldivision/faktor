@@ -8,10 +8,12 @@ const { BN, Provider } = anchor;
 const { Keypair, SystemProgram, PublicKey } = anchor.web3;
 const { Token, TOKEN_PROGRAM_ID } = spl;
 
+// Mints
 const WSOL_MINT = new anchor.web3.PublicKey(
   "So11111111111111111111111111111111111111112"
 );
 
+// Fees
 const TRANSFER_FEE_DISTRIBUTOR = 1000;
 const TRANSFER_FEE_TREASURY = 1000;
 
@@ -23,7 +25,7 @@ describe("faktor", () => {
   const program = anchor.workspace.Faktor;
   anchor.setProvider(provider);
 
-  /** Helper functions **/
+  /** HELPERS **/
 
   async function airdrop(publicKey, amount) {
     await provider.connection
@@ -269,6 +271,83 @@ describe("faktor", () => {
     assert.ok(
       finalBalances.cashflow.SOL ===
         initialBalances.cashflow.SOL + expectedRent + expectedTransferFee
+    );
+    assert.ok(finalBalances.treasury.SOL === initialBalances.treasury.SOL);
+
+    // Validate wSOL balances.
+    assert.ok(finalBalances.alice.wSOL === initialBalances.alice.wSOL);
+    assert.ok(finalBalances.bob.wSOL === initialBalances.bob.wSOL);
+    assert.ok(finalBalances.charlie.wSOL === initialBalances.charlie.wSOL);
+    assert.ok(finalBalances.dana.wSOL === initialBalances.dana.wSOL);
+  });
+
+  it("Alice approves additional cashflow to Bob.", async () => {
+    // Setup
+    const accounts = await createAccounts();
+    const name = "Abc";
+    const memo = "123";
+    const balance = 1000;
+    const deltaBalance = 100;
+    const deltaTime = 50;
+    const isFactorable = true;
+    await createCashflow(
+      accounts,
+      name,
+      memo,
+      balance,
+      deltaBalance,
+      deltaTime,
+      isFactorable
+    );
+
+    // Test
+    const initialBalances = await getBalances(accounts);
+    const additionalBalance = 500;
+    await program.rpc.approveCashflow(new BN(additionalBalance), {
+      accounts: {
+        cashflow: accounts.cashflow.keys.publicKey,
+        sender: accounts.alice.keys.publicKey,
+        senderTokens: accounts.alice.tokens,
+        receiver: accounts.bob.keys.publicKey,
+        programAuthority: programAuthority,
+        systemProgram: SystemProgram.programId,
+        tokenProgram: spl.TOKEN_PROGRAM_ID,
+      },
+      signers: [accounts.alice.keys],
+    });
+
+    // Validate cashflow data.
+    let expectedTransferFee =
+      (additionalBalance / deltaBalance) *
+      (TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_TREASURY);
+    const cashflow = await program.account.cashflow.fetch(
+      accounts.cashflow.keys.publicKey
+    );
+    assert.ok(cashflow.name === "Abc");
+    assert.ok(cashflow.memo === "123");
+    assert.ok(
+      cashflow.sender.toString() === accounts.alice.keys.publicKey.toString()
+    );
+    assert.ok(
+      cashflow.receiver.toString() === accounts.bob.keys.publicKey.toString()
+    );
+    assert.ok(cashflow.balance.toNumber() === balance + additionalBalance);
+    assert.ok(cashflow.deltaBalance.toNumber() === deltaBalance);
+    assert.ok(cashflow.deltaTime.toNumber() === deltaTime);
+    assert.ok(cashflow.isFactorable === isFactorable);
+
+    // Validate SOL balances.
+    const finalBalances = await getBalances(accounts);
+    assert.ok(
+      finalBalances.alice.SOL ===
+        initialBalances.alice.SOL - expectedTransferFee
+    );
+    assert.ok(finalBalances.bob.SOL === initialBalances.bob.SOL);
+    assert.ok(finalBalances.charlie.SOL === initialBalances.charlie.SOL);
+    assert.ok(finalBalances.dana.SOL === initialBalances.dana.SOL);
+    assert.ok(
+      finalBalances.cashflow.SOL ===
+        initialBalances.cashflow.SOL + expectedTransferFee
     );
     assert.ok(finalBalances.treasury.SOL === initialBalances.treasury.SOL);
 
