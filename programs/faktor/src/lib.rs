@@ -25,9 +25,13 @@ use {
 
 declare_id!("9LjA6DjxKDB2uEQPH1kipq5L7Z2hRKGz2yd9EQD9fGhU");
 
-static PROGRAM_AUTHORITY_SEED: &[u8] = b"faktor";
-static FEE_PER_TRANSFER: u64 = 1000; // lamports
+// PDA seeds
+static PROGRAM_AUTHORITY_SEED: &[u8] = b"program_authority";
+static TREASURY_SEED: &[u8] = b"treasury";
 
+// Fees
+static TRANSFER_FEE_DISTRIBUTOR: u64 = 1000; 
+static TRANSFER_FEE_TREASURY: u64 = 1000;
 
 
 ///////////////
@@ -37,12 +41,21 @@ static FEE_PER_TRANSFER: u64 = 1000; // lamports
 #[program]
 pub mod faktor {
     use super::*;
-    pub fn initialize_program_authority(
-        ctx: Context<InitializeProgramAuthority>, 
-        bump: u8
+    pub fn initialize(
+        ctx: Context<Initialize>, 
+        program_authority_bump: u8,
+        treasury_bump: u8
     ) -> ProgramResult {
+        // Get accounts.
         let program_authority = &mut ctx.accounts.program_authority;
-        program_authority.bump = bump;
+        let treasury = &mut ctx.accounts.treasury;
+
+        // Initialize program authorty.
+        program_authority.bump = program_authority_bump;
+
+        // Initialize treasury.
+        treasury.bump = treasury_bump;
+
         return Ok(());
     }
 
@@ -73,11 +86,11 @@ pub mod faktor {
             ErrorCode::InsufficientApproval
         );
         
-        // Validate sender has sufficient lamports to cover transfer fee.
+        // Validate sender has sufficient lamports to cover total fee.
         let num_transfers = balance / delta_balance;
-        let transfer_fee = num_transfers * FEE_PER_TRANSFER;
+        let total_transfer_fee = num_transfers * (TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_TREASURY);
         require!(
-            sender.to_account_info().lamports() >= transfer_fee,
+            sender.to_account_info().lamports() >= total_transfer_fee,
             ErrorCode::InsufficientLamports
         );
 
@@ -109,16 +122,15 @@ pub mod faktor {
             balance,
         )?;
 
-        // Collect transfer fee from sender.
+        // Collect total transfer fee from sender.
         invoke(
-            &system_instruction::transfer(&sender.key(), &cashflow.key(), transfer_fee),
+            &system_instruction::transfer(&sender.key(), &cashflow.key(), total_transfer_fee),
             &[
                 sender.to_account_info().clone(),
                 cashflow.to_account_info().clone(),
                 system_program.to_account_info().clone(),
             ],
         )?;
-
 
         return Ok(());
     }
@@ -129,6 +141,7 @@ pub mod faktor {
         let sender_tokens = &ctx.accounts.sender_tokens;
         let receiver_tokens = &ctx.accounts.receiver_tokens;
         let distributor = &ctx.accounts.distributor;
+        let treasury = &ctx.accounts.treasury;
         let program_authority = &ctx.accounts.program_authority;
         let token_program = &ctx.accounts.token_program;
         let clock = &ctx.accounts.clock;
@@ -167,9 +180,13 @@ pub mod faktor {
         cashflow.balance -= cashflow.delta_balance;
 
         // Pay transfer fee from cashflow to distributor.
-        **cashflow.to_account_info().try_borrow_mut_lamports()? -= FEE_PER_TRANSFER;
-        **distributor.to_account_info().try_borrow_mut_lamports()? += FEE_PER_TRANSFER;
+        **cashflow.to_account_info().try_borrow_mut_lamports()? -= TRANSFER_FEE_DISTRIBUTOR;
+        **distributor.to_account_info().try_borrow_mut_lamports()? += TRANSFER_FEE_DISTRIBUTOR;
         
+        // Pay transfer fee from cashflow to treasury.
+        **cashflow.to_account_info().try_borrow_mut_lamports()? -= TRANSFER_FEE_TREASURY;
+        **treasury.to_account_info().try_borrow_mut_lamports()? += TRANSFER_FEE_TREASURY;
+
         return Ok(());
     } 
 }
@@ -181,12 +198,29 @@ pub mod faktor {
 ////////////////////
 
 #[derive(Accounts)]
-#[instruction(bump: u8)]
-pub struct InitializeProgramAuthority<'info> {
-    #[account(init, seeds = [PROGRAM_AUTHORITY_SEED], bump = bump, payer = signer, space = 8 + 1)]
-    pub program_authority: Account<'info, ProgramAuthority>,
+#[instruction(
+    program_authority_bump: u8,
+    treasury_bump: u8
+)]
+pub struct Initialize<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
+    #[account(
+        init, 
+        seeds = [PROGRAM_AUTHORITY_SEED], 
+        bump = program_authority_bump, 
+        payer = signer, 
+        space = 8 + 1
+    )]
+    pub program_authority: Account<'info, ProgramAuthority>,
+    #[account(
+        init, 
+        seeds = [TREASURY_SEED], 
+        bump = treasury_bump, 
+        payer = signer, 
+        space = 8 + 1
+    )]
+    pub treasury: Account<'info, Treasury>,
     #[account(address = SYSTEM_PROGRAM_ID)]
     pub system_program: Program<'info, System>,
 }
@@ -247,6 +281,8 @@ pub struct DistributeCashflow<'info> {
     pub distributor: Signer<'info>,
     #[account(mut, seeds = [PROGRAM_AUTHORITY_SEED], bump = program_authority.bump)]
     pub program_authority: Account<'info, ProgramAuthority>,
+    #[account(mut, seeds = [TREASURY_SEED], bump = treasury.bump)]
+    pub treasury: Account<'info, Treasury>,
     #[account(address = TOKEN_PROGRAM_ID)]
     pub token_program: Program<'info, Token>,
     pub clock: Sysvar<'info, Clock>,
@@ -277,6 +313,11 @@ pub struct Cashflow {
 
 #[account]
 pub struct ProgramAuthority {
+    pub bump: u8,
+}
+
+#[account]
+pub struct Treasury {
     pub bump: u8,
 }
 

@@ -12,11 +12,13 @@ const WSOL_MINT = new anchor.web3.PublicKey(
   "So11111111111111111111111111111111111111112"
 );
 
-const FEE_PER_TRANSFER = 1000;
+const TRANSFER_FEE_DISTRIBUTOR = 1000;
+const TRANSFER_FEE_TREASURY = 1000;
 
 describe("faktor", () => {
   // Test environment
   var programAuthority;
+  var treasury;
   const provider = Provider.local();
   const program = anchor.workspace.Faktor;
   anchor.setProvider(provider);
@@ -83,8 +85,8 @@ describe("faktor", () => {
    * @returns {object} The balances
    */
   async function getBalances(accounts) {
-    async function getBalance(account) {
-      return await provider.connection.getBalance(account.keys.publicKey);
+    async function getBalance(pubkey) {
+      return await provider.connection.getBalance(pubkey);
     }
     async function getTokenBalance(account) {
       const token = new Token(
@@ -99,23 +101,26 @@ describe("faktor", () => {
 
     return {
       alice: {
-        SOL: await getBalance(accounts.alice),
+        SOL: await getBalance(accounts.alice.keys.publicKey),
         wSOL: await getTokenBalance(accounts.alice),
       },
       bob: {
-        SOL: await getBalance(accounts.bob),
+        SOL: await getBalance(accounts.bob.keys.publicKey),
         wSOL: await getTokenBalance(accounts.bob),
       },
       charlie: {
-        SOL: await getBalance(accounts.charlie),
+        SOL: await getBalance(accounts.charlie.keys.publicKey),
         wSOL: await getTokenBalance(accounts.charlie),
       },
       dana: {
-        SOL: await getBalance(accounts.dana),
+        SOL: await getBalance(accounts.dana.keys.publicKey),
         wSOL: await getTokenBalance(accounts.dana),
       },
       cashflow: {
-        SOL: await getBalance(accounts.cashflow),
+        SOL: await getBalance(accounts.cashflow.keys.publicKey),
+      },
+      treasury: {
+        SOL: await getBalance(treasury),
       },
     };
   }
@@ -173,6 +178,7 @@ describe("faktor", () => {
         receiverTokens: accounts.bob.tokens,
         distributor: accounts.dana.keys.publicKey,
         programAuthority: programAuthority,
+        treasury: treasury,
         tokenProgram: spl.TOKEN_PROGRAM_ID,
         clock: SYSVAR_CLOCK_PUBKEY,
       },
@@ -185,13 +191,20 @@ describe("faktor", () => {
     await airdrop(signer.publicKey, 1);
     const [_programAuthority, programAuthorityBump] =
       await anchor.web3.PublicKey.findProgramAddress(
-        ["faktor"],
+        ["program_authority"],
         program.programId
       );
     programAuthority = _programAuthority;
-    await program.rpc.initializeProgramAuthority(programAuthorityBump, {
+    const [_treasury, treasuryBump] =
+      await anchor.web3.PublicKey.findProgramAddress(
+        ["treasury"],
+        program.programId
+      );
+    treasury = _treasury;
+    await program.rpc.initialize(programAuthorityBump, treasuryBump, {
       accounts: {
         programAuthority: programAuthority,
+        treasury: treasury,
         signer: signer.publicKey,
         systemProgram: SystemProgram.programId,
       },
@@ -225,7 +238,9 @@ describe("faktor", () => {
 
     // Validate cashflow data.
     let expectedRent = 2227200;
-    let expectedTransferFee = (balance / deltaBalance) * FEE_PER_TRANSFER;
+    let expectedTransferFee =
+      (balance / deltaBalance) *
+      (TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_TREASURY);
     const cashflow = await program.account.cashflow.fetch(
       accounts.cashflow.keys.publicKey
     );
@@ -255,13 +270,13 @@ describe("faktor", () => {
       finalBalances.cashflow.SOL ===
         initialBalances.cashflow.SOL + expectedRent + expectedTransferFee
     );
+    assert.ok(finalBalances.treasury.SOL === initialBalances.treasury.SOL);
 
     // Validate wSOL balances.
     assert.ok(finalBalances.alice.wSOL === initialBalances.alice.wSOL);
     assert.ok(finalBalances.bob.wSOL === initialBalances.bob.wSOL);
     assert.ok(finalBalances.charlie.wSOL === initialBalances.charlie.wSOL);
     assert.ok(finalBalances.dana.wSOL === initialBalances.dana.wSOL);
-    assert.ok(finalBalances.cashflow.wSOL === initialBalances.cashflow.wSOL);
   });
 
   it("Dana distributes a cashflow from Alice to Bob.", async () => {
@@ -310,11 +325,18 @@ describe("faktor", () => {
     assert.ok(finalBalances.bob.SOL === initialBalances.bob.SOL);
     assert.ok(finalBalances.charlie.SOL === initialBalances.charlie.SOL);
     assert.ok(
-      finalBalances.dana.SOL === initialBalances.dana.SOL + FEE_PER_TRANSFER
+      finalBalances.dana.SOL ===
+        initialBalances.dana.SOL + TRANSFER_FEE_DISTRIBUTOR
     );
     assert.ok(
       finalBalances.cashflow.SOL ===
-        initialBalances.cashflow.SOL - FEE_PER_TRANSFER
+        initialBalances.cashflow.SOL -
+          TRANSFER_FEE_DISTRIBUTOR -
+          TRANSFER_FEE_TREASURY
+    );
+    assert.ok(
+      finalBalances.treasury.SOL ===
+        initialBalances.treasury.SOL + TRANSFER_FEE_TREASURY
     );
 
     // Validate wSOL balances.
@@ -326,6 +348,5 @@ describe("faktor", () => {
     );
     assert.ok(finalBalances.charlie.wSOL === initialBalances.charlie.wSOL);
     assert.ok(finalBalances.dana.wSOL === initialBalances.dana.wSOL);
-    assert.ok(finalBalances.cashflow.wSOL === initialBalances.cashflow.wSOL);
   });
 });
