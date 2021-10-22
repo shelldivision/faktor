@@ -12,6 +12,8 @@ const WSOL_MINT = new anchor.web3.PublicKey(
   "So11111111111111111111111111111111111111112"
 );
 
+const FEE_PER_TRANSFER = 1000;
+
 describe("faktor", () => {
   // Test environment
   var programAuthority;
@@ -114,7 +116,6 @@ describe("faktor", () => {
       },
       cashflow: {
         SOL: await getBalance(accounts.cashflow),
-        // wSOL: await getBalance(accounts.cashflow.keys.publicKey),
       },
     };
   }
@@ -224,6 +225,7 @@ describe("faktor", () => {
 
     // Validate cashflow data.
     let expectedRent = 2227200;
+    let expectedTransferFee = (balance / deltaBalance) * FEE_PER_TRANSFER;
     const cashflow = await program.account.cashflow.fetch(
       accounts.cashflow.keys.publicKey
     );
@@ -243,13 +245,15 @@ describe("faktor", () => {
     // Validate SOL balances.
     const finalBalances = await getBalances(accounts);
     assert.ok(
-      finalBalances.alice.SOL === initialBalances.alice.SOL - expectedRent
+      finalBalances.alice.SOL ===
+        initialBalances.alice.SOL - expectedRent - expectedTransferFee
     );
     assert.ok(finalBalances.bob.SOL === initialBalances.bob.SOL);
     assert.ok(finalBalances.charlie.SOL === initialBalances.charlie.SOL);
     assert.ok(finalBalances.dana.SOL === initialBalances.dana.SOL);
     assert.ok(
-      finalBalances.cashflow.SOL === initialBalances.cashflow.SOL + expectedRent
+      finalBalances.cashflow.SOL ===
+        initialBalances.cashflow.SOL + expectedRent + expectedTransferFee
     );
 
     // Validate wSOL balances.
@@ -305,8 +309,13 @@ describe("faktor", () => {
     assert.ok(finalBalances.alice.SOL === initialBalances.alice.SOL);
     assert.ok(finalBalances.bob.SOL === initialBalances.bob.SOL);
     assert.ok(finalBalances.charlie.SOL === initialBalances.charlie.SOL);
-    assert.ok(finalBalances.dana.SOL === initialBalances.dana.SOL);
-    assert.ok(finalBalances.cashflow.SOL === initialBalances.cashflow.SOL);
+    assert.ok(
+      finalBalances.dana.SOL === initialBalances.dana.SOL + FEE_PER_TRANSFER
+    );
+    assert.ok(
+      finalBalances.cashflow.SOL ===
+        initialBalances.cashflow.SOL - FEE_PER_TRANSFER
+    );
 
     // Validate wSOL balances.
     assert.ok(

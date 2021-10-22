@@ -1,16 +1,34 @@
 use {
     anchor_lang::{
-        prelude::*,
-        solana_program::system_program::ID as SYSTEM_PROGRAM_ID,
         AnchorSerialize,
+        prelude::*,
+        solana_program::{
+            program::invoke,
+            system_instruction,
+            system_program::{
+                ID as SYSTEM_PROGRAM_ID
+            },
+        },
     },
-    anchor_spl::token::{ID as TOKEN_PROGRAM_ID, Approve, Mint, Token, TokenAccount, Transfer, approve, transfer},
+    anchor_spl::token::{
+        ID as TOKEN_PROGRAM_ID, 
+        Approve, 
+        Mint, 
+        Token, 
+        TokenAccount, 
+        Transfer, 
+        approve, 
+        transfer
+    },
     std::clone::Clone,
 };
 
 declare_id!("9LjA6DjxKDB2uEQPH1kipq5L7Z2hRKGz2yd9EQD9fGhU");
 
 static PROGRAM_AUTHORITY_SEED: &[u8] = b"faktor";
+static FEE_PER_TRANSFER: u64 = 1000; // lamports
+
+
 
 ///////////////
 /// Program ///
@@ -44,14 +62,23 @@ pub mod faktor {
         let sender_tokens = &mut ctx.accounts.sender_tokens;
         let receiver = &ctx.accounts.receiver;
         let receiver_tokens = &ctx.accounts.receiver_tokens;
-        let program_authority = &mut ctx.accounts.program_authority;
+        let program_authority = &ctx.accounts.program_authority;
+        let system_program = &ctx.accounts.system_program;
         let token_program = &ctx.accounts.token_program;
         let clock = &ctx.accounts.clock;
 
-        // Validate request.
+        // Validate request data.
         require!(
             balance >= delta_balance, 
             ErrorCode::InsufficientApproval
+        );
+        
+        // Validate sender has sufficient lamports to cover transfer fee.
+        let num_transfers = balance / delta_balance;
+        let transfer_fee = num_transfers * FEE_PER_TRANSFER;
+        require!(
+            sender.to_account_info().lamports() >= transfer_fee,
+            ErrorCode::InsufficientLamports
         );
 
         // Initialize cashflow account.
@@ -69,7 +96,7 @@ pub mod faktor {
         cashflow.created_at = clock.unix_timestamp as u64;
         cashflow.bump = bump;
 
-        // Approve program authority to transfer from the sender's token account.
+        // Approve program authority to initiate transfers from the sender's token account.
         approve(
             CpiContext::new(
                 token_program.to_account_info(),
@@ -82,8 +109,16 @@ pub mod faktor {
             balance,
         )?;
 
-        // TODO Collect bounty (FKTR tokens) from sender.
-        // TODO Burn FKTR tokens.
+        // Collect transfer fee from sender.
+        invoke(
+            &system_instruction::transfer(&sender.key(), &cashflow.key(), transfer_fee),
+            &[
+                sender.to_account_info().clone(),
+                cashflow.to_account_info().clone(),
+                system_program.to_account_info().clone(),
+            ],
+        )?;
+
 
         return Ok(());
     }
@@ -93,7 +128,7 @@ pub mod faktor {
         let cashflow = &mut ctx.accounts.cashflow;
         let sender_tokens = &ctx.accounts.sender_tokens;
         let receiver_tokens = &ctx.accounts.receiver_tokens;
-        let _distributor = &ctx.accounts.distributor;
+        let distributor = &ctx.accounts.distributor;
         let program_authority = &ctx.accounts.program_authority;
         let token_program = &ctx.accounts.token_program;
         let clock = &ctx.accounts.clock;
@@ -128,12 +163,12 @@ pub mod faktor {
             cashflow.delta_balance,
         )?;
 
-        // Draw down the balance
+        // Draw down the balance.
         cashflow.balance -= cashflow.delta_balance;
 
-        // TODO Transfer Δbounty from cashflow to distributor.
-        // **cashflow.to_account_info().try_borrow_mut_lamports()? -= cashflow.delta_bounty;
-        // **distributor.to_account_info().try_borrow_mut_lamports()? += cashflow.delta_bounty;
+        // Pay transfer fee from cashflow to distributor.
+        **cashflow.to_account_info().try_borrow_mut_lamports()? -= FEE_PER_TRANSFER;
+        **distributor.to_account_info().try_borrow_mut_lamports()? += FEE_PER_TRANSFER;
         
         return Ok(());
     } 
@@ -144,7 +179,6 @@ pub mod faktor {
 ////////////////////
 /// Instructions ///
 ////////////////////
-
 
 #[derive(Accounts)]
 #[instruction(bump: u8)]
@@ -219,6 +253,7 @@ pub struct DistributeCashflow<'info> {
 }
 
 
+
 ////////////////
 /// Accounts ///
 ////////////////
@@ -244,6 +279,7 @@ pub struct Cashflow {
 pub struct ProgramAuthority {
     pub bump: u8,
 }
+
 
 
 //////////////
