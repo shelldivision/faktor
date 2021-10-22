@@ -162,7 +162,7 @@ pub mod faktor {
             ErrorCode::InsufficientBalance
         );
 
-        // Transfer Δbalance from cashflow to receiver.
+        // Transfer tokens from sender to receiver.
         transfer(
             CpiContext::new_with_signer(
                 token_program.to_account_info(),
