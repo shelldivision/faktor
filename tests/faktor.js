@@ -17,6 +17,10 @@ const WSOL_MINT = new anchor.web3.PublicKey(
 const TRANSFER_FEE_DISTRIBUTOR = 1000;
 const TRANSFER_FEE_TREASURY = 1000;
 
+// Seeds
+const PROGRAM_AUTHORITY_SEED = "program_authority";
+const TREASURY_SEED = "treasury";
+
 describe("faktor", () => {
   // Test environment
   var programAuthority;
@@ -193,17 +197,17 @@ describe("faktor", () => {
     await airdrop(signer.publicKey, 1);
     const [_programAuthority, programAuthorityBump] =
       await anchor.web3.PublicKey.findProgramAddress(
-        ["program_authority"],
+        [PROGRAM_AUTHORITY_SEED],
         program.programId
       );
     programAuthority = _programAuthority;
     const [_treasury, treasuryBump] =
       await anchor.web3.PublicKey.findProgramAddress(
-        ["treasury"],
+        [TREASURY_SEED],
         program.programId
       );
     treasury = _treasury;
-    await program.rpc.initialize(programAuthorityBump, treasuryBump, {
+    await program.rpc.initializeProgram(programAuthorityBump, treasuryBump, {
       accounts: {
         programAuthority: programAuthority,
         treasury: treasury,

@@ -41,7 +41,7 @@ static TRANSFER_FEE_PROGRAM: u64 = 1000;
 #[program]
 pub mod faktor {
     use super::*;
-    pub fn initialize(
+    pub fn initialize_program(
         ctx: Context<Initialize>, 
         program_authority_bump: u8,
         treasury_bump: u8
