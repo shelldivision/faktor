@@ -239,7 +239,7 @@ describe("faktor", () => {
     );
 
     // Validate cashflow data.
-    let expectedRent = 2227200;
+    let expectedRent = 2449920;
     let expectedTransferFee =
       (balance / deltaBalance) *
       (TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_TREASURY);
