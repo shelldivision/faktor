@@ -1,8 +1,13 @@
 import { Program, Provider, web3 } from "@project-serum/anchor";
-import { AnchorWallet, useConnection } from "@solana/wallet-adapter-react";
+import {
+  AnchorWallet,
+  useAnchorWallet,
+  useConnection,
+} from "@solana/wallet-adapter-react";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { PublicKey } from "@solana/web3.js";
 import { useEffect, useMemo, useState } from "react";
-import { IssueModal, InvoiceTable } from "src/components";
+import { CreateCashflowModal, CashflowTable } from "src/components";
 import idl from "../idl.json";
 
 const programID = new PublicKey(idl.metadata.address);
@@ -11,49 +16,48 @@ const opts: web3.ConfirmOptions = {
   preflightCommitment: "processed",
 };
 
-const tabs = [{ name: "All" }, { name: "Payables" }, { name: "Receivables" }];
+const tabs = [{ name: "All" }, { name: "Outgoing" }, { name: "Incoming" }];
 
-interface IInvoices {
+interface Cashflows {
   all: any[];
-  payables: any[];
-  receivables: any[];
+  incoming: any[];
+  outgoing: any[];
 }
 
-export interface HomeViewProps {
-  wallet: AnchorWallet;
-}
+export function HomeView() {
+  const wallet = useAnchorWallet();
 
-export const HomeView: React.FC<HomeViewProps> = ({ wallet }) => {
-  const [invoices, setInvoices] = useState<IInvoices>({
+  const [cashflows, setCashflows] = useState<Cashflows>({
     all: [],
-    payables: [],
-    receivables: [],
+    incoming: [],
+    outgoing: [],
   });
 
   const [currentTab, setCurrentTab] = useState("All");
-  const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
+  const [isCreateCashflowModalOpen, setIsCreateCashflowModalOpen] =
+    useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const visibleInvoices = useMemo(() => {
+  const visibleCashflows = useMemo(() => {
     switch (currentTab) {
       case "All":
-        return invoices.all;
-      case "Payables":
-        return invoices.payables;
-      case "Receivables":
-        return invoices.receivables;
+        return cashflows.all;
+      case "Incoming":
+        return cashflows.incoming;
+      case "Outgoing":
+        return cashflows.outgoing;
     }
-  }, [invoices, currentTab]);
+  }, [cashflows, currentTab]);
 
   const { connection } = useConnection();
 
   const provider = useMemo(() => {
     return new Provider(connection, wallet, opts);
-  }, [connection]);
+  }, [connection, wallet, opts]);
 
   const program = useMemo(() => {
     return new Program(idl as any, programID, provider);
-  }, [provider]);
+  }, [idl, programID, provider]);
 
   useEffect(() => {
     refresh();
@@ -61,16 +65,16 @@ export const HomeView: React.FC<HomeViewProps> = ({ wallet }) => {
 
   async function refresh() {
     setIsRefreshing(true);
-    const allInvoices: any = await program.account.invoice.all();
-    setInvoices({
-      all: allInvoices,
-      payables: allInvoices.filter(
+    const cashflows: any = await program.account.cashflow.all();
+    setCashflows({
+      all: cashflows,
+      incoming: cashflows.filter(
         (inv: any) =>
-          inv.account.debtor.toString() === wallet.publicKey.toString()
+          inv.account.receiver.toString() === wallet.publicKey.toString()
       ),
-      receivables: allInvoices.filter(
+      outgoing: cashflows.filter(
         (inv: any) =>
-          inv.account.creditor.toString() === wallet.publicKey.toString()
+          inv.account.sender.toString() === wallet.publicKey.toString()
       ),
     });
     setIsRefreshing(false);
@@ -83,18 +87,12 @@ export const HomeView: React.FC<HomeViewProps> = ({ wallet }) => {
           {/* Devnet banner */}
           <div className="flex w-full h-12 bg-orange-500">
             <p className="m-auto font-medium text-white">
-              Currently only available on Solana devnet.
+              Currently available on Solana devnet.
             </p>
           </div>
           {/* Page header */}
           <div className="max-w-4xl mx-auto mt-8">
-            <div className="mt-4">
-              <div className="py-4">
-                <h2 className="text-4xl font-bold leading-6 text-left text-gray-900">
-                  Faktor
-                </h2>
-              </div>
-            </div>
+            <Header />
             {/* Toolbar */}
             <div className="flex items-center justify-between mt-4">
               {/* Invoice tabs */}
@@ -113,30 +111,23 @@ export const HomeView: React.FC<HomeViewProps> = ({ wallet }) => {
                   </a>
                 ))}
               </nav>
-              {/* "New Invoice" button */}
-              <div className="py-2">
-                <button
-                  onClick={refresh}
-                  disabled={isRefreshing}
-                  className="px-4 py-3 mr-4 font-semibold text-gray-600 rounded-md hover:text-gray-900 hover:bg-gray-200"
-                >
-                  {isRefreshing ? "Refreshing..." : "Refresh"}
-                </button>
-                <button
-                  onClick={() => {
-                    setIsIssueModalOpen(true);
-                  }}
-                  type="button"
-                  className="inline-flex items-center px-4 py-3 text-lg font-semibold leading-4 text-white bg-blue-500 border border-transparent rounded-md shadow-sm hover:bg-blue-600"
-                >
-                  New invoice
-                </button>
-              </div>
+              {/* Toolbar */}
+              {wallet && (
+                <div className="space-x-2">
+                  <RefreshButton
+                    refresh={refresh}
+                    isRefreshing={isRefreshing}
+                  />
+                  <CreateCashflowButton
+                    showModal={() => setIsCreateCashflowModalOpen(true)}
+                  />
+                </div>
+              )}
             </div>
-            {/* Invoices table */}
+            {/* Cashflows table */}
             <div className="flex flex-col min-w-full mt-2 overflow-hidden overflow-x-auto rounded shadow">
-              <InvoiceTable
-                invoices={visibleInvoices}
+              <CashflowTable
+                cashflows={visibleCashflows}
                 currentTab={currentTab}
                 program={program}
                 refresh={refresh}
@@ -145,13 +136,56 @@ export const HomeView: React.FC<HomeViewProps> = ({ wallet }) => {
           </div>
         </main>
       </div>
-      <IssueModal
-        open={isIssueModalOpen}
-        setOpen={setIsIssueModalOpen}
-        program={program}
-        refresh={refresh}
-        provider={provider}
-      />
+      {wallet && (
+        <CreateCashflowModal
+          open={isCreateCashflowModalOpen}
+          setOpen={setIsCreateCashflowModalOpen}
+          program={program}
+          refresh={refresh}
+          provider={provider}
+        />
+      )}
     </>
   );
-};
+}
+
+function Header() {
+  const wallet = useAnchorWallet();
+
+  return (
+    <div className="flex flex-row justify-between h-20 py-4">
+      <h2 className="my-auto text-4xl font-bold leading-6 text-left text-gray-900">
+        Faktor
+      </h2>
+      {!wallet && (
+        <div className="my-auto">
+          <WalletMultiButton />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CreateCashflowButton({ showModal }) {
+  return (
+    <button
+      onClick={showModal}
+      type="button"
+      className="px-4 py-3 font-semibold text-white bg-blue-500 rounded-md shadow-sm hover:bg-blue-600"
+    >
+      Create cashflow
+    </button>
+  );
+}
+
+function RefreshButton({ refresh, isRefreshing }) {
+  return (
+    <button
+      onClick={refresh}
+      disabled={isRefreshing}
+      className="px-4 py-3 font-semibold text-gray-600 rounded-md hover:text-gray-900 hover:bg-gray-200"
+    >
+      {isRefreshing ? "Refreshing..." : "Refresh"}
+    </button>
+  );
+}

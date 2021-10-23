@@ -4,22 +4,24 @@ import { useState } from "react";
 import { PayModal } from "src/components/Pay";
 import { abbreviate } from "src/utils";
 
-export const InvoiceTable = ({
-  invoices,
-  currentTab,
-  program,
-  refresh,
-}: {
-  invoices: any;
+export type CashflowTableProps = {
+  cashflows: any;
   currentTab: string;
   program: any;
   refresh: any;
-}) => {
+};
+
+export function CashflowTable({
+  cashflows,
+  currentTab,
+  program,
+  refresh,
+}: CashflowTableProps) {
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
-  const [currentInvoice, setCurrentInvoice] = useState<any>();
+  const [currentCashflow, setCurrentCashflow] = useState<any>();
   return (
     <>
-      {invoices.length > 0 ? (
+      {cashflows.length > 0 ? (
         <>
           <table className="min-w-full divide-y divide-gray-200">
             <thead>
@@ -42,16 +44,16 @@ export const InvoiceTable = ({
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {(invoices ?? []).map((invoice: any, i: number) => {
+              {(cashflows ?? []).map((cashflow: any, i: number) => {
                 const balance = (
-                  invoice.account.balance / LAMPORTS_PER_SOL
+                  cashflow.account.balance / LAMPORTS_PER_SOL
                 ).toString();
 
                 return (
                   <tr key={i} className="bg-white">
                     <td className="w-full px-6 py-4 text-sm text-gray-900 max-w-0 whitespace-nowrap">
                       <p className="text-gray-500 truncate group-hover:text-gray-900">
-                        {invoice.account.memo}
+                        {cashflow.account.memo}
                       </p>
                     </td>
                     <td className="px-6 py-4 text-sm text-right text-gray-500 whitespace-nowrap">
@@ -128,17 +130,17 @@ export const InvoiceTable = ({
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-right text-gray-500 whitespace-nowrap">
-                      <span>{abbreviate(invoice.account.creditor)}</span>
+                      <span>{abbreviate(cashflow.account.sender)}</span>
                     </td>
                     <td className="px-6 py-4 text-sm text-right text-gray-500 whitespace-nowrap">
-                      <span>{abbreviate(invoice.account.debtor)}</span>
+                      <span>{abbreviate(cashflow.account.receiver)}</span>
                     </td>
                     {currentTab === "Payables" && (
                       <td className="px-6 py-4 text-sm text-right text-gray-500 whitespace-nowrap">
                         <button
                           onClick={() => {
                             setIsPayModalOpen(true);
-                            setCurrentInvoice(invoice);
+                            setCurrentCashflow(cashflow);
                           }}
                           type="button"
                           className="inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-white bg-green-600 rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
@@ -160,14 +162,14 @@ export const InvoiceTable = ({
           </div>
           <div className="mt-3 text-center sm:mt-5">
             <h3 className="text-lg font-medium leading-6 text-gray-900">
-              No invoices found
+              No cashflows found
             </h3>
           </div>
         </div>
       )}
-      {currentInvoice && (
+      {currentCashflow && (
         <PayModal
-          invoice={currentInvoice}
+          invoice={currentCashflow}
           open={isPayModalOpen}
           setOpen={setIsPayModalOpen}
           program={program}
@@ -176,4 +178,4 @@ export const InvoiceTable = ({
       )}
     </>
   );
-};
+}

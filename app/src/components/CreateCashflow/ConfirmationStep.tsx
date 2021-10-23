@@ -1,9 +1,9 @@
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { IssueInvoiceRequest } from "src/api";
+import { CreateCashflowRequest } from "src/api";
 import { SecondaryAction, PrimaryAction } from "../ActionButtons";
 
 export interface ConfirmationStepProps {
-  request: IssueInvoiceRequest;
+  request: CreateCashflowRequest;
   onBack: () => void;
   onConfirm: () => void;
 }
@@ -15,11 +15,11 @@ export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
 }) => {
   return (
     <div className="w-full bg-gray-50">
-      <h1 className="text-modal-title">Confirm invoice</h1>
+      <h1 className="text-modal-title">Confirm cashflow</h1>
       <div className="flex flex-col mt-8 space-y-4">
         <Section>
-          <Label>Debtor</Label>
-          <Value>{request.debtor.toString()}</Value>
+          <Label>Receiver</Label>
+          <Value>{request.receiver.toString()}</Value>
         </Section>
         <Section>
           <Label>Balance</Label>
@@ -42,20 +42,20 @@ export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
   );
 };
 
-export const Section: React.FC = ({ children }) => {
+export function Section({ children }) {
   return (
     <div className="flex flex-col justify-center border border-gray-200 rounded-md px-3 py-2 w-full space-y-0.5">
       {children}
     </div>
   );
-};
+}
 
-export const Label: React.FC = ({ children }) => {
+export function Label({ children }) {
   return <span className="mb-2 font-medium text-gray-500">{children}</span>;
-};
+}
 
-export const Value: React.FC = ({ children }) => {
+export function Value({ children }) {
   return (
     <span className="text-lg font-semibold text-gray-800">{children}</span>
   );
-};
+}

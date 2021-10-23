@@ -3,25 +3,131 @@
   "name": "faktor",
   "instructions": [
     {
-      "name": "issue",
+      "name": "initializeProgram",
       "accounts": [
         {
-          "name": "invoice",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "creditor",
+          "name": "signer",
           "isMut": true,
           "isSigner": true
         },
         {
-          "name": "debtor",
-          "isMut": false,
+          "name": "programAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "treasury",
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "programAuthorityBump",
+          "type": "u8"
+        },
+        {
+          "name": "treasuryBump",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "approveCashflow",
+      "accounts": [
+        {
+          "name": "cashflow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "sender",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "senderTokens",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "receiver",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "programAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "additionalBalance",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "createCashflow",
+      "accounts": [
+        {
+          "name": "cashflow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "sender",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "senderTokens",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "receiver",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "receiverTokens",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "programAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
         },
@@ -33,63 +139,124 @@
       ],
       "args": [
         {
-          "name": "bump",
-          "type": "u8"
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "memo",
+          "type": "string"
         },
         {
           "name": "balance",
           "type": "u64"
         },
         {
-          "name": "memo",
-          "type": "string"
+          "name": "deltaBalance",
+          "type": "u64"
+        },
+        {
+          "name": "deltaTime",
+          "type": "u64"
+        },
+        {
+          "name": "factorableBalance",
+          "type": "u64"
+        },
+        {
+          "name": "bump",
+          "type": "u8"
         }
       ]
     },
     {
-      "name": "pay",
+      "name": "distributeCashflow",
       "accounts": [
         {
-          "name": "invoice",
+          "name": "cashflow",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "creditor",
+          "name": "sender",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "senderTokens",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "debtor",
+          "name": "receiver",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "receiverTokens",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "distributor",
           "isMut": true,
           "isSigner": true
         },
         {
-          "name": "systemProgram",
+          "name": "programAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "treasury",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "clock",
           "isMut": false,
           "isSigner": false
         }
       ],
-      "args": [
-        {
-          "name": "amount",
-          "type": "u64"
-        }
-      ]
+      "args": []
     }
   ],
   "accounts": [
     {
-      "name": "Invoice",
+      "name": "Cashflow",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "creditor",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "memo",
+            "type": "string"
+          },
+          {
+            "name": "sender",
             "type": "publicKey"
           },
           {
-            "name": "debtor",
+            "name": "senderTokens",
+            "type": "publicKey"
+          },
+          {
+            "name": "receiver",
+            "type": "publicKey"
+          },
+          {
+            "name": "receiverTokens",
+            "type": "publicKey"
+          },
+          {
+            "name": "mint",
             "type": "publicKey"
           },
           {
@@ -97,13 +264,49 @@
             "type": "u64"
           },
           {
-            "name": "memo",
-            "type": "string"
+            "name": "deltaBalance",
+            "type": "u64"
           },
           {
-            "name": "issuedAt",
-            "type": "i64"
+            "name": "deltaTime",
+            "type": "u64"
           },
+          {
+            "name": "factorableBalance",
+            "type": "u64"
+          },
+          {
+            "name": "nextTransferAt",
+            "type": "u64"
+          },
+          {
+            "name": "createdAt",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProgramAuthority",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Treasury",
+      "type": {
+        "kind": "struct",
+        "fields": [
           {
             "name": "bump",
             "type": "u8"
@@ -115,11 +318,31 @@
   "errors": [
     {
       "code": 300,
-      "name": "NotEnoughSOL",
-      "msg": "Not enough SOL"
+      "name": "InsufficientBalance",
+      "msg": "Insufficient balance"
+    },
+    {
+      "code": 301,
+      "name": "InsufficientBounty",
+      "msg": "Insufficient bounty"
+    },
+    {
+      "code": 302,
+      "name": "InsufficientLamports",
+      "msg": "Insufficient lamports"
+    },
+    {
+      "code": 303,
+      "name": "InvalidRequest",
+      "msg": "Invalid request"
+    },
+    {
+      "code": 304,
+      "name": "TooEarly",
+      "msg": "Too early to distribute"
     }
   ],
   "metadata": {
-    "address": "9LjA6DjxKDB2uEQPH1kipq5L7Z2hRKGz2yd9EQD9fGhU"
+    "address": "B67a7z2ttQ39KJcFWHERXG6bUoWY2GPXgQfAeE6K89vN"
   }
 }

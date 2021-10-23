@@ -2,39 +2,41 @@ import { BN, Program } from "@project-serum/anchor";
 import { PublicKey, SystemProgram, SYSVAR_CLOCK_PUBKEY } from "@solana/web3.js";
 import { assertExists } from "src/utils";
 
-export type IssueInvoiceRequest = {
+export type CreateCashflowRequest = {
   program?: Program;
-  creditor?: PublicKey;
-  debtor?: PublicKey;
+  receiver?: PublicKey;
+  sender?: PublicKey;
   balance?: number;
   memo?: string;
 };
 
-export const issueInvoice = async (req: IssueInvoiceRequest): Promise<any> => {
+export const createCashflow = async (
+  req: CreateCashflowRequest
+): Promise<any> => {
   // Validate request
   assertExists(req.program);
-  assertExists(req.creditor);
-  assertExists(req.debtor);
+  assertExists(req.receiver);
+  assertExists(req.sender);
   assertExists(req.balance);
   assertExists(req.memo);
 
   // Execute RPC request
   const [address, bump] = await PublicKey.findProgramAddress(
-    [req.creditor.toBuffer(), req.debtor.toBuffer()],
+    [req.receiver.toBuffer(), req.sender.toBuffer()],
     req.program.programId
   );
   try {
-    await req.program.rpc.issue(bump, new BN(req.balance), req.memo, {
+    await req.program.rpc.createCashflow(bump, new BN(req.balance), req.memo, {
       accounts: {
-        invoice: address,
-        creditor: req.creditor,
-        debtor: req.debtor,
+        cashflow: address,
+        receiver: req.receiver,
+        sender: req.sender,
         systemProgram: SystemProgram.programId,
         clock: SYSVAR_CLOCK_PUBKEY,
       },
     });
-    return await req.program.account.invoice.fetch(address);
+    return await req.program.account.cashflow.fetch(address);
   } catch (error: any) {
-    throw new Error(`Failed to issue invoice: ${error.message}`);
+    throw new Error(`Failed to issue cashflow: ${error.message}`);
   }
 };

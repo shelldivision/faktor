@@ -2,16 +2,16 @@ import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useState } from "react";
 import { Program, Provider } from "@project-serum/anchor";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
-import { issueInvoice, IssueInvoiceRequest } from "src/api";
+import { createCashflow, CreateCashflowRequest } from "src/api";
 import { EditingStep } from "./EditingStep";
 import { ConfirmationStep } from "./ConfirmationStep";
 
-export enum IssueInvoiceSteps {
+export enum CreateCashflowSteps {
   Editing = 0,
   Confirmation = 1,
 }
 
-interface IssueModalProps {
+interface CreateCashflowModalProps {
   open: any;
   setOpen: any;
   refresh: () => void;
@@ -19,33 +19,37 @@ interface IssueModalProps {
   program: Program;
 }
 
-export const IssueModal = ({
+export function CreateCashflowModal({
   open,
   setOpen,
   refresh,
   provider,
   program,
-}: IssueModalProps) => {
+}: CreateCashflowModalProps) {
   const wallet = useAnchorWallet();
-  const [step, setStep] = useState(IssueInvoiceSteps.Editing);
-  const [request, setRequest] = useState<IssueInvoiceRequest | null>({
-    program,
-    creditor: provider.wallet.publicKey,
-  });
+  const [step, setStep] = useState(CreateCashflowSteps.Editing);
+  const [request, setRequest] = useState<CreateCashflowRequest | null>(
+    wallet
+      ? {
+          program,
+          sender: provider.wallet.publicKey,
+        }
+      : null
+  );
 
-  const onSubmit = (data: IssueInvoiceRequest) => {
+  const onSubmit = (data: CreateCashflowRequest) => {
     setRequest({
-      debtor: data.debtor,
+      receiver: data.receiver,
       balance: data.balance,
       memo: data.memo,
       ...request,
     });
-    setStep(IssueInvoiceSteps.Confirmation);
+    setStep(CreateCashflowSteps.Confirmation);
   };
 
   const onConfirm = async () => {
     if (!wallet) return;
-    issueInvoice(request)
+    createCashflow(request)
       .then(() => {
         onClose();
         refresh();
@@ -57,10 +61,10 @@ export const IssueModal = ({
 
   const onClose = () => {
     setOpen(false);
-    setStep(IssueInvoiceSteps.Editing);
+    setStep(CreateCashflowSteps.Editing);
     setRequest({
       program,
-      creditor: provider.wallet.publicKey,
+      sender: provider.wallet.publicKey,
     });
   };
 
@@ -105,14 +109,14 @@ export const IssueModal = ({
           >
             <div className="inline-block w-full max-w-2xl px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform rounded-lg shadow-xl bg-gray-50 sm:my-8 sm:align-middle sm:p-6">
               <div className="flex items-center my-4 divide-x-2">
-                {step === IssueInvoiceSteps.Editing && (
+                {step === CreateCashflowSteps.Editing && (
                   <EditingStep
                     request={request}
                     onCancel={onClose}
                     onSubmit={onSubmit}
                   />
                 )}
-                {step === IssueInvoiceSteps.Confirmation && (
+                {step === CreateCashflowSteps.Confirmation && (
                   <ConfirmationStep
                     request={request}
                     onBack={() => setStep(step - 1)}
@@ -126,4 +130,4 @@ export const IssueModal = ({
       </Dialog>
     </Transition.Root>
   );
-};
+}
