@@ -17,12 +17,12 @@ const WSOL_MINT = new anchor.web3.PublicKey(
 const TRANSFER_FEE_DISTRIBUTOR = 1000;
 const TRANSFER_FEE_TREASURY = 1000;
 
-describe("cashflow", () => {
+describe("faktor", () => {
   // Test environment
   var programAuthority;
   var treasury;
   const provider = Provider.local();
-  const program = anchor.workspace.Cashflow;
+  const program = anchor.workspace.Faktor;
   anchor.setProvider(provider);
 
   /** HELPERS **/

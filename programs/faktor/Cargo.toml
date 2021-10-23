@@ -1,12 +1,12 @@
 [package]
-name = "cashflow"
+name = "faktor"
 version = "0.1.0"
 description = "Tokenized cash flows"
 edition = "2018"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "cashflow"
+name = "faktor"
 
 [features]
 no-entrypoint = []

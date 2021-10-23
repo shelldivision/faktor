@@ -26,12 +26,12 @@ use {
 declare_id!("9LjA6DjxKDB2uEQPH1kipq5L7Z2hRKGz2yd9EQD9fGhU");
 
 // PDA seeds
-pub static PROGRAM_AUTHORITY_SEED: &[u8] = b"program_authority";
-pub static TREASURY_SEED: &[u8] = b"treasury";
+static PROGRAM_AUTHORITY_SEED: &[u8] = b"program_authority";
+static TREASURY_SEED: &[u8] = b"treasury";
 
 // Fees
-pub static TRANSFER_FEE_DISTRIBUTOR: u64 = 1000; 
-pub static TRANSFER_FEE_PROGRAM: u64 = 1000;
+static TRANSFER_FEE_DISTRIBUTOR: u64 = 1000; 
+static TRANSFER_FEE_PROGRAM: u64 = 1000;
 
 
 ///////////////
@@ -39,7 +39,7 @@ pub static TRANSFER_FEE_PROGRAM: u64 = 1000;
 ///////////////
 
 #[program]
-pub mod cashflow {
+pub mod faktor {
     use super::*;
     pub fn initialize(
         ctx: Context<Initialize>, 
