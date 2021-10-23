@@ -122,7 +122,7 @@ pub mod faktor {
         balance: u64,
         delta_balance: u64,
         delta_time: u64,
-        is_factorable: bool,
+        factorable_balance: u64,
         bump: u8
     ) -> ProgramResult {
         // Get accounts.
@@ -162,7 +162,7 @@ pub mod faktor {
         cashflow.balance = balance;
         cashflow.delta_balance = delta_balance;
         cashflow.delta_time = delta_time;
-        cashflow.is_factorable = is_factorable;
+        cashflow.factorable_balance = factorable_balance;
         cashflow.next_transfer_at = clock.unix_timestamp as u64; // TODO this should be a user variable
         cashflow.created_at = clock.unix_timestamp as u64;
         cashflow.bump = bump;
@@ -315,7 +315,7 @@ pub struct ApproveCashflow<'info> {
     balance: u64,
     delta_balance: u64, 
     delta_time: u64,
-    is_factorable: bool,
+    factorable_balance: u64,
     bump: u8,
 )]
 pub struct CreateCashflow<'info> {
@@ -324,7 +324,7 @@ pub struct CreateCashflow<'info> {
         seeds = [b"cashflow", sender.key().as_ref(), receiver.key().as_ref()],
         bump = bump,
         payer = sender,
-        space = 8 + (4 + name.len()) + (4 + memo.len()) + 32 + 32 + 32 + 32 + 32 + 8 + 8 + 8 + 1 + 8 + 8 + 1,
+        space = 8 + (4 + name.len()) + (4 + memo.len()) + 32 + 32 + 32 + 32 + 32 + 8 + 8 + 8 + 8 + 8 + 8 + 1,
     )]
     pub cashflow: Account<'info, Cashflow>,
     #[account(mut)]
@@ -389,7 +389,7 @@ pub struct Cashflow {
     pub balance: u64,
     pub delta_balance: u64,
     pub delta_time: u64,
-    pub is_factorable: bool,
+    pub factorable_balance: u64,
     pub next_transfer_at: u64,
     pub created_at: u64,
     pub bump: u8,

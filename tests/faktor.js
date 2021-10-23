@@ -143,7 +143,7 @@ describe("faktor", () => {
     balance,
     deltaBalance,
     deltaTime,
-    isFactorable
+    factorableBalance
   ) {
     await program.rpc.createCashflow(
       name,
@@ -151,7 +151,7 @@ describe("faktor", () => {
       new BN(balance),
       new BN(deltaBalance),
       new BN(deltaTime),
-      isFactorable,
+      new BN(factorableBalance),
       accounts.cashflow.bump,
       {
         accounts: {
@@ -231,7 +231,7 @@ describe("faktor", () => {
     const balance = 1000;
     const deltaBalance = 100;
     const deltaTime = 50;
-    const isFactorable = true;
+    const factorableBalance = 50;
     await createCashflow(
       accounts,
       name,
@@ -239,14 +239,15 @@ describe("faktor", () => {
       balance,
       deltaBalance,
       deltaTime,
-      isFactorable
+      factorableBalance
     );
 
     // Validate cashflow data.
-    let expectedRent = 2449920;
+    let expectedRent = 2498640;
     let expectedTransferFee =
       (balance / deltaBalance) *
       (TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_TREASURY);
+
     const cashflow = await program.account.cashflow.fetch(
       accounts.cashflow.keys.publicKey
     );
@@ -258,10 +259,10 @@ describe("faktor", () => {
     assert.ok(
       cashflow.receiver.toString() === accounts.bob.keys.publicKey.toString()
     );
-    assert.ok(cashflow.balance.toString() === balance.toString());
-    assert.ok(cashflow.deltaBalance.toString() === deltaBalance.toString());
-    assert.ok(cashflow.deltaTime.toString() === deltaTime.toString());
-    assert.ok(cashflow.isFactorable === isFactorable);
+    assert.ok(cashflow.balance.toNumber() === balance);
+    assert.ok(cashflow.deltaBalance.toNumber() === deltaBalance);
+    assert.ok(cashflow.deltaTime.toNumber() === deltaTime);
+    assert.ok(cashflow.factorableBalance.toNumber() === factorableBalance);
 
     // Validate SOL balances.
     const finalBalances = await getBalances(accounts);
@@ -293,7 +294,7 @@ describe("faktor", () => {
     const balance = 1000;
     const deltaBalance = 100;
     const deltaTime = 50;
-    const isFactorable = true;
+    const factorableBalance = 50;
     await createCashflow(
       accounts,
       name,
@@ -301,7 +302,7 @@ describe("faktor", () => {
       balance,
       deltaBalance,
       deltaTime,
-      isFactorable
+      factorableBalance
     );
 
     // Test
@@ -338,7 +339,7 @@ describe("faktor", () => {
     assert.ok(cashflow.balance.toNumber() === balance + additionalBalance);
     assert.ok(cashflow.deltaBalance.toNumber() === deltaBalance);
     assert.ok(cashflow.deltaTime.toNumber() === deltaTime);
-    assert.ok(cashflow.isFactorable === isFactorable);
+    assert.ok(cashflow.factorableBalance.toNumber() === factorableBalance);
 
     // Validate SOL balances.
     const finalBalances = await getBalances(accounts);
@@ -370,7 +371,7 @@ describe("faktor", () => {
     const balance = 1000;
     const deltaBalance = 100;
     const deltaTime = 50;
-    const isFactorable = true;
+    const factorableBalance = 50;
     await createCashflow(
       accounts,
       name,
@@ -378,7 +379,7 @@ describe("faktor", () => {
       balance,
       deltaBalance,
       deltaTime,
-      isFactorable
+      factorableBalance
     );
 
     // Test
@@ -400,7 +401,7 @@ describe("faktor", () => {
     assert.ok(cashflow.balance.toNumber() === balance - deltaBalance);
     assert.ok(cashflow.deltaBalance.toNumber() === deltaBalance);
     assert.ok(cashflow.deltaTime.toNumber() === deltaTime);
-    assert.ok(cashflow.isFactorable === isFactorable);
+    assert.ok(cashflow.factorableBalance.toNumber() === factorableBalance);
 
     // Validate SOL balances.
     const finalBalances = await getBalances(accounts);
