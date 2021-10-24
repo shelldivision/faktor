@@ -21,49 +21,61 @@ const opts: web3.ConfirmOptions = {
   preflightCommitment: "processed",
 };
 
-const tabs = [{ name: "All" }, { name: "Outgoing" }, { name: "Incoming" }];
+enum Tab {
+  Incoming = "incoming",
+  Outgoing = "outgoing",
+}
+
+const tabs = [Tab.Incoming, Tab.Outgoing];
+
+function getTabName(tab: Tab) {
+  switch (tab) {
+    case Tab.Incoming:
+      return "Incoming";
+    case Tab.Outgoing:
+      return "Outgoing";
+    default:
+      return "";
+  }
+}
+
+// const tabs = [{ name: "Incoming" }, { name: "Outgoing" }];
 
 interface Cashflows {
-  all: any[];
   incoming: any[];
   outgoing: any[];
 }
 
 export function HomeView() {
+  // Web3
   const wallet = useAnchorWallet();
+  const { connection } = useConnection();
+  const provider = useMemo(
+    () => new Provider(connection, wallet, opts),
+    [connection, wallet, opts]
+  );
+  const program = useMemo(
+    () => new Program(idl as any, programID, provider),
+    [idl, programID, provider]
+  );
 
+  // Page state
+  const [currentTab, setCurrentTab] = useState(Tab.Incoming);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isCreateCashflowModalOpen, setIsCreateCashflowModalOpen] =
+    useState(false);
+
+  // Cached data
   const [cashflows, setCashflows] = useState<Cashflows>({
-    all: [],
     incoming: [],
     outgoing: [],
   });
+  const visibleCashflows = useMemo(
+    () => cashflows[currentTab.toString()],
+    [cashflows, currentTab]
+  );
 
-  const [currentTab, setCurrentTab] = useState("All");
-  const [isCreateCashflowModalOpen, setIsCreateCashflowModalOpen] =
-    useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const visibleCashflows = useMemo(() => {
-    switch (currentTab) {
-      case "All":
-        return cashflows.all;
-      case "Incoming":
-        return cashflows.incoming;
-      case "Outgoing":
-        return cashflows.outgoing;
-    }
-  }, [cashflows, currentTab]);
-
-  const { connection } = useConnection();
-
-  const provider = useMemo(() => {
-    return new Provider(connection, wallet, opts);
-  }, [connection, wallet, opts]);
-
-  const program = useMemo(() => {
-    return new Program(idl as any, programID, provider);
-  }, [idl, programID, provider]);
-
+  // Refresh page on load
   useEffect(() => {
     refresh();
   }, []);
@@ -72,7 +84,6 @@ export function HomeView() {
     setIsRefreshing(true);
     const cashflows: any = await program.account.cashflow.all();
     setCashflows({
-      all: cashflows,
       incoming: cashflows.filter(
         (inv: any) =>
           inv.account.receiver.toString() === wallet.publicKey.toString()
@@ -89,12 +100,23 @@ export function HomeView() {
     <div className="flex flex-1 h-screen overflow-auto overflow-hidden bg-gray-100 focus:outline-none">
       <main className="z-0 flex-1 max-w-4xl py-8 mx-auto space-y-8">
         <Header />
-        <CashflowTable
-          cashflows={visibleCashflows}
-          currentTab={currentTab}
-          program={program}
-          refresh={refresh}
-        />
+        <div className="space-y-4">
+          {wallet && (
+            <Toolbar
+              currentTab={currentTab}
+              setCurrentTab={setCurrentTab}
+              isRefreshing={isRefreshing}
+              refresh={refresh}
+              setIsCreateCashflowModalOpen={setIsCreateCashflowModalOpen}
+            />
+          )}
+          <CashflowTable
+            cashflows={visibleCashflows}
+            currentTab={currentTab}
+            program={program}
+            refresh={refresh}
+          />
+        </div>
       </main>
       {wallet && (
         <CreateCashflowModal
@@ -113,7 +135,6 @@ function Header() {
   return (
     <div className="flex flex-row justify-between py-0">
       <HomeButton />
-      {/* <img className="h-6 my-auto" src="/wordmark-orange-black.svg" /> */}
       <WalletButton />
     </div>
   );
@@ -129,13 +150,7 @@ function HomeButton() {
 
 function WalletButton() {
   const wallet = useAnchorWallet();
-  // if (wallet)
-  //   return (
-  //     <div className="my-auto">
-  //       <WalletDisconnectButton />
-  //     </div>
-  //   );
-  // else
+
   const { visible, setVisible: setWalletModalVisible } = useWalletModal();
 
   function onClickConnectWallet(e: any) {
@@ -175,34 +190,35 @@ function Toolbar({
   refresh,
   setIsCreateCashflowModalOpen,
 }) {
-  const wallet = useAnchorWallet();
   return (
-    <div className="flex items-center justify-between mt-4">
+    <div className="flex items-center justify-between">
       {/* Left side */}
       <nav className="flex space-x-4" aria-label="Tabs">
         {tabs.map((tab) => (
-          <a
-            onClick={() => setCurrentTab(tab.name)}
-            key={tab.name}
-            className={`px-3 py-2 font-medium text-sm rounded-md cursor-pointer ${
-              tab.name === currentTab
-                ? "bg-blue-100 text-blue-700"
-                : "text-gray-500 hover:text-gray-700"
+          <div
+            className={`flex border-b-2 transition duration-200 ${
+              currentTab === tab ? "border-orange-500" : "border-none"
             }`}
           >
-            {tab.name}
-          </a>
+            <a
+              onClick={() => setCurrentTab(tab.toString())}
+              key={tab.toString()}
+              className={`px-3 py-2 text hover:bg-gray-200 transition duration-200 rounded-md font-semibold cursor-pointer ${
+                currentTab === tab ? "text-gray-900" : "text-gray-400"
+              }`}
+            >
+              {getTabName(tab)}
+            </a>
+          </div>
         ))}
       </nav>
       {/* Right side */}
-      {wallet && (
-        <div className="space-x-2">
-          <RefreshButton refresh={refresh} isRefreshing={isRefreshing} />
-          <CreateCashflowButton
-            showModal={() => setIsCreateCashflowModalOpen(true)}
-          />
-        </div>
-      )}
+      <div className="space-x-2">
+        {/* <RefreshButton refresh={refresh} isRefreshing={isRefreshing} /> */}
+        <CreateCashflowButton
+          showModal={() => setIsCreateCashflowModalOpen(true)}
+        />
+      </div>
     </div>
   );
 }
@@ -212,9 +228,9 @@ function CreateCashflowButton({ showModal }) {
     <button
       onClick={showModal}
       type="button"
-      className="px-4 py-3 font-semibold text-white bg-blue-500 rounded-md shadow-sm hover:bg-blue-600"
+      className="px-5 py-3 font-semibold text-white transition duration-200 bg-orange-500 shadow-sm rounded-tl-3xl rounded-br-3xl hover:bg-orange-400"
     >
-      Create cashflow
+      New Cashflow
     </button>
   );
 }
