@@ -36,10 +36,6 @@ button:disabled {
   cursor: default;
 }
 
-input {
-  outline: none;
-}
-
 /* Change Autocomplete styles in Chrome*/
 input:-webkit-autofill,
 textarea:-webkit-autofill {
@@ -58,12 +54,6 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 
-@layer base {
-  h2 {
-    @apply text-2xl font-semibold leading-6;
-  }
-}
-
 /* @font-face {
     font-family: Proxima Nova;
     font-weight: 400;
@@ -75,20 +65,3 @@ input[type="number"] {
     font-weight: 500;
     src: url(/fonts/proxima-nova/500-medium.woff) format("woff");
   } */
-
-@layer gradients {
-  .bg-gradient-primary {
-    background: linear-gradient(
-        128.32deg,
-        rgba(245, 0, 162, 0.2) 24.33%,
-        rgba(112, 45, 255, 0) 81.84%
-      ),
-      #3733ff;
-  }
-}
-
-@layer copy {
-  .copy-title {
-    @apply text-3xl font-medium text-gray-900;
-  }
-}

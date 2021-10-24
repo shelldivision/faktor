@@ -5,41 +5,43 @@ export interface InputFieldProps {
   label?: string;
   placeholder?: string;
   error?: string;
-  labelClassName?: string;
-  inputClassName?: string;
   autoComplete?: string;
   min?: string;
   step?: string;
 }
 
-export const InputField: React.FC<InputFieldProps>=({
+export const InputField: React.FC<InputFieldProps> = ({
   value,
   onChange,
-  type="text",
+  type = "text",
   label,
   placeholder,
   error,
-  labelClassName="",
-  inputClassName="",
-  autoComplete="off",
+  autoComplete = "off",
 }) => {
-
-
-
-  const _onChange=(e) => {
+  const _onChange = (e) => {
     onChange(e.target.value);
   };
 
   return (
-    <div className={`flex flex-col leading-tight`}>
-      {label&&<label className={`text-gray-500 font-medium mb-2 ${labelClassName}`}>{label}</label>}
+    <div
+      className={`flex flex-col flex-1 bg-white border rounded-lg ${
+        error ? "border-red-600" : `border-gray-100`
+      }`}
+    >
+      {label && (
+        <label className={`text-gray-600 font-medium text-sm ml-3 mt-2`}>
+          {label}
+        </label>
+      )}
       <input
-        {...{value,placeholder,autoComplete,type}}
-        className={`h-12 text-lg w-full text-black placeholder-gray-400 bg-white border ${error? 'border-red-600':`border-gray-100`} rounded-md px-3 py-2 ${inputClassName}`}
+        {...{ value, placeholder, autoComplete }}
+        type={type}
+        className={`text-lg text-black py-2 rounded-lg placeholder-gray-400 border-none outline-none`}
         onChange={_onChange}
         required
       />
-      {error&&<p className="text-red-600 text-base">{error}</p>}
+      {error && <p className="text-base text-red-600">{error}</p>}
     </div>
   );
 };

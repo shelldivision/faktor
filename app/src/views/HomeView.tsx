@@ -142,7 +142,7 @@ function Header() {
 
 function HomeButton() {
   return (
-    <a href="/" className="flex h-12 px-2 my-auto transform hover:opacity-75">
+    <a href="/" className="flex h-12 px-2 my-auto transform">
       <img className="h-6 my-auto" src="/wordmark-orange-black.svg" />
     </a>
   );
@@ -215,7 +215,7 @@ function Toolbar({
       {/* Right side */}
       <div className="space-x-2">
         {/* <RefreshButton refresh={refresh} isRefreshing={isRefreshing} /> */}
-        <CreateCashflowButton
+        <NewPaymentButton
           showModal={() => setIsCreateCashflowModalOpen(true)}
         />
       </div>
@@ -223,14 +223,14 @@ function Toolbar({
   );
 }
 
-function CreateCashflowButton({ showModal }) {
+function NewPaymentButton({ showModal }) {
   return (
     <button
       onClick={showModal}
       type="button"
-      className="px-5 py-3 font-semibold text-white transition duration-200 bg-orange-500 shadow-sm rounded-tl-3xl rounded-br-3xl hover:bg-orange-400"
+      className="px-5 py-3 font-bold text-white transition duration-200 bg-orange-500 shadow-sm rounded-tl-3xl rounded-br-3xl hover:bg-orange-400"
     >
-      New Cashflow
+      New Payment
     </button>
   );
 }

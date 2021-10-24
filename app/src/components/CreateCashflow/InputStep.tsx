@@ -4,14 +4,16 @@ import { checkWalletAddressExists, CreateCashflowRequest } from "src/api";
 import { InputField } from "../InputField";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { useConnection } from "@solana/wallet-adapter-react";
+import { MintAmountInput } from "../MintAmountInput";
+import { TransferRateInput } from "../TransferRateInput";
 
-export interface EditingStepProps {
+export interface InputStepProps {
   request: CreateCashflowRequest;
   onCancel: () => void;
   onSubmit: (request: CreateCashflowRequest) => void;
 }
 
-export const EditingStep: React.FC<EditingStepProps> = ({
+export const InputStep: React.FC<InputStepProps> = ({
   request,
   onCancel,
   onSubmit,
@@ -51,29 +53,49 @@ export const EditingStep: React.FC<EditingStepProps> = ({
   }, [receiver]);
 
   return (
-    <form onSubmit={_onSubmit} className="w-full">
-      <h1 className="copy-title">New invoice</h1>
-      <div className="flex flex-col mt-8 space-y-4">
+    <form onSubmit={_onSubmit} className="w-full space-y-8">
+      <h1 className="text-3xl font-bold text-gray-900">New Payment</h1>
+      <div className="flex flex-col space-y-4">
         <InputField
           type="text"
-          placeholder="Wallet address"
+          label="To"
+          placeholder="Public address"
           error={receiverError}
           value={receiver}
           onChange={(v) => setReceiver(v)}
         />
         <InputField
-          type="number"
-          placeholder="Amount (SOL)"
-          onChange={(v) => setBalance(v)}
-        />
-        <InputField
           type="text"
-          placeholder="Add a note"
+          label="Memo"
+          placeholder="What's it for?"
           value={memo}
           onChange={(v) => setMemo(v)}
         />
+        <MintAmountInput />
+        {/* <InputField
+          type="text"
+          placeholder="Token"
+          onChange={(v) => setBalance(v)}
+        />
+        <InputField
+          type="number"
+          placeholder="Amount"
+          onChange={(v) => setBalance(v)}
+        /> */}
+        {/* <InputField
+          type="number"
+          placeholder="Frequency"
+          onChange={(v) => setBalance(v)}
+        /> */}
+
+        <TransferRateInput />
+        {/* <InputField
+          type="number"
+          placeholder="End at"
+          onChange={(v) => setBalance(v)}
+        /> */}
       </div>
-      <div className="flex items-center justify-between w-full mt-8 space-x-3">
+      <div className="flex items-center justify-between w-full space-x-3">
         <SecondaryAction className="w-1/2" onClick={onCancel}>
           Cancel
         </SecondaryAction>
@@ -82,7 +104,7 @@ export const EditingStep: React.FC<EditingStepProps> = ({
           disabled={!isSubmitEnabled}
           onClick={_onSubmit}
         >
-          Send
+          Continue
         </PrimaryAction>
       </div>
     </form>

@@ -3,11 +3,11 @@ import { Fragment, useState } from "react";
 import { Program, Provider } from "@project-serum/anchor";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { createCashflow, CreateCashflowRequest } from "src/api";
-import { EditingStep } from "./EditingStep";
+import { InputStep } from "./InputStep";
 import { ConfirmationStep } from "./ConfirmationStep";
 
-export enum CreateCashflowSteps {
-  Editing = 0,
+export enum CreateCashflowStep {
+  Input = 0,
   Confirmation = 1,
 }
 
@@ -27,7 +27,7 @@ export function CreateCashflowModal({
   program,
 }: CreateCashflowModalProps) {
   const wallet = useAnchorWallet();
-  const [step, setStep] = useState(CreateCashflowSteps.Editing);
+  const [step, setStep] = useState(CreateCashflowStep.Input);
   const [request, setRequest] = useState<CreateCashflowRequest | null>(
     wallet
       ? {
@@ -44,7 +44,7 @@ export function CreateCashflowModal({
       memo: data.memo,
       ...request,
     });
-    setStep(CreateCashflowSteps.Confirmation);
+    setStep(CreateCashflowStep.Confirmation);
   };
 
   const onConfirm = async () => {
@@ -61,7 +61,7 @@ export function CreateCashflowModal({
 
   const onClose = () => {
     setOpen(false);
-    setStep(CreateCashflowSteps.Editing);
+    setStep(CreateCashflowStep.Input);
     setRequest({
       program,
       sender: provider.wallet.publicKey,
@@ -109,14 +109,14 @@ export function CreateCashflowModal({
           >
             <div className="inline-block w-full max-w-2xl px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform rounded-lg shadow-xl bg-gray-50 sm:my-8 sm:align-middle sm:p-6">
               <div className="flex items-center my-4 divide-x-2">
-                {step === CreateCashflowSteps.Editing && (
-                  <EditingStep
+                {step === CreateCashflowStep.Input && (
+                  <InputStep
                     request={request}
                     onCancel={onClose}
                     onSubmit={onSubmit}
                   />
                 )}
-                {step === CreateCashflowSteps.Confirmation && (
+                {step === CreateCashflowStep.Confirmation && (
                   <ConfirmationStep
                     request={request}
                     onBack={() => setStep(step - 1)}
