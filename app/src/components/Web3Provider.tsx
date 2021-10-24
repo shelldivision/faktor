@@ -31,11 +31,11 @@ export function Web3Provider({ children }) {
   const wallets = useMemo(
     () => [
       getPhantomWallet(),
-      getSlopeWallet(),
       getSolflareWallet(),
-      getLedgerWallet(),
+      getSlopeWallet(),
       getSolletWallet({ network }),
       getSolletExtensionWallet({ network }),
+      getLedgerWallet(),
     ],
     [network]
   );
@@ -45,8 +45,6 @@ export function Web3Provider({ children }) {
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider logo="/logo512.png">
           {children}
-          {/* <WalletMultiButton />
-          <WalletDisconnectButton /> */}
         </WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>

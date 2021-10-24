@@ -7,10 +7,12 @@ import {
 import {
   WalletMultiButton,
   WalletDisconnectButton,
+  useWalletModal,
 } from "@solana/wallet-adapter-react-ui";
 import { PublicKey } from "@solana/web3.js";
 import { useEffect, useMemo, useState } from "react";
 import { CreateCashflowModal, CashflowTable } from "src/components";
+import { abbreviate } from "src/utils";
 import idl from "../idl.json";
 
 const programID = new PublicKey(idl.metadata.address);
@@ -112,7 +114,7 @@ function Header() {
     <div className="flex flex-row justify-between py-0">
       <HomeButton />
       {/* <img className="h-6 my-auto" src="/wordmark-orange-black.svg" /> */}
-      <WalletManager />
+      <WalletButton />
     </div>
   );
 }
@@ -125,8 +127,8 @@ function HomeButton() {
   );
 }
 
-function WalletManager() {
-  // const wallet = useAnchorWallet();
+function WalletButton() {
+  const wallet = useAnchorWallet();
   // if (wallet)
   //   return (
   //     <div className="my-auto">
@@ -134,11 +136,36 @@ function WalletManager() {
   //     </div>
   //   );
   // else
-  return (
-    <div className="my-auto">
-      <WalletMultiButton />
-    </div>
-  );
+  const { visible, setVisible: setWalletModalVisible } = useWalletModal();
+
+  function onClickConnectWallet(e: any) {
+    e.preventDefault();
+    setWalletModalVisible(true);
+  }
+
+  function onClickWallet(e: any) {
+    e.preventDefault();
+    // TODO
+  }
+
+  if (wallet)
+    return (
+      <button
+        className="px-6 py-3 my-auto text-lg font-semibold text-gray-900 transition duration-200 rounded-full hover:bg-gray-200"
+        onClick={onClickWallet}
+      >
+        {abbreviate(wallet.publicKey)}
+      </button>
+    );
+  else
+    return (
+      <button
+        className="px-6 py-3 my-auto text-lg font-semibold text-gray-900 transition duration-200 rounded-full hover:bg-gray-200"
+        onClick={onClickConnectWallet}
+      >
+        Connect wallet
+      </button>
+    );
 }
 
 function Toolbar({

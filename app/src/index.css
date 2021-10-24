@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --color-gray-100: #EDEDED;
+  --color-gray-100: #ededed;
   --color-gray-800: #292929;
-  --color-gray-900: #1F1F1F;
+  --color-gray-900: #1f1f1f;
 }
 
 * {
@@ -47,30 +47,48 @@ textarea:-webkit-autofill {
 }
 
 /* Hide up and down buttons for number inputs */
-input[type=number]::-webkit-inner-spin-button, 
-input[type=number]::-webkit-outer-spin-button { 
-  -webkit-appearance: none; 
-  margin: 0; 
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 /* Firefox */
-input[type=number] {
+input[type="number"] {
   -moz-appearance: textfield;
 }
 
 @layer base {
   h2 {
-    @apply font-semibold text-2xl leading-6;
+    @apply text-2xl font-semibold leading-6;
   }
 }
 
-@layer utilities {
-  .bg-gradient-primary {
-     background: linear-gradient(128.32deg, rgba(245, 0, 162, 0.2) 24.33%, rgba(112, 45, 255, 0) 81.84%), #3733FF;
+/* @font-face {
+    font-family: Proxima Nova;
+    font-weight: 400;
+    src: url(/fonts/proxima-nova/400-regular.woff) format("woff");
   }
 
-  .text-modal-title {
+  @font-face {
+    font-family: Proxima Nova;
+    font-weight: 500;
+    src: url(/fonts/proxima-nova/500-medium.woff) format("woff");
+  } */
+
+@layer gradients {
+  .bg-gradient-primary {
+    background: linear-gradient(
+        128.32deg,
+        rgba(245, 0, 162, 0.2) 24.33%,
+        rgba(112, 45, 255, 0) 81.84%
+      ),
+      #3733ff;
+  }
+}
+
+@layer copy {
+  .copy-title {
     @apply text-3xl font-medium text-gray-900;
   }
 }
-

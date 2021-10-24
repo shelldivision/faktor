@@ -1,7 +1,5 @@
-import { useAnchorWallet } from "@solana/wallet-adapter-react";
-
 import { Switch, Route } from "react-router-dom";
-import { ConnectWalletView, HomeView } from "./views";
+import { HomeView } from "./views";
 
 export const Routes = () => {
   return (

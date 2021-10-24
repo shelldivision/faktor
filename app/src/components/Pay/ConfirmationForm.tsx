@@ -17,7 +17,7 @@ export const ConfirmationForm: React.FC<ConfirmationFormProps> = ({
 }) => {
   return (
     <form onSubmit={onConfirm} className="w-full">
-      <h1 className="text-modal-title">Pay invoice</h1>
+      <h1 className="copy-title">Pay invoice</h1>
       <div className="flex flex-col mt-8 space-y-4">
         <Section>
           <Label>From</Label>
