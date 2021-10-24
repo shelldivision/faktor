@@ -4,7 +4,10 @@ import {
   useAnchorWallet,
   useConnection,
 } from "@solana/wallet-adapter-react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import {
+  WalletMultiButton,
+  WalletDisconnectButton,
+} from "@solana/wallet-adapter-react-ui";
 import { PublicKey } from "@solana/web3.js";
 import { useEffect, useMemo, useState } from "react";
 import { CreateCashflowModal, CashflowTable } from "src/components";
@@ -81,61 +84,16 @@ export function HomeView() {
   }
 
   return (
-    <>
-      <div className="flex flex-1 h-screen overflow-auto overflow-hidden bg-gray-100 focus:outline-none">
-        <main className="z-0 flex-1 pb-8 overflow-y-auto">
-          {/* Devnet banner */}
-          <div className="flex w-full h-12 bg-orange-500">
-            <p className="m-auto font-medium text-white">
-              Currently available on Solana devnet.
-            </p>
-          </div>
-          {/* Page header */}
-          <div className="max-w-4xl mx-auto mt-8">
-            <Header />
-            {/* Toolbar */}
-            <div className="flex items-center justify-between mt-4">
-              {/* Invoice tabs */}
-              <nav className="flex space-x-4" aria-label="Tabs">
-                {tabs.map((tab) => (
-                  <a
-                    onClick={() => setCurrentTab(tab.name)}
-                    key={tab.name}
-                    className={`px-3 py-2 font-medium text-sm rounded-md cursor-pointer ${
-                      tab.name === currentTab
-                        ? "bg-blue-100 text-blue-700"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
-                    {tab.name}
-                  </a>
-                ))}
-              </nav>
-              {/* Toolbar */}
-              {wallet && (
-                <div className="space-x-2">
-                  <RefreshButton
-                    refresh={refresh}
-                    isRefreshing={isRefreshing}
-                  />
-                  <CreateCashflowButton
-                    showModal={() => setIsCreateCashflowModalOpen(true)}
-                  />
-                </div>
-              )}
-            </div>
-            {/* Cashflows table */}
-            <div className="flex flex-col min-w-full mt-2 overflow-hidden overflow-x-auto rounded shadow">
-              <CashflowTable
-                cashflows={visibleCashflows}
-                currentTab={currentTab}
-                program={program}
-                refresh={refresh}
-              />
-            </div>
-          </div>
-        </main>
-      </div>
+    <div className="flex flex-1 h-screen overflow-auto overflow-hidden bg-gray-100 focus:outline-none">
+      <main className="z-0 flex-1 max-w-4xl py-8 mx-auto space-y-8">
+        <Header />
+        <CashflowTable
+          cashflows={visibleCashflows}
+          currentTab={currentTab}
+          program={program}
+          refresh={refresh}
+        />
+      </main>
       {wallet && (
         <CreateCashflowModal
           open={isCreateCashflowModalOpen}
@@ -145,21 +103,77 @@ export function HomeView() {
           provider={provider}
         />
       )}
-    </>
+    </div>
   );
 }
 
 function Header() {
-  const wallet = useAnchorWallet();
-
   return (
-    <div className="flex flex-row justify-between h-20 py-4">
-      <h2 className="my-auto text-4xl font-bold leading-6 text-left text-gray-900">
-        Faktor
-      </h2>
-      {!wallet && (
-        <div className="my-auto">
-          <WalletMultiButton />
+    <div className="flex flex-row justify-between py-0">
+      <HomeButton />
+      {/* <img className="h-6 my-auto" src="/wordmark-orange-black.svg" /> */}
+      <WalletManager />
+    </div>
+  );
+}
+
+function HomeButton() {
+  return (
+    <a href="/" className="flex h-12 px-2 my-auto transform hover:opacity-75">
+      <img className="h-6 my-auto" src="/wordmark-orange-black.svg" />
+    </a>
+  );
+}
+
+function WalletManager() {
+  // const wallet = useAnchorWallet();
+  // if (wallet)
+  //   return (
+  //     <div className="my-auto">
+  //       <WalletDisconnectButton />
+  //     </div>
+  //   );
+  // else
+  return (
+    <div className="my-auto">
+      <WalletMultiButton />
+    </div>
+  );
+}
+
+function Toolbar({
+  currentTab,
+  setCurrentTab,
+  isRefreshing,
+  refresh,
+  setIsCreateCashflowModalOpen,
+}) {
+  const wallet = useAnchorWallet();
+  return (
+    <div className="flex items-center justify-between mt-4">
+      {/* Left side */}
+      <nav className="flex space-x-4" aria-label="Tabs">
+        {tabs.map((tab) => (
+          <a
+            onClick={() => setCurrentTab(tab.name)}
+            key={tab.name}
+            className={`px-3 py-2 font-medium text-sm rounded-md cursor-pointer ${
+              tab.name === currentTab
+                ? "bg-blue-100 text-blue-700"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {tab.name}
+          </a>
+        ))}
+      </nav>
+      {/* Right side */}
+      {wallet && (
+        <div className="space-x-2">
+          <RefreshButton refresh={refresh} isRefreshing={isRefreshing} />
+          <CreateCashflowButton
+            showModal={() => setIsCreateCashflowModalOpen(true)}
+          />
         </div>
       )}
     </div>

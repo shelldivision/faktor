@@ -20,7 +20,7 @@ export function CashflowTable({
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
   const [currentCashflow, setCurrentCashflow] = useState<any>();
   return (
-    <>
+    <div className="flex flex-col min-w-full overflow-hidden overflow-x-auto bg-white rounded-lg shadow">
       {cashflows.length > 0 ? (
         <>
           <table className="min-w-full divide-y divide-gray-200">
@@ -156,7 +156,7 @@ export function CashflowTable({
           </table>
         </>
       ) : (
-        <div className="p-8 bg-white">
+        <div className="p-8">
           <div className="flex items-center justify-center w-12 h-12 mx-auto bg-gray-200 rounded-full">
             <CashIcon className="w-6 h-6 text-gray-500" aria-hidden="true" />
           </div>
@@ -176,6 +176,6 @@ export function CashflowTable({
           refresh={refresh}
         />
       )}
-    </>
+    </div>
   );
 }

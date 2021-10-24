@@ -17,7 +17,7 @@ module.exports = {
       },
       gray: {
         ...defaultColors.gray,
-        100: "#EDEDED",
+        100: "#F1F1F1",
         800: "#292929",
         900: "#1F1F1F",
       },
@@ -27,9 +27,6 @@ module.exports = {
       },
     },
     extend: {
-      backgroundColor: {
-        lightest: '#E5E5E5'
-      },
       minWidth: {
         card: "32rem",
       },
