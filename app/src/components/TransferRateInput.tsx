@@ -1,4 +1,4 @@
-import { InputField } from './InputField';
+import { InputField } from "./InputField";
 
 export function TransferRateInput() {
   return (

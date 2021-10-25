@@ -1,7 +1,7 @@
-import { Dialog, Transition } from '@headlessui/react';
-import { Fragment, useMemo } from 'react';
-import { payInvoice, PayInvoiceRequest } from '@api/payInvoice';
-import { ConfirmationForm } from './ConfirmationForm';
+import { Dialog, Transition } from "@headlessui/react";
+import { Fragment, useMemo } from "react";
+import { payInvoice, PayInvoiceRequest } from "@api";
+import { ConfirmationForm } from "./ConfirmationForm";
 
 export enum PayInvoiceSteps {
   Editing = 0,
@@ -31,7 +31,7 @@ export const PayModal: React.FC<PayModalProps> = ({ invoice, open, setOpen, refr
         refresh();
       })
       .catch((error) => {
-        console.warn('Failed to pay invoice: ', error.message);
+        console.warn("Failed to pay invoice: ", error.message);
       });
   };
 

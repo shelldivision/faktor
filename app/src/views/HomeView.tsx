@@ -1,19 +1,19 @@
-import { Program, Provider, web3 } from '@project-serum/anchor';
-import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
-import { PublicKey } from '@solana/web3.js';
-import { useEffect, useMemo, useState } from 'react';
-import { CreatePaymentModal, PaymentsTable, WalletButton } from '@components';
-import idl from '../idl.json';
+import { Program, Provider, web3 } from "@project-serum/anchor";
+import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
+import { useEffect, useMemo, useState } from "react";
+import { CreatePaymentModal, PaymentsTable, WalletButton } from "@components";
+import idl from "../idl.json";
 
 const programID = new PublicKey(idl.metadata.address);
 
 const opts: web3.ConfirmOptions = {
-  preflightCommitment: 'processed'
+  preflightCommitment: "processed"
 };
 
 enum Tab {
-  Incoming = 'incoming',
-  Outgoing = 'outgoing'
+  Incoming = "incoming",
+  Outgoing = "outgoing"
 }
 
 const tabs = [Tab.Incoming, Tab.Outgoing];
@@ -21,11 +21,11 @@ const tabs = [Tab.Incoming, Tab.Outgoing];
 function getTabName(tab: Tab) {
   switch (tab) {
     case Tab.Incoming:
-      return 'Incoming';
+      return "Incoming";
     case Tab.Outgoing:
-      return 'Outgoing';
+      return "Outgoing";
     default:
-      return '';
+      return "";
   }
 }
 
@@ -140,14 +140,14 @@ function Toolbar({
         {tabs.map((tab) => (
           <div
             className={`flex border-b-2 transition duration-200 ${
-              currentTab === tab ? 'border-orange-500' : 'border-none'
+              currentTab === tab ? "border-orange-500" : "border-none"
             }`}
           >
             <a
               onClick={() => setCurrentTab(tab.toString())}
               key={tab.toString()}
               className={`px-3 py-2 text hover:bg-gray-200 transition duration-200 rounded-md font-semibold cursor-pointer ${
-                currentTab === tab ? 'text-gray-900' : 'text-gray-400'
+                currentTab === tab ? "text-gray-900" : "text-gray-400"
               }`}
             >
               {getTabName(tab)}
@@ -183,7 +183,7 @@ function RefreshButton({ refresh, isRefreshing }) {
       disabled={isRefreshing}
       className="px-4 py-3 font-semibold text-gray-600 rounded-md hover:text-gray-900 hover:bg-gray-200"
     >
-      {isRefreshing ? 'Refreshing...' : 'Refresh'}
+      {isRefreshing ? "Refreshing..." : "Refresh"}
     </button>
   );
 }

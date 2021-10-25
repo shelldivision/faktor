@@ -1,5 +1,5 @@
-import { Switch, Route } from 'react-router-dom';
-import { HomeView } from './views';
+import { Switch, Route } from "react-router-dom";
+import { HomeView } from "./views";
 
 export const Routes = () => {
   return (

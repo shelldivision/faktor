@@ -1,10 +1,10 @@
-import { Dialog, Transition } from '@headlessui/react';
-import { Fragment, useState } from 'react';
-import { Program, Provider } from '@project-serum/anchor';
-import { useAnchorWallet } from '@solana/wallet-adapter-react';
-import { createPayment, CreatePaymentRequest } from '@api';
-import { InputStep } from './InputStep';
-import { ConfirmationStep } from './ConfirmationStep';
+import { Dialog, Transition } from "@headlessui/react";
+import { Fragment, useState } from "react";
+import { Program, Provider } from "@project-serum/anchor";
+import { useAnchorWallet } from "@solana/wallet-adapter-react";
+import { createPayment, CreatePaymentRequest } from "@api";
+import { InputStep } from "./InputStep";
+import { ConfirmationStep } from "./ConfirmationStep";
 
 export enum CreatePaymentStep {
   Input = 0,
@@ -55,7 +55,7 @@ export function CreatePaymentModal({
         refresh();
       })
       .catch((error) => {
-        console.warn('Failed to issue invoice: ', error.message);
+        console.warn("Failed to issue invoice: ", error.message);
       });
   };
 

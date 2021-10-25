@@ -13,11 +13,11 @@ export interface InputFieldProps {
 export const InputField: React.FC<InputFieldProps> = ({
   value,
   onChange,
-  type = 'text',
+  type = "text",
   label,
   placeholder,
   error,
-  autoComplete = 'off',
+  autoComplete = "off",
   step
 }) => {
   const _onChange = (e) => {
@@ -27,7 +27,7 @@ export const InputField: React.FC<InputFieldProps> = ({
   return (
     <div
       className={`flex flex-col flex-1 bg-white border rounded-lg ${
-        error ? 'border-red-600' : `border-gray-200`
+        error ? "border-red-600" : `border-gray-200`
       }`}
     >
       {label && <label className={`text-gray-600 font-medium text-sm ml-3 mt-2`}>{label}</label>}

@@ -1,6 +1,6 @@
-import { PublicKey } from '@solana/web3.js';
-import { useState } from 'react';
-import { InputField } from './InputField';
+import { PublicKey } from "@solana/web3.js";
+import { useState } from "react";
+import { InputField } from "./InputField";
 
 type Mint = {
   address: PublicKey;
@@ -11,16 +11,16 @@ type Mint = {
 
 const MINTS = [
   {
-    address: new PublicKey('So11111111111111111111111111111111111111112'),
-    name: 'Solana',
-    ticker: 'wSOL',
-    icon: '/svg/token/sol.svg'
+    address: new PublicKey("So11111111111111111111111111111111111111112"),
+    name: "Solana",
+    ticker: "wSOL",
+    icon: "/svg/token/sol.svg"
   },
   {
-    address: new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'),
-    name: 'USD Coin',
-    ticker: 'USDC',
-    icon: '/svg/token/usdc.svg'
+    address: new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
+    name: "USD Coin",
+    ticker: "USDC",
+    icon: "/svg/token/usdc.svg"
   }
 ];
 
@@ -42,7 +42,7 @@ function MintInput() {
   return (
     <div
       className={`flex flex-col flex-1 bg-white border rounded-lg ${
-        error ? 'border-red-600' : `border-gray-200`
+        error ? "border-red-600" : `border-gray-200`
       }`}
     >
       <label className={`text-gray-600 font-medium text-sm ml-3 mt-2`}>Mint</label>

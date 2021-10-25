@@ -1,8 +1,8 @@
-import { LAMPORTS_PER_SOL } from '@solana/web3.js';
-import React from 'react';
-import { PayInvoiceRequest } from '@api/payInvoice';
-import { abbreviate } from '@utils';
-import { PrimaryAction, SecondaryAction } from '../ActionButtons';
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import React from "react";
+import { PayInvoiceRequest } from "@api";
+import { abbreviate } from "@utils";
+import { PrimaryAction, SecondaryAction } from "../ActionButtons";
 
 interface ConfirmationFormProps {
   request: PayInvoiceRequest;
