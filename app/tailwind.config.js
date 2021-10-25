@@ -2,41 +2,37 @@
 const defaultColors = require("tailwindcss/colors");
 module.exports = {
   important: true,
-  purge: [
-    "./src/**/*.{js,jsx,ts,tsx}",
-    "./src/**/**/*.{js,jsx,ts,tsx}",
-    "./public/index.html",
-  ],
+  purge: ["./src/**/*.{js,jsx,ts,tsx}", "./src/**/**/*.{js,jsx,ts,tsx}", "./public/index.html"],
   darkMode: false, // or 'media' or 'class'
   theme: {
     colors: {
       ...defaultColors,
       orange: {
         ...defaultColors.orange,
-        500: "#FD833A",
+        500: "#FD833A"
       },
       gray: {
         ...defaultColors.gray,
         100: "#F1F1F1",
         800: "#292929",
-        900: "#1F1F1F",
+        900: "#1F1F1F"
       },
       indigo: {
         ...defaultColors.indigo,
-        600: "#3733FF",
-      },
+        600: "#3733FF"
+      }
     },
     extend: {
       minWidth: {
-        card: "32rem",
+        card: "32rem"
       },
       width: {
-        card: "32rem",
+        card: "32rem"
       },
       height: {
-        card: "28rem",
-      },
-    },
+        card: "28rem"
+      }
+    }
   },
   variants: {
     extend: {
@@ -46,8 +42,8 @@ module.exports = {
       backgroundImage: ["disabled"],
       textOpacity: ["disabled"],
       cursor: ["disabled"],
-      opacity: ["disabled"],
-    },
+      opacity: ["disabled"]
+    }
   },
-  plugins: [require("@tailwindcss/forms")],
+  plugins: [require("@tailwindcss/forms")]
 };

@@ -1,7 +1,7 @@
 import { CashIcon } from "@heroicons/react/solid";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { useState } from "react";
-import { PayModal } from "@components/Pay";
+import { PayModal } from "@components";
 import { abbreviate } from "@utils";
 
 export type PaymentsTableProps = {
