@@ -1,6 +1,6 @@
-import { BN, Program } from '@project-serum/anchor';
-import { SystemProgram } from '@solana/web3.js';
-import { assertExists } from '@utils';
+import { BN, Program } from "@project-serum/anchor";
+import { SystemProgram } from "@solana/web3.js";
+import { assertExists } from "@utils";
 
 export type PayInvoiceRequest = {
   program?: Program;

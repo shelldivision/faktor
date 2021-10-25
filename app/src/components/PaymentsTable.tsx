@@ -1,8 +1,8 @@
-import { CashIcon } from '@heroicons/react/solid';
-import { LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { useState } from 'react';
-import { PayModal } from '@components/Pay';
-import { abbreviate } from '@utils';
+import { CashIcon } from "@heroicons/react/solid";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { useState } from "react";
+import { PayModal } from "@components/Pay";
+import { abbreviate } from "@utils";
 
 export type PaymentsTableProps = {
   payments: any;
@@ -33,7 +33,7 @@ export function PaymentsTable({ payments, currentTab, program, refresh }: Paymen
                 <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase bg-gray-50">
                   To
                 </th>
-                {currentTab === 'Payables' && (
+                {currentTab === "Payables" && (
                   <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase bg-gray-50"></th>
                 )}
               </tr>
@@ -122,7 +122,7 @@ export function PaymentsTable({ payments, currentTab, program, refresh }: Paymen
                     <td className="px-6 py-4 text-sm text-right text-gray-500 whitespace-nowrap">
                       <span>{abbreviate(payment.account.receiver)}</span>
                     </td>
-                    {currentTab === 'Payables' && (
+                    {currentTab === "Payables" && (
                       <td className="px-6 py-4 text-sm text-right text-gray-500 whitespace-nowrap">
                         <button
                           onClick={() => {
