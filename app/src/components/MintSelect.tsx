@@ -34,20 +34,14 @@ export function MintSelect() {
   useOnClickOutside(dropdownRef, () => setIsDropdownVisible(false));
 
   return (
-    <div className={`flex flex-col bg-white rounded-lg hover:shadow-sm hover:bg-gray-50`}>
-      <DropdownButton
-        onClick={() => setIsDropdownVisible(!isDropdownVisible)}
-        selectedMint={selectedMint}
-      />
-      <div className="relative" ref={dropdownRef}>
+    <div className={`flex flex-col bg-white rounded-lg hover:shadow-sm`} ref={dropdownRef}>
+      <DropdownButton onClick={() => setIsDropdownVisible(true)} selectedMint={selectedMint} />
+      <div className="relative">
         {isDropdownVisible && (
           <DropdownList>
             {MINTS.map((mint) => (
               <DropdownItem mint={mint} />
             ))}
-            {/* <DropdownItem title="wSOL" /> */}
-            {/* <DropdownItem title="USDC" /> */}
-            {/* <DropdownItem title="USDT" /> */}
           </DropdownList>
         )}
       </div>
@@ -60,7 +54,7 @@ function DropdownButton({ onClick, selectedMint }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-grow items-center justify-between px-3 space-x-2 h-input text-left rounded-lg focus:outline-none sm:text-sm"
+      className="flex items-center justify-between flex-grow px-3 space-x-2 text-left rounded-lg h-input focus:outline-none sm:text-sm"
     >
       <MintSummary mint={selectedMint} />
       <DropdownToggleIcon />
@@ -115,10 +109,7 @@ function MintSummary({ mint }: { mint: Mint }) {
     <div className="flex flex-row space-x-4">
       <img className="my-auto w-7 h-7" src={mint.icon} />
       <div>
-        <span className="block text-lg font-medium text-gray-900 truncate">{mint.name}</span>
-        <span className="block -mt-1 text-sm font-medium text-gray-400 truncate">
-          {mint.ticker}
-        </span>
+        <span className="block text-lg font-semibold text-gray-900 truncate">{mint.ticker}</span>
       </div>
     </div>
   );
