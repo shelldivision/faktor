@@ -1,5 +1,5 @@
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { CreatePaymentRequest } from "src/api";
+import { CreatePaymentRequest } from "@api";
 import { SecondaryAction, PrimaryAction } from "../ActionButtons";
 
 export interface ConfirmationStepProps {

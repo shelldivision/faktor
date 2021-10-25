@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { SecondaryAction, PrimaryAction } from "../ActionButtons";
-import { checkWalletAddressExists, CreatePaymentRequest } from "src/api";
+import { checkWalletAddressExists, CreatePaymentRequest } from "@api";
 import { InputField } from "../InputField";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { useConnection } from "@solana/wallet-adapter-react";

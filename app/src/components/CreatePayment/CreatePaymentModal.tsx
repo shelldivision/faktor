@@ -2,7 +2,7 @@ import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useState } from "react";
 import { Program, Provider } from "@project-serum/anchor";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
-import { createPayment, CreatePaymentRequest } from "src/api";
+import { createPayment, CreatePaymentRequest } from "@api";
 import { InputStep } from "./InputStep";
 import { ConfirmationStep } from "./ConfirmationStep";
 

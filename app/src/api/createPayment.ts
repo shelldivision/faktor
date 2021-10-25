@@ -1,6 +1,6 @@
 import { BN, Program } from "@project-serum/anchor";
 import { PublicKey, SystemProgram, SYSVAR_CLOCK_PUBKEY } from "@solana/web3.js";
-import { assertExists } from "src/utils";
+import { assertExists } from "@utils";
 
 const PAYMENT_SEED: Buffer = Buffer.from("payment");
 

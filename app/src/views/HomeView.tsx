@@ -6,7 +6,7 @@ import {
   CreatePaymentModal,
   PaymentsTable,
   WalletButton,
-} from "src/components";
+} from "@components";
 import idl from "../idl.json";
 
 const programID = new PublicKey(idl.metadata.address);

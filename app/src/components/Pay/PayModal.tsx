@@ -1,6 +1,6 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useMemo } from "react";
-import { payInvoice, PayInvoiceRequest } from "src/api/payInvoice";
+import { payInvoice, PayInvoiceRequest } from "@api/payInvoice";
 import { ConfirmationForm } from "./ConfirmationForm";
 
 export enum PayInvoiceSteps {
