@@ -18,6 +18,7 @@ const TRANSFER_FEE_DISTRIBUTOR = 1000;
 const TRANSFER_FEE_TREASURY = 1000;
 
 // Seeds
+const PAYMENT_SEED = "payment";
 const PROGRAM_AUTHORITY_SEED = "program_authority";
 const TREASURY_SEED = "treasury";
 
@@ -65,7 +66,7 @@ describe("faktor", () => {
     const dana = await createAccount();
     const [payment, paymentBump] = await PublicKey.findProgramAddress(
       [
-        "payment",
+        PAYMENT_SEED,
         alice.keys.publicKey.toBuffer(),
         bob.keys.publicKey.toBuffer(),
       ],
@@ -139,17 +140,17 @@ describe("faktor", () => {
   async function createPayment(
     accounts,
     memo,
-    balance,
-    deltaBalance,
-    deltaTime,
-    factorableBalance
+    amount,
+    authorizedBalance,
+    factorableBalance,
+    recurrenceInterval
   ) {
     await program.rpc.createPayment(
       memo,
-      new BN(balance),
-      new BN(deltaBalance),
-      new BN(deltaTime),
+      new BN(amount),
+      new BN(authorizedBalance),
       new BN(factorableBalance),
+      new BN(recurrenceInterval),
       accounts.payment.bump,
       {
         accounts: {
@@ -225,25 +226,24 @@ describe("faktor", () => {
     // Test
     const initialBalances = await getBalances(accounts);
     const memo = "Abc";
-    const balance = 1000;
-    const deltaBalance = 100;
-    const deltaTime = 50;
-    const factorableBalance = 50;
+    const amount = 100;
+    const authorizedBalance = 1000;
+    const factorableBalance = 25;
+    const recurrenceInterval = 50;
     await createPayment(
       accounts,
       memo,
-      balance,
-      deltaBalance,
-      deltaTime,
-      factorableBalance
+      amount,
+      authorizedBalance,
+      factorableBalance,
+      recurrenceInterval
     );
 
     // Validate payment data.
     let expectedRent = 2449920;
     let expectedTransferFee =
-      (balance / deltaBalance) *
+      (authorizedBalance / amount) *
       (TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_TREASURY);
-
     const payment = await program.account.payment.fetch(
       accounts.payment.keys.publicKey
     );
@@ -254,10 +254,10 @@ describe("faktor", () => {
     assert.ok(
       payment.creditor.toString() === accounts.bob.keys.publicKey.toString()
     );
-    assert.ok(payment.balance.toNumber() === balance);
-    assert.ok(payment.deltaBalance.toNumber() === deltaBalance);
-    assert.ok(payment.deltaTime.toNumber() === deltaTime);
+    assert.ok(payment.amount.toNumber() === amount);
+    assert.ok(payment.authorizedBalance.toNumber() === authorizedBalance);
     assert.ok(payment.factorableBalance.toNumber() === factorableBalance);
+    assert.ok(payment.recurrenceInterval.toNumber() === recurrenceInterval);
 
     // Validate SOL balances.
     const finalBalances = await getBalances(accounts);
@@ -281,95 +281,21 @@ describe("faktor", () => {
     assert.ok(finalBalances.dana.wSOL === initialBalances.dana.wSOL);
   });
 
-  it("Alice approves additional payment to Bob.", async () => {
-    // Setup
-    const accounts = await createAccounts();
-    const memo = "Abc";
-    const balance = 1000;
-    const deltaBalance = 100;
-    const deltaTime = 50;
-    const factorableBalance = 50;
-    await createPayment(
-      accounts,
-      memo,
-      balance,
-      deltaBalance,
-      deltaTime,
-      factorableBalance
-    );
-
-    // Test
-    const initialBalances = await getBalances(accounts);
-    const additionalBalance = 500;
-    await program.rpc.approvePayment(new BN(additionalBalance), {
-      accounts: {
-        payment: accounts.payment.keys.publicKey,
-        debtor: accounts.alice.keys.publicKey,
-        debtorTokens: accounts.alice.tokens,
-        creditor: accounts.bob.keys.publicKey,
-        programAuthority: programAuthority,
-        systemProgram: SystemProgram.programId,
-        tokenProgram: spl.TOKEN_PROGRAM_ID,
-      },
-      signers: [accounts.alice.keys],
-    });
-
-    // Validate payment data.
-    let expectedTransferFee =
-      (additionalBalance / deltaBalance) *
-      (TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_TREASURY);
-    const payment = await program.account.payment.fetch(
-      accounts.payment.keys.publicKey
-    );
-    assert.ok(payment.memo === "Abc");
-    assert.ok(
-      payment.debtor.toString() === accounts.alice.keys.publicKey.toString()
-    );
-    assert.ok(
-      payment.creditor.toString() === accounts.bob.keys.publicKey.toString()
-    );
-    assert.ok(payment.balance.toNumber() === balance + additionalBalance);
-    assert.ok(payment.deltaBalance.toNumber() === deltaBalance);
-    assert.ok(payment.deltaTime.toNumber() === deltaTime);
-    assert.ok(payment.factorableBalance.toNumber() === factorableBalance);
-
-    // Validate SOL balances.
-    const finalBalances = await getBalances(accounts);
-    assert.ok(
-      finalBalances.alice.SOL ===
-        initialBalances.alice.SOL - expectedTransferFee
-    );
-    assert.ok(finalBalances.bob.SOL === initialBalances.bob.SOL);
-    assert.ok(finalBalances.charlie.SOL === initialBalances.charlie.SOL);
-    assert.ok(finalBalances.dana.SOL === initialBalances.dana.SOL);
-    assert.ok(
-      finalBalances.payment.SOL ===
-        initialBalances.payment.SOL + expectedTransferFee
-    );
-    assert.ok(finalBalances.treasury.SOL === initialBalances.treasury.SOL);
-
-    // Validate wSOL balances.
-    assert.ok(finalBalances.alice.wSOL === initialBalances.alice.wSOL);
-    assert.ok(finalBalances.bob.wSOL === initialBalances.bob.wSOL);
-    assert.ok(finalBalances.charlie.wSOL === initialBalances.charlie.wSOL);
-    assert.ok(finalBalances.dana.wSOL === initialBalances.dana.wSOL);
-  });
-
   it("Dana distributes a payment from Alice to Bob.", async () => {
     // Setup
     const accounts = await createAccounts();
     const memo = "Abc";
-    const balance = 1000;
-    const deltaBalance = 100;
-    const deltaTime = 50;
-    const factorableBalance = 50;
+    const amount = 100;
+    const authorizedBalance = 1000;
+    const factorableBalance = 25;
+    const recurrenceInterval = 50;
     await createPayment(
       accounts,
       memo,
-      balance,
-      deltaBalance,
-      deltaTime,
-      factorableBalance
+      amount,
+      authorizedBalance,
+      factorableBalance,
+      recurrenceInterval
     );
 
     // Test
@@ -387,10 +313,12 @@ describe("faktor", () => {
     assert.ok(
       payment.creditor.toString() === accounts.bob.keys.publicKey.toString()
     );
-    assert.ok(payment.balance.toNumber() === balance - deltaBalance);
-    assert.ok(payment.deltaBalance.toNumber() === deltaBalance);
-    assert.ok(payment.deltaTime.toNumber() === deltaTime);
+    assert.ok(payment.amount.toNumber() === amount);
+    assert.ok(
+      payment.authorizedBalance.toNumber() === authorizedBalance - amount
+    );
     assert.ok(payment.factorableBalance.toNumber() === factorableBalance);
+    assert.ok(payment.recurrenceInterval.toNumber() === recurrenceInterval);
 
     // Validate SOL balances.
     const finalBalances = await getBalances(accounts);
@@ -413,12 +341,8 @@ describe("faktor", () => {
     );
 
     // Validate wSOL balances.
-    assert.ok(
-      finalBalances.alice.wSOL === initialBalances.alice.wSOL - deltaBalance
-    );
-    assert.ok(
-      finalBalances.bob.wSOL === initialBalances.bob.wSOL + deltaBalance
-    );
+    assert.ok(finalBalances.alice.wSOL === initialBalances.alice.wSOL - amount);
+    assert.ok(finalBalances.bob.wSOL === initialBalances.bob.wSOL + amount);
     assert.ok(finalBalances.charlie.wSOL === initialBalances.charlie.wSOL);
     assert.ok(finalBalances.dana.wSOL === initialBalances.dana.wSOL);
   });

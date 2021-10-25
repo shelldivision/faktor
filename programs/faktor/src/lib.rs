@@ -26,6 +26,7 @@ use {
 declare_id!("B67a7z2ttQ39KJcFWHERXG6bUoWY2GPXgQfAeE6K89vN");
 
 // PDA seeds
+static PAYMENT_SEED: &[u8] = b"payment";
 static PROGRAM_AUTHORITY_SEED: &[u8] = b"program_authority";
 static TREASURY_SEED: &[u8] = b"treasury";
 
@@ -59,70 +60,14 @@ pub mod faktor {
         return Ok(());
     }
 
-    pub fn approve_payment(
-        ctx: Context<ApprovePayment>,
-        additional_balance: u64
-    ) -> ProgramResult {
-        // Get accounts.
-        let payment = &mut ctx.accounts.payment;
-        let debtor = &ctx.accounts.debtor;
-        let debtor_tokens = &mut ctx.accounts.debtor_tokens;
-        let token_program = &ctx.accounts.token_program;
-        let program_authority = &ctx.accounts.program_authority;
-        let system_program = &ctx.accounts.system_program;
-
-        // Validate request data.
-        require!(
-            additional_balance >= payment.delta_balance, 
-            ErrorCode::InvalidRequest
-        );
-
-        // Validate debtor has sufficient lamports to cover transfer fee.
-        let num_transfers = additional_balance / payment.delta_balance;
-        let transfer_fee = num_transfers * (TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_PROGRAM);
-        require!(
-            debtor.to_account_info().lamports() >= transfer_fee,
-            ErrorCode::InsufficientLamports
-        );
-
-        // Approve program authority to initiate transfers from the debtor's token account.
-        let new_balance = payment.balance + additional_balance;
-        approve(
-            CpiContext::new(
-                token_program.to_account_info(),
-                Approve {
-                    authority: debtor.to_account_info(),
-                    delegate: program_authority.to_account_info(),
-                    to: debtor_tokens.to_account_info(),
-                }
-            ),
-            new_balance,
-        )?;
-
-        // Update payment balance.
-        payment.balance = new_balance;
-
-        // Collect transfer fee from debtor.
-        invoke(
-            &system_instruction::transfer(&debtor.key(), &payment.key(), transfer_fee),
-            &[
-                debtor.to_account_info().clone(),
-                payment.to_account_info().clone(),
-                system_program.to_account_info().clone(),
-            ],
-        )?;
-
-        return Ok(())
-    }
-
     pub fn create_payment(
         ctx: Context<CreatePayment>, 
-        memo: String,
-        balance: u64,
-        delta_balance: u64,
-        delta_time: u64,
+        memo: String, 
+        amount: u64,
+        authorized_balance: u64, 
         factorable_balance: u64,
-        bump: u8
+        recurrence_interval: u64,
+        bump: u8,
     ) -> ProgramResult {
         // Get accounts.
         let payment = &mut ctx.accounts.payment;
@@ -138,12 +83,12 @@ pub mod faktor {
 
         // Validate request data.
         require!(
-            balance >= delta_balance, 
+            authorized_balance >= amount, 
             ErrorCode::InvalidRequest
         );
         
         // Validate debtor has sufficient lamports to cover the transfer fee.
-        let num_transfers = balance / delta_balance;
+        let num_transfers = authorized_balance / amount;
         let transfer_fee = num_transfers * (TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_PROGRAM);
         require!(
             debtor.to_account_info().lamports() >= transfer_fee,
@@ -157,10 +102,10 @@ pub mod faktor {
         payment.creditor = creditor.key();
         payment.creditor_tokens = creditor_tokens.key();
         payment.mint = mint.key();
-        payment.balance = balance;
-        payment.delta_balance = delta_balance;
-        payment.delta_time = delta_time;
+        payment.amount = amount;
+        payment.authorized_balance = authorized_balance;
         payment.factorable_balance = factorable_balance;
+        payment.recurrence_interval = recurrence_interval;
         payment.next_transfer_at = clock.unix_timestamp as u64; // TODO this should be a user variable
         payment.created_at = clock.unix_timestamp as u64;
         payment.bump = bump;
@@ -171,11 +116,11 @@ pub mod faktor {
                 token_program.to_account_info(),
                 Approve {
                     authority: debtor.to_account_info(),
-                    delegate: program_authority.to_account_info(),
+                    delegate: payment.to_account_info(),
                     to: debtor_tokens.to_account_info(),
                 }
             ),
-            balance,
+            authorized_balance,
         )?;
 
         // Collect total transfer fee from debtor.
@@ -196,7 +141,9 @@ pub mod faktor {
     ) -> ProgramResult {
         // Get accounts.
         let payment = &mut ctx.accounts.payment;
+        let debtor = &mut ctx.accounts.debtor;
         let debtor_tokens = &ctx.accounts.debtor_tokens;
+        let creditor = &ctx.accounts.creditor;
         let creditor_tokens = &ctx.accounts.creditor_tokens;
         let distributor = &ctx.accounts.distributor;
         let treasury = &ctx.accounts.treasury;
@@ -212,11 +159,13 @@ pub mod faktor {
         );
 
         // Set timestamp for next transfer attempt.
-        payment.next_transfer_at += payment.delta_time;
+        if payment.recurrence_interval > 0 {
+            payment.next_transfer_at += payment.recurrence_interval;
+        }
 
         // Validate balances.
         require!(
-            payment.balance >= payment.delta_balance,
+            payment.authorized_balance >= payment.amount,
             ErrorCode::InsufficientBalance
         );
 
@@ -225,17 +174,17 @@ pub mod faktor {
             CpiContext::new_with_signer(
                 token_program.to_account_info(),
                 Transfer {
-                    authority: program_authority.to_account_info(),
+                    authority: payment.to_account_info(),
                     from: debtor_tokens.to_account_info(),
                     to: creditor_tokens.to_account_info(),
                 },
-                &[&[PROGRAM_AUTHORITY_SEED, &[program_authority.bump]]]
+                &[&[PAYMENT_SEED, debtor.key().as_ref(), creditor.key().as_ref(), &[payment.bump]]]
             ),
-            payment.delta_balance,
+            payment.amount,
         )?;
 
-        // Draw down the balance.
-        payment.balance -= payment.delta_balance;
+        // Draw down the authorized balance.
+        payment.authorized_balance -= payment.amount;
 
         // Pay distributor transfer fee from payment to distributor.
         **payment.to_account_info().try_borrow_mut_lamports()? -= TRANSFER_FEE_DISTRIBUTOR;
@@ -284,41 +233,18 @@ pub struct InitializeProgram<'info> {
 }
 
 #[derive(Accounts)]
-pub struct ApprovePayment<'info> {
-    #[account(
-        mut,
-        seeds = [b"payment", debtor.key().as_ref(), creditor.key().as_ref()],
-        bump = payment.bump,
-        has_one = debtor,
-        has_one = creditor,
-    )]
-    pub payment: Account<'info, Payment>,
-    #[account(mut)]
-    pub debtor: Signer<'info>,
-    #[account(mut)]
-    pub debtor_tokens: Account<'info, TokenAccount>,
-    pub creditor: AccountInfo<'info>,
-    #[account(mut, seeds = [PROGRAM_AUTHORITY_SEED], bump = program_authority.bump)]
-    pub program_authority: Account<'info, ProgramAuthority>,
-    #[account(address = SYSTEM_PROGRAM_ID)]
-    pub system_program: Program<'info, System>,
-    #[account(address = TOKEN_PROGRAM_ID)]
-    pub token_program: Program<'info, Token>,
-}
-
-#[derive(Accounts)]
 #[instruction(
     memo: String, 
-    balance: u64,
-    delta_balance: u64, 
-    delta_time: u64,
+    amount: u64,
+    authorized_balance: u64, 
     factorable_balance: u64,
+    recurrence_interval: u64,
     bump: u8,
 )]
 pub struct CreatePayment<'info> {
     #[account(
         init,
-        seeds = [b"payment", debtor.key().as_ref(), creditor.key().as_ref()],
+        seeds = [PAYMENT_SEED, debtor.key().as_ref(), creditor.key().as_ref()],
         bump = bump,
         payer = debtor,
         space = 8 + (4 + memo.len()) + 32 + 32 + 32 + 32 + 32 + 8 + 8 + 8 + 8 + 8 + 8 + 1,
@@ -344,7 +270,7 @@ pub struct CreatePayment<'info> {
 pub struct DistributePayment<'info> {
     #[account(
         mut,
-        seeds = [b"payment", debtor.key().as_ref(), creditor.key().as_ref()],
+        seeds = [PAYMENT_SEED, debtor.key().as_ref(), creditor.key().as_ref()],
         bump = payment.bump,
         has_one = debtor,
         has_one = creditor,
@@ -382,10 +308,10 @@ pub struct Payment {
     pub creditor: Pubkey,
     pub creditor_tokens: Pubkey,
     pub mint: Pubkey,
-    pub balance: u64,
-    pub delta_balance: u64,
-    pub delta_time: u64,
+    pub amount: u64,
+    pub authorized_balance: u64,
     pub factorable_balance: u64,
+    pub recurrence_interval: u64,
     pub next_transfer_at: u64,
     pub created_at: u64,
     pub bump: u8,
