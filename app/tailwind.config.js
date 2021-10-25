@@ -30,6 +30,7 @@ module.exports = {
         card: "32rem"
       },
       height: {
+        input: "3.5rem",
         card: "28rem"
       }
     }

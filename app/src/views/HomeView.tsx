@@ -45,6 +45,7 @@ export function HomeView() {
 
   // Page state
   const [currentTab, setCurrentTab] = useState(Tab.Incoming);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isCreatePaymentModalOpen, setIsCreatePaymentModalOpen] = useState(false);
 
   // Cached data
@@ -52,7 +53,13 @@ export function HomeView() {
     incoming: [],
     outgoing: []
   });
+
   const visiblePayments = useMemo(() => payments[currentTab.toString()], [payments, currentTab]);
+
+  // Refresh page on load
+  useEffect(() => {
+    refresh();
+  }, []);
 
   async function refresh() {
     console.log("REFRESHING HOME VIEW...");
