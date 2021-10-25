@@ -53,7 +53,7 @@ export function HomeView() {
     incoming: [],
     outgoing: []
   });
-    
+
   const visiblePayments = useMemo(() => payments[currentTab.toString()], [payments, currentTab]);
 
   // Refresh page on load
