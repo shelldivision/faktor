@@ -40,11 +40,12 @@ export const InputStep: React.FC<InputStepProps> = ({ request, onCancel, onSubmi
   useEffect(() => {
     if (creditor) {
       setReceiverError("");
-      checkWalletAddressExists(connection, creditor).then((res) => {
-        if (!res) {
-          setReceiverError("Invalid account");
-        }
-      });
+      try {
+        const _ = new PublicKey(creditor);
+      } catch (e) {
+        console.log("HEY");
+        setReceiverError("Invalid address");
+      }
     }
   }, [creditor]);
 

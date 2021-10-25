@@ -106,11 +106,9 @@ function DropdownToggleIcon() {
 
 function MintSummary({ mint }: { mint: Mint }) {
   return (
-    <div className="flex flex-row space-x-4">
-      <img className="my-auto w-7 h-7" src={mint.icon} />
-      <div>
-        <span className="block text-lg font-semibold text-gray-900 truncate">{mint.ticker}</span>
-      </div>
+    <div className="flex flex-row space-x-3">
+      <img className="w-6 h-6 my-auto" src={mint.icon} />
+      <span className="block text-lg font-semibold text-gray-900 truncate">{mint.ticker}</span>
     </div>
   );
 }

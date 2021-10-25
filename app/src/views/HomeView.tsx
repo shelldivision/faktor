@@ -62,7 +62,6 @@ export function HomeView() {
   }, []);
 
   async function refresh() {
-    console.log("REFRESHING HOME VIEW...");
     const payments: any = await program.account.payment.all();
     setPayments({
       incoming: payments.filter(
@@ -74,14 +73,9 @@ export function HomeView() {
     });
   }
 
-  // Refresh page on load
-  useEffect(() => {
-    refresh();
-  }, []);
-
   return (
     <div className="flex flex-1 h-screen overflow-auto bg-gray-100 focus:outline-none">
-      <main className="z-0 flex-1 max-w-4xl py-8 mx-auto space-y-8">
+      <main className="z-0 flex-1 max-w-4xl px-2 py-8 mx-auto space-y-8 sm:px-4">
         <Header />
         <div className="space-y-4">
           {wallet && (
