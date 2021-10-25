@@ -4,7 +4,7 @@ import { PublicKey } from "@solana/web3.js";
 import { useEffect, useMemo, useState } from "react";
 import {
   CreateCashflowModal,
-  CashflowTable,
+  PaymentsTable,
   WalletButton,
 } from "src/components";
 import idl from "../idl.json";
@@ -35,7 +35,7 @@ function getTabName(tab: Tab) {
 
 // const tabs = [{ name: "Incoming" }, { name: "Outgoing" }];
 
-interface Cashflows {
+interface PaymentsFeed {
   incoming: any[];
   outgoing: any[];
 }
@@ -60,13 +60,13 @@ export function HomeView() {
     useState(false);
 
   // Cached data
-  const [cashflows, setCashflows] = useState<Cashflows>({
+  const [payments, setPayments] = useState<PaymentsFeed>({
     incoming: [],
     outgoing: [],
   });
-  const visibleCashflows = useMemo(
-    () => cashflows[currentTab.toString()],
-    [cashflows, currentTab]
+  const visiblePayments = useMemo(
+    () => payments[currentTab.toString()],
+    [payments, currentTab]
   );
 
   // Refresh page on load
@@ -76,13 +76,13 @@ export function HomeView() {
 
   async function refresh() {
     setIsRefreshing(true);
-    const cashflows: any = await program.account.cashflow.all();
-    setCashflows({
-      incoming: cashflows.filter(
+    const payments: any = await program.account.cashflow.all();
+    setPayments({
+      incoming: payments.filter(
         (inv: any) =>
           inv.account.receiver.toString() === wallet.publicKey.toString()
       ),
-      outgoing: cashflows.filter(
+      outgoing: payments.filter(
         (inv: any) =>
           inv.account.sender.toString() === wallet.publicKey.toString()
       ),
@@ -104,8 +104,8 @@ export function HomeView() {
               setIsCreateCashflowModalOpen={setIsCreateCashflowModalOpen}
             />
           )}
-          <CashflowTable
-            cashflows={visibleCashflows}
+          <PaymentsTable
+            payments={visiblePayments}
             currentTab={currentTab}
             program={program}
             refresh={refresh}

@@ -1,5 +1,5 @@
-export * from "./CashflowTable";
 export * from "./NewPayment";
+export * from "./PaymentsTable";
 export * from "./Pay";
 export * from "./SolanaLogo";
 export * from "./WalletButton";

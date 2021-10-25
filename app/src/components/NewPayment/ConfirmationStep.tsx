@@ -1,9 +1,9 @@
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { CreateCashflowRequest } from "src/api";
+import { CreatePaymentRequest } from "src/api";
 import { SecondaryAction, PrimaryAction } from "../ActionButtons";
 
 export interface ConfirmationStepProps {
-  request: CreateCashflowRequest;
+  request: CreatePaymentRequest;
   onBack: () => void;
   onConfirm: () => void;
 }
@@ -19,7 +19,7 @@ export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
       <div className="flex flex-col mt-8 space-y-4">
         <Section>
           <Label>Receiver</Label>
-          <Value>{request.receiver.toString()}</Value>
+          <Value>{request.creditor.toString()}</Value>
         </Section>
         <Section>
           <Label>Balance</Label>

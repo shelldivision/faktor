@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { SecondaryAction, PrimaryAction } from "../ActionButtons";
-import { checkWalletAddressExists, CreateCashflowRequest } from "src/api";
+import { checkWalletAddressExists, CreatePaymentRequest } from "src/api";
 import { InputField } from "../InputField";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { useConnection } from "@solana/wallet-adapter-react";
@@ -8,9 +8,9 @@ import { MintAmountInput } from "../MintAmountInput";
 import { TransferRateInput } from "../TransferRateInput";
 
 export interface InputStepProps {
-  request: CreateCashflowRequest;
+  request: CreatePaymentRequest;
   onCancel: () => void;
-  onSubmit: (request: CreateCashflowRequest) => void;
+  onSubmit: (request: CreatePaymentRequest) => void;
 }
 
 export const InputStep: React.FC<InputStepProps> = ({
@@ -20,8 +20,8 @@ export const InputStep: React.FC<InputStepProps> = ({
 }) => {
   const [isSubmitEnabled, setIsSubmitEnabled] = useState(false);
 
-  const [receiver, setReceiver] = useState(request.receiver?.toString() ?? "");
-  const [receiverError, setReceiverError] = useState("");
+  const [creditor, setReceiver] = useState(request.creditor?.toString() ?? "");
+  const [creditorError, setReceiverError] = useState("");
 
   const [balance, setBalance] = useState(request.balance?.toString() ?? "");
   const [memo, setMemo] = useState(request.memo?.toString() ?? "");
@@ -30,7 +30,7 @@ export const InputStep: React.FC<InputStepProps> = ({
 
   const _onSubmit = () => {
     onSubmit({
-      receiver: new PublicKey(receiver),
+      creditor: new PublicKey(creditor),
       balance: parseFloat(balance) * LAMPORTS_PER_SOL,
       memo: memo,
     });
@@ -38,19 +38,19 @@ export const InputStep: React.FC<InputStepProps> = ({
 
   useEffect(() => {
     // TODO input validation (valid address, non-negative balance, etc.)
-    setIsSubmitEnabled(receiver !== "" && balance !== "" && memo !== "");
-  }, [receiver, balance, memo]);
+    setIsSubmitEnabled(creditor !== "" && balance !== "" && memo !== "");
+  }, [creditor, balance, memo]);
 
   useEffect(() => {
-    if (receiver) {
+    if (creditor) {
       setReceiverError("");
-      checkWalletAddressExists(connection, receiver).then((res) => {
+      checkWalletAddressExists(connection, creditor).then((res) => {
         if (!res) {
           setReceiverError("Invalid account");
         }
       });
     }
-  }, [receiver]);
+  }, [creditor]);
 
   return (
     <form onSubmit={_onSubmit} className="w-full space-y-8">
@@ -60,8 +60,8 @@ export const InputStep: React.FC<InputStepProps> = ({
           type="text"
           label="To"
           placeholder="Public address"
-          error={receiverError}
-          value={receiver}
+          error={creditorError}
+          value={creditor}
           onChange={(v) => setReceiver(v)}
         />
         <InputField
@@ -72,28 +72,7 @@ export const InputStep: React.FC<InputStepProps> = ({
           onChange={(v) => setMemo(v)}
         />
         <MintAmountInput />
-        {/* <InputField
-          type="text"
-          placeholder="Token"
-          onChange={(v) => setBalance(v)}
-        />
-        <InputField
-          type="number"
-          placeholder="Amount"
-          onChange={(v) => setBalance(v)}
-        /> */}
-        {/* <InputField
-          type="number"
-          placeholder="Frequency"
-          onChange={(v) => setBalance(v)}
-        /> */}
-
         <TransferRateInput />
-        {/* <InputField
-          type="number"
-          placeholder="End at"
-          onChange={(v) => setBalance(v)}
-        /> */}
       </div>
       <div className="flex items-center justify-between w-full space-x-3">
         <SecondaryAction className="w-1/2" onClick={onCancel}>

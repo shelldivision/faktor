@@ -1,2 +1,2 @@
 export * from "./checkWalletAddressExists";
-export * from "./createCashflow";
+export * from "./createPayment";

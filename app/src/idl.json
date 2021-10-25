@@ -38,76 +38,30 @@
       ]
     },
     {
-      "name": "approveCashflow",
+      "name": "createPayment",
       "accounts": [
         {
-          "name": "cashflow",
+          "name": "payment",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "sender",
+          "name": "debtor",
           "isMut": true,
           "isSigner": true
         },
         {
-          "name": "senderTokens",
+          "name": "debtorTokens",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "receiver",
+          "name": "creditor",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "programAuthority",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "additionalBalance",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "createCashflow",
-      "accounts": [
-        {
-          "name": "cashflow",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "sender",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "senderTokens",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "receiver",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "receiverTokens",
+          "name": "creditorTokens",
           "isMut": false,
           "isSigner": false
         },
@@ -139,27 +93,23 @@
       ],
       "args": [
         {
-          "name": "name",
-          "type": "string"
-        },
-        {
           "name": "memo",
           "type": "string"
         },
         {
-          "name": "balance",
+          "name": "amount",
           "type": "u64"
         },
         {
-          "name": "deltaBalance",
-          "type": "u64"
-        },
-        {
-          "name": "deltaTime",
+          "name": "authorizedBalance",
           "type": "u64"
         },
         {
           "name": "factorableBalance",
+          "type": "u64"
+        },
+        {
+          "name": "recurrenceInterval",
           "type": "u64"
         },
         {
@@ -169,30 +119,30 @@
       ]
     },
     {
-      "name": "distributeCashflow",
+      "name": "distributePayment",
       "accounts": [
         {
-          "name": "cashflow",
+          "name": "payment",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "sender",
+          "name": "debtor",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "senderTokens",
+          "name": "debtorTokens",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "receiver",
+          "name": "creditor",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "receiverTokens",
+          "name": "creditorTokens",
           "isMut": true,
           "isSigner": false
         },
@@ -227,32 +177,28 @@
   ],
   "accounts": [
     {
-      "name": "Cashflow",
+      "name": "Payment",
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "name",
-            "type": "string"
-          },
           {
             "name": "memo",
             "type": "string"
           },
           {
-            "name": "sender",
+            "name": "debtor",
             "type": "publicKey"
           },
           {
-            "name": "senderTokens",
+            "name": "debtorTokens",
             "type": "publicKey"
           },
           {
-            "name": "receiver",
+            "name": "creditor",
             "type": "publicKey"
           },
           {
-            "name": "receiverTokens",
+            "name": "creditorTokens",
             "type": "publicKey"
           },
           {
@@ -260,19 +206,19 @@
             "type": "publicKey"
           },
           {
-            "name": "balance",
+            "name": "amount",
             "type": "u64"
           },
           {
-            "name": "deltaBalance",
-            "type": "u64"
-          },
-          {
-            "name": "deltaTime",
+            "name": "authorizedBalance",
             "type": "u64"
           },
           {
             "name": "factorableBalance",
+            "type": "u64"
+          },
+          {
+            "name": "recurrenceInterval",
             "type": "u64"
           },
           {

@@ -18,9 +18,9 @@ const TRANSFER_FEE_DISTRIBUTOR = 1000;
 const TRANSFER_FEE_TREASURY = 1000;
 
 // Seeds
-const PAYMENT_SEED = "payment";
-const PROGRAM_AUTHORITY_SEED = "program_authority";
-const TREASURY_SEED = "treasury";
+const PAYMENT_SEED = Buffer.from("payment");
+const PROGRAM_AUTHORITY_SEED = Buffer.from("program_authority");
+const TREASURY_SEED = Buffer.from("treasury");
 
 describe("faktor", () => {
   // Test environment

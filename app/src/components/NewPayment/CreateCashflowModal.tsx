@@ -2,7 +2,7 @@ import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useState } from "react";
 import { Program, Provider } from "@project-serum/anchor";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
-import { createCashflow, CreateCashflowRequest } from "src/api";
+import { createPayment, CreatePaymentRequest } from "src/api";
 import { InputStep } from "./InputStep";
 import { ConfirmationStep } from "./ConfirmationStep";
 
@@ -28,18 +28,18 @@ export function CreateCashflowModal({
 }: CreateCashflowModalProps) {
   const wallet = useAnchorWallet();
   const [step, setStep] = useState(CreateCashflowStep.Input);
-  const [request, setRequest] = useState<CreateCashflowRequest | null>(
+  const [request, setRequest] = useState<CreatePaymentRequest | null>(
     wallet
       ? {
           program,
-          sender: provider.wallet.publicKey,
+          debtor: provider.wallet.publicKey,
         }
       : null
   );
 
-  const onSubmit = (data: CreateCashflowRequest) => {
+  const onSubmit = (data: CreatePaymentRequest) => {
     setRequest({
-      receiver: data.receiver,
+      creditor: data.creditor,
       balance: data.balance,
       memo: data.memo,
       ...request,
@@ -49,7 +49,7 @@ export function CreateCashflowModal({
 
   const onConfirm = async () => {
     if (!wallet) return;
-    createCashflow(request)
+    createPayment(request)
       .then(() => {
         onClose();
         refresh();
@@ -64,7 +64,7 @@ export function CreateCashflowModal({
     setStep(CreateCashflowStep.Input);
     setRequest({
       program,
-      sender: provider.wallet.publicKey,
+      debtor: provider.wallet.publicKey,
     });
   };
 

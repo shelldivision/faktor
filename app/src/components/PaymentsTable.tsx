@@ -4,24 +4,24 @@ import { useState } from "react";
 import { PayModal } from "src/components/Pay";
 import { abbreviate } from "src/utils";
 
-export type CashflowTableProps = {
-  cashflows: any;
+export type PaymentsTableProps = {
+  payments: any;
   currentTab: string;
   program: any;
   refresh: any;
 };
 
-export function CashflowTable({
-  cashflows,
+export function PaymentsTable({
+  payments,
   currentTab,
   program,
   refresh,
-}: CashflowTableProps) {
+}: PaymentsTableProps) {
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
-  const [currentCashflow, setCurrentCashflow] = useState<any>();
+  const [currentPayment, setCurrentPayment] = useState<any>();
   return (
     <div className="flex flex-col min-w-full overflow-hidden overflow-x-auto bg-white rounded-lg shadow">
-      {cashflows.length > 0 ? (
+      {payments.length > 0 ? (
         <>
           <table className="min-w-full divide-y divide-gray-200">
             <thead>
@@ -44,7 +44,7 @@ export function CashflowTable({
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {(cashflows ?? []).map((cashflow: any, i: number) => {
+              {(payments ?? []).map((cashflow: any, i: number) => {
                 const balance = (
                   cashflow.account.balance / LAMPORTS_PER_SOL
                 ).toString();
@@ -140,7 +140,7 @@ export function CashflowTable({
                         <button
                           onClick={() => {
                             setIsPayModalOpen(true);
-                            setCurrentCashflow(cashflow);
+                            setCurrentPayment(cashflow);
                           }}
                           type="button"
                           className="inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-white bg-green-600 rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
@@ -162,14 +162,14 @@ export function CashflowTable({
           </div>
           <div className="mt-3 text-center sm:mt-5">
             <h3 className="text-lg font-medium leading-6 text-gray-900">
-              No cashflows found
+              No payments found
             </h3>
           </div>
         </div>
       )}
-      {currentCashflow && (
+      {currentPayment && (
         <PayModal
-          invoice={currentCashflow}
+          invoice={currentPayment}
           open={isPayModalOpen}
           setOpen={setIsPayModalOpen}
           program={program}
