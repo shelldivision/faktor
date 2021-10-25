@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
-import { SecondaryAction, PrimaryAction } from "../ActionButtons";
-import { checkWalletAddressExists, CreatePaymentRequest } from "src/api";
-import { InputField } from "../InputField";
-import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
-import { useConnection } from "@solana/wallet-adapter-react";
-import { MintAmountInput } from "../MintAmountInput";
-import { TransferRateInput } from "../TransferRateInput";
+import { useEffect, useState } from 'react';
+import { SecondaryAction, PrimaryAction } from '../ActionButtons';
+import { checkWalletAddressExists, CreatePaymentRequest } from '@api';
+import { InputField } from '../InputField';
+import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
+import { useConnection } from '@solana/wallet-adapter-react';
+import { MintAmountInput } from '../MintAmountInput';
+import { TransferRateInput } from '../TransferRateInput';
 
 export interface InputStepProps {
   request: CreatePaymentRequest;
@@ -13,18 +13,14 @@ export interface InputStepProps {
   onSubmit: (request: CreatePaymentRequest) => void;
 }
 
-export const InputStep: React.FC<InputStepProps> = ({
-  request,
-  onCancel,
-  onSubmit,
-}) => {
+export const InputStep: React.FC<InputStepProps> = ({ request, onCancel, onSubmit }) => {
   const [isSubmitEnabled, setIsSubmitEnabled] = useState(false);
 
-  const [creditor, setReceiver] = useState(request.creditor?.toString() ?? "");
-  const [creditorError, setReceiverError] = useState("");
+  const [creditor, setReceiver] = useState(request.creditor?.toString() ?? '');
+  const [creditorError, setReceiverError] = useState('');
 
-  const [balance, setBalance] = useState(request.balance?.toString() ?? "");
-  const [memo, setMemo] = useState(request.memo?.toString() ?? "");
+  const [balance, setBalance] = useState(request.balance?.toString() ?? '');
+  const [memo, setMemo] = useState(request.memo?.toString() ?? '');
 
   const { connection } = useConnection();
 
@@ -32,21 +28,21 @@ export const InputStep: React.FC<InputStepProps> = ({
     onSubmit({
       creditor: new PublicKey(creditor),
       balance: parseFloat(balance) * LAMPORTS_PER_SOL,
-      memo: memo,
+      memo: memo
     });
   };
 
   useEffect(() => {
     // TODO input validation (valid address, non-negative balance, etc.)
-    setIsSubmitEnabled(creditor !== "" && balance !== "" && memo !== "");
+    setIsSubmitEnabled(creditor !== '' && balance !== '' && memo !== '');
   }, [creditor, balance, memo]);
 
   useEffect(() => {
     if (creditor) {
-      setReceiverError("");
+      setReceiverError('');
       checkWalletAddressExists(connection, creditor).then((res) => {
         if (!res) {
-          setReceiverError("Invalid account");
+          setReceiverError('Invalid account');
         }
       });
     }
@@ -78,11 +74,7 @@ export const InputStep: React.FC<InputStepProps> = ({
         <SecondaryAction className="w-1/2" onClick={onCancel}>
           Cancel
         </SecondaryAction>
-        <PrimaryAction
-          className="w-1/2"
-          disabled={!isSubmitEnabled}
-          onClick={_onSubmit}
-        >
+        <PrimaryAction className="w-1/2" disabled={!isSubmitEnabled} onClick={_onSubmit}>
           Continue
         </PrimaryAction>
       </div>

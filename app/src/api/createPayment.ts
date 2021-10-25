@@ -1,8 +1,8 @@
-import { BN, Program } from "@project-serum/anchor";
-import { PublicKey, SystemProgram, SYSVAR_CLOCK_PUBKEY } from "@solana/web3.js";
-import { assertExists } from "src/utils";
+import { BN, Program } from '@project-serum/anchor';
+import { PublicKey, SystemProgram, SYSVAR_CLOCK_PUBKEY } from '@solana/web3.js';
+import { assertExists } from '@utils';
 
-const PAYMENT_SEED: Buffer = Buffer.from("payment");
+const PAYMENT_SEED: Buffer = Buffer.from('payment');
 
 export type CreatePaymentRequest = {
   program?: Program;
@@ -12,9 +12,7 @@ export type CreatePaymentRequest = {
   memo?: string;
 };
 
-export const createPayment = async (
-  req: CreatePaymentRequest
-): Promise<any> => {
+export const createPayment = async (req: CreatePaymentRequest): Promise<any> => {
   // Validate request
   assertExists(req.program);
   assertExists(req.debtor);
@@ -34,8 +32,8 @@ export const createPayment = async (
         debtor: req.debtor,
         creditor: req.creditor,
         systemProgram: SystemProgram.programId,
-        clock: SYSVAR_CLOCK_PUBKEY,
-      },
+        clock: SYSVAR_CLOCK_PUBKEY
+      }
     });
     return await req.program.account.payment.fetch(address);
   } catch (error: any) {

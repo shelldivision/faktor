@@ -1,19 +1,16 @@
-import { useMemo } from "react";
-import {
-  ConnectionProvider,
-  WalletProvider,
-} from "@solana/wallet-adapter-react";
-import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
+import { useMemo } from 'react';
+import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import {
   getLedgerWallet,
   getPhantomWallet,
   getSlopeWallet,
   getSolflareWallet,
   getSolletExtensionWallet,
-  getSolletWallet,
-} from "@solana/wallet-adapter-wallets";
-import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
-import { clusterApiUrl } from "@solana/web3.js";
+  getSolletWallet
+} from '@solana/wallet-adapter-wallets';
+import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
+import { clusterApiUrl } from '@solana/web3.js';
 
 export function Web3Provider({ children }) {
   // Can be set to 'devnet', 'testnet', or 'mainnet-beta'
@@ -31,7 +28,7 @@ export function Web3Provider({ children }) {
       getSlopeWallet(),
       getSolletWallet({ network }),
       getSolletExtensionWallet({ network }),
-      getLedgerWallet(),
+      getLedgerWallet()
     ],
     [network]
   );
@@ -39,9 +36,7 @@ export function Web3Provider({ children }) {
   return (
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider wallets={wallets} autoConnect>
-        <WalletModalProvider logo="/logo512.png">
-          {children}
-        </WalletModalProvider>
+        <WalletModalProvider logo="/logo512.png">{children}</WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
   );

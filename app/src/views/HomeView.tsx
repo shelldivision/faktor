@@ -1,23 +1,19 @@
-import { Program, Provider, web3 } from "@project-serum/anchor";
-import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
-import { PublicKey } from "@solana/web3.js";
-import { useEffect, useMemo, useState } from "react";
-import {
-  CreatePaymentModal,
-  PaymentsTable,
-  WalletButton,
-} from "src/components";
-import idl from "../idl.json";
+import { Program, Provider, web3 } from '@project-serum/anchor';
+import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
+import { useEffect, useMemo, useState } from 'react';
+import { CreatePaymentModal, PaymentsTable, WalletButton } from '@components';
+import idl from '../idl.json';
 
 const programID = new PublicKey(idl.metadata.address);
 
 const opts: web3.ConfirmOptions = {
-  preflightCommitment: "processed",
+  preflightCommitment: 'processed'
 };
 
 enum Tab {
-  Incoming = "incoming",
-  Outgoing = "outgoing",
+  Incoming = 'incoming',
+  Outgoing = 'outgoing'
 }
 
 const tabs = [Tab.Incoming, Tab.Outgoing];
@@ -25,11 +21,11 @@ const tabs = [Tab.Incoming, Tab.Outgoing];
 function getTabName(tab: Tab) {
   switch (tab) {
     case Tab.Incoming:
-      return "Incoming";
+      return 'Incoming';
     case Tab.Outgoing:
-      return "Outgoing";
+      return 'Outgoing';
     default:
-      return "";
+      return '';
   }
 }
 
@@ -44,30 +40,20 @@ export function HomeView() {
   // Web3
   const wallet = useAnchorWallet();
   const { connection } = useConnection();
-  const provider = useMemo(
-    () => new Provider(connection, wallet, opts),
-    [connection, wallet]
-  );
-  const program = useMemo(
-    () => new Program(idl as any, programID, provider),
-    [provider]
-  );
+  const provider = useMemo(() => new Provider(connection, wallet, opts), [connection, wallet]);
+  const program = useMemo(() => new Program(idl as any, programID, provider), [provider]);
 
   // Page state
   const [currentTab, setCurrentTab] = useState(Tab.Incoming);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isCreatePaymentModalOpen, setIsCreatePaymentModalOpen] =
-    useState(false);
+  const [isCreatePaymentModalOpen, setIsCreatePaymentModalOpen] = useState(false);
 
   // Cached data
   const [payments, setPayments] = useState<PaymentsFeed>({
     incoming: [],
-    outgoing: [],
+    outgoing: []
   });
-  const visiblePayments = useMemo(
-    () => payments[currentTab.toString()],
-    [payments, currentTab]
-  );
+  const visiblePayments = useMemo(() => payments[currentTab.toString()], [payments, currentTab]);
 
   // Refresh page on load
   useEffect(() => {
@@ -79,13 +65,11 @@ export function HomeView() {
     const payments: any = await program.account.payment.all();
     setPayments({
       incoming: payments.filter(
-        (inv: any) =>
-          inv.account.receiver.toString() === wallet.publicKey.toString()
+        (inv: any) => inv.account.receiver.toString() === wallet.publicKey.toString()
       ),
       outgoing: payments.filter(
-        (inv: any) =>
-          inv.account.sender.toString() === wallet.publicKey.toString()
-      ),
+        (inv: any) => inv.account.sender.toString() === wallet.publicKey.toString()
+      )
     });
     setIsRefreshing(false);
   }
@@ -137,10 +121,7 @@ function Header() {
 function HomeButton() {
   return (
     <a href="/" className="flex h-12 px-2 my-auto transform">
-      <img
-        className="h-6 my-auto"
-        src="/svg/logo/logo-wordmark-orange-black.svg"
-      />
+      <img className="h-6 my-auto" src="/svg/logo/logo-wordmark-orange-black.svg" />
     </a>
   );
 }
@@ -150,7 +131,7 @@ function Toolbar({
   setCurrentTab,
   isRefreshing,
   refresh,
-  setIsCreatePaymentModalOpen,
+  setIsCreatePaymentModalOpen
 }) {
   return (
     <div className="flex items-center justify-between">
@@ -159,14 +140,14 @@ function Toolbar({
         {tabs.map((tab) => (
           <div
             className={`flex border-b-2 transition duration-200 ${
-              currentTab === tab ? "border-orange-500" : "border-none"
+              currentTab === tab ? 'border-orange-500' : 'border-none'
             }`}
           >
             <a
               onClick={() => setCurrentTab(tab.toString())}
               key={tab.toString()}
               className={`px-3 py-2 text hover:bg-gray-200 transition duration-200 rounded-md font-semibold cursor-pointer ${
-                currentTab === tab ? "text-gray-900" : "text-gray-400"
+                currentTab === tab ? 'text-gray-900' : 'text-gray-400'
               }`}
             >
               {getTabName(tab)}
@@ -202,7 +183,7 @@ function RefreshButton({ refresh, isRefreshing }) {
       disabled={isRefreshing}
       className="px-4 py-3 font-semibold text-gray-600 rounded-md hover:text-gray-900 hover:bg-gray-200"
     >
-      {isRefreshing ? "Refreshing..." : "Refresh"}
+      {isRefreshing ? 'Refreshing...' : 'Refresh'}
     </button>
   );
 }

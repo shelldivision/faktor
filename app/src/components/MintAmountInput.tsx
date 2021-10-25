@@ -1,6 +1,6 @@
-import { PublicKey } from "@solana/web3.js";
-import { useState } from "react";
-import { InputField } from "./InputField";
+import { PublicKey } from '@solana/web3.js';
+import { useState } from 'react';
+import { InputField } from './InputField';
 
 type Mint = {
   address: PublicKey;
@@ -11,30 +11,24 @@ type Mint = {
 
 const MINTS = [
   {
-    address: new PublicKey("So11111111111111111111111111111111111111112"),
-    name: "Solana",
-    ticker: "wSOL",
-    icon: "/svg/token/sol.svg",
+    address: new PublicKey('So11111111111111111111111111111111111111112'),
+    name: 'Solana',
+    ticker: 'wSOL',
+    icon: '/svg/token/sol.svg'
   },
   {
-    address: new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
-    name: "USD Coin",
-    ticker: "USDC",
-    icon: "/svg/token/usdc.svg",
-  },
+    address: new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'),
+    name: 'USD Coin',
+    ticker: 'USDC',
+    icon: '/svg/token/usdc.svg'
+  }
 ];
 
 export function MintAmountInput() {
   return (
     <div className="flex flex-row flex-1 space-x-2">
       <MintInput />
-      <InputField
-        type="number"
-        label="Amount"
-        placeholder="0.00"
-        step="1"
-        onChange={() => {}}
-      />
+      <InputField type="number" label="Amount" placeholder="0.00" step="1" onChange={() => {}} />
     </div>
   );
 }
@@ -48,12 +42,10 @@ function MintInput() {
   return (
     <div
       className={`flex flex-col flex-1 bg-white border rounded-lg ${
-        error ? "border-red-600" : `border-gray-200`
+        error ? 'border-red-600' : `border-gray-200`
       }`}
     >
-      <label className={`text-gray-600 font-medium text-sm ml-3 mt-2`}>
-        Mint
-      </label>
+      <label className={`text-gray-600 font-medium text-sm ml-3 mt-2`}>Mint</label>
       <DropdownButton
         selectedMint={selectedMint}
         setSelectedMint={setSelectedMint}
@@ -81,9 +73,7 @@ export function MintSummary({ mint }: { mint: Mint }) {
     <div className="flex flex-row space-x-4">
       <img className="my-auto w-7 h-7" src={mint.icon} />
       <div className="">
-        <span className="block text-lg font-medium text-gray-900 truncate">
-          {mint.name}
-        </span>
+        <span className="block text-lg font-medium text-gray-900 truncate">{mint.name}</span>
         <span className="block -mt-1 text-sm font-medium text-gray-400 truncate">
           {mint.ticker}
         </span>
@@ -96,7 +86,7 @@ function DropdownButton({
   selectedMint,
   setSelectedMint,
   isDropdownVisible,
-  setIsDropdownVisible,
+  setIsDropdownVisible
 }) {
   return (
     <button

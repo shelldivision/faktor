@@ -1,5 +1,5 @@
 export interface ActionProps extends React.HTMLAttributes<HTMLButtonElement> {
-  type?: "button" | "submit" | "reset" | undefined;
+  type?: 'button' | 'submit' | 'reset' | undefined;
   disabled?: boolean;
   className?: string;
 }
@@ -7,8 +7,8 @@ export interface ActionProps extends React.HTMLAttributes<HTMLButtonElement> {
 export const PrimaryAction: React.FC<ActionProps> = ({
   children,
   disabled = false,
-  type = "button",
-  className = "",
+  type = 'button',
+  className = '',
   ...props
 }) => {
   return (
@@ -25,8 +25,8 @@ export const PrimaryAction: React.FC<ActionProps> = ({
 export const SecondaryAction: React.FC<ActionProps> = ({
   children,
   disabled = false,
-  className = "",
-  type = "button",
+  className = '',
+  type = 'button',
   ...props
 }) => {
   return (

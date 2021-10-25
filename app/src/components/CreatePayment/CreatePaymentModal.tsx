@@ -1,14 +1,14 @@
-import { Dialog, Transition } from "@headlessui/react";
-import { Fragment, useState } from "react";
-import { Program, Provider } from "@project-serum/anchor";
-import { useAnchorWallet } from "@solana/wallet-adapter-react";
-import { createPayment, CreatePaymentRequest } from "src/api";
-import { InputStep } from "./InputStep";
-import { ConfirmationStep } from "./ConfirmationStep";
+import { Dialog, Transition } from '@headlessui/react';
+import { Fragment, useState } from 'react';
+import { Program, Provider } from '@project-serum/anchor';
+import { useAnchorWallet } from '@solana/wallet-adapter-react';
+import { createPayment, CreatePaymentRequest } from '@api';
+import { InputStep } from './InputStep';
+import { ConfirmationStep } from './ConfirmationStep';
 
 export enum CreatePaymentStep {
   Input = 0,
-  Confirmation = 1,
+  Confirmation = 1
 }
 
 interface CreatePaymentModalProps {
@@ -24,7 +24,7 @@ export function CreatePaymentModal({
   setOpen,
   refresh,
   provider,
-  program,
+  program
 }: CreatePaymentModalProps) {
   const wallet = useAnchorWallet();
   const [step, setStep] = useState(CreatePaymentStep.Input);
@@ -32,7 +32,7 @@ export function CreatePaymentModal({
     wallet
       ? {
           program,
-          debtor: provider.wallet.publicKey,
+          debtor: provider.wallet.publicKey
         }
       : null
   );
@@ -42,7 +42,7 @@ export function CreatePaymentModal({
       creditor: data.creditor,
       balance: data.balance,
       memo: data.memo,
-      ...request,
+      ...request
     });
     setStep(CreatePaymentStep.Confirmation);
   };
@@ -55,7 +55,7 @@ export function CreatePaymentModal({
         refresh();
       })
       .catch((error) => {
-        console.warn("Failed to issue invoice: ", error.message);
+        console.warn('Failed to issue invoice: ', error.message);
       });
   };
 
@@ -64,17 +64,13 @@ export function CreatePaymentModal({
     setStep(CreatePaymentStep.Input);
     setRequest({
       program,
-      debtor: provider.wallet.publicKey,
+      debtor: provider.wallet.publicKey
     });
   };
 
   return (
     <Transition.Root show={open} as={Fragment}>
-      <Dialog
-        as="div"
-        className="fixed inset-0 z-10 overflow-y-auto"
-        onClose={setOpen}
-      >
+      <Dialog as="div" className="fixed inset-0 z-10 overflow-y-auto" onClose={setOpen}>
         <div className="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block">
           {/* Background overlay */}
           <Transition.Child
@@ -90,10 +86,7 @@ export function CreatePaymentModal({
           </Transition.Child>
 
           {/* This element is to trick the browser into centering the modal contents. */}
-          <span
-            className="hidden sm:inline-block sm:align-middle sm:h-screen"
-            aria-hidden="true"
-          >
+          <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
             &#8203;
           </span>
 
@@ -110,11 +103,7 @@ export function CreatePaymentModal({
             <div className="inline-block w-full max-w-2xl px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform rounded-lg shadow-xl bg-gray-50 sm:my-8 sm:align-middle sm:p-6">
               <div className="flex items-center my-4 divide-x-2">
                 {step === CreatePaymentStep.Input && (
-                  <InputStep
-                    request={request}
-                    onCancel={onClose}
-                    onSubmit={onSubmit}
-                  />
+                  <InputStep request={request} onCancel={onClose} onSubmit={onSubmit} />
                 )}
                 {step === CreatePaymentStep.Confirmation && (
                   <ConfirmationStep

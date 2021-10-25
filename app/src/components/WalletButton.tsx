@@ -1,6 +1,6 @@
-import { useAnchorWallet } from "@solana/wallet-adapter-react";
-import { useWalletModal } from "@solana/wallet-adapter-react-ui";
-import { abbreviate } from "src/utils";
+import { useAnchorWallet } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
+import { abbreviate } from '@utils';
 
 export function WalletButton() {
   const wallet = useAnchorWallet();
