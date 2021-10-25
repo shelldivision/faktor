@@ -24,20 +24,4 @@ export function TransferRateInput() {
       </div>
     </div>
   );
-  //   return (
-  //     <div className="flex flex-row flex-1 space-x-2">
-  //       <InputField
-  //         type="number"
-  //         label="Every"
-  //         placeholder="1"
-  //         onChange={() => {}}
-  //       />
-  //       <InputField
-  //         type="number"
-  //         label="Duration"
-  //         placeholder="Week"
-  //         onChange={() => {}}
-  //       />
-  //     </div>
-  //   );
 }

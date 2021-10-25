@@ -5,7 +5,7 @@ import { InputField } from "../InputField";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { useConnection } from "@solana/wallet-adapter-react";
 import { TransferRateInput } from "../TransferRateInput";
-import { MintSelect } from "@components";
+import { MintInputField, MintSelect } from "@components";
 
 export interface InputStepProps {
   request: CreatePaymentRequest;
@@ -70,14 +70,8 @@ export const InputStep: React.FC<InputStepProps> = ({ request, onCancel, onSubmi
         />
 
         <div className="flex flex-row flex-1 space-x-2">
-          <InputField label="Mint" labelClassName="mt-2" input={<MintSelect />} />
-          <InputField
-            label="Amount"
-            type="number"
-            placeholder="0.00"
-            step="1"
-            className="text-2xl"
-          />
+          <MintInputField error={null} onChange={() => {}} />
+          <InputField label="Amount" type="number" placeholder="0.00" />
         </div>
         <TransferRateInput />
       </div>

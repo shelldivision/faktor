@@ -1,60 +1,49 @@
-import { PropsWithClassName } from "./types";
-
-export interface InputFieldProps extends InputProps {
+export interface InputFieldProps {
+  type: string;
+  label: string;
+  value?: string;
+  placeholder?: string;
   error?: string;
-  label?: string;
-  labelClassName?: string;
-  input?: JSX.Element;
+  onChange?: (val: any) => void;
 }
 
-export const InputField = ({
-  label,
-  error,
-  className = "",
-  labelClassName = "",
-  input,
-  ...inputProps
-}: PropsWithClassName<InputFieldProps>) => {
+export function InputField({ type, error, label, placeholder, value, onChange }: InputFieldProps) {
+  async function _onChange(e: any) {
+    onChange(e.target.value);
+  }
+
+  return (
+    <InputContainer label={label} error={error}>
+      <input
+        type={type}
+        placeholder={placeholder}
+        onChange={_onChange}
+        value={value}
+        className="flex items-center text-xl text-black placeholder-gray-400 bg-white border-none rounded-lg outline-none h-input focus:ring-0"
+      />
+    </InputContainer>
+  );
+}
+
+export function InputContainer({ children, error, label }) {
   return (
     <div
-      className={`${className} pt-1 flex flex-col flex-1 bg-white border rounded-lg ${
+      className={`pt-2 flex flex-col flex-1 bg-white border rounded-lg ${
         error ? "border-red-600" : `border-gray-200`
       }`}
     >
-      {label && <InputLabel className={`${labelClassName} my-2 ml-3`}>{label}</InputLabel>}
-      {input ?? <Input {...inputProps} />}
-      {error && <p className="text-base text-red-600">{error}</p>}
+      <InputLabel title={label} />
+      {children}
+      <InputErrorLabel error={error} />
     </div>
   );
-};
+}
 
-export const InputLabel: React.FC<PropsWithClassName> = ({ children, className = "" }) => {
-  return (
-    <label className={`${className} text-gray-600 font-medium text-sm leading-3`}>{children}</label>
-  );
-};
+export function InputLabel({ title }) {
+  return <label className={`my-2 ml-3 text-gray-600 font-medium text-sm leading-3`}>{title}</label>;
+}
 
-export type InputProps = {
-  type?: string;
-  value?: string;
-  onChange?: (val: string) => void;
-  placeholder?: string;
-  autoComplete?: string;
-  min?: string;
-  step?: string;
-  required?: boolean;
-};
-
-export const Input = ({ className = "", onChange, ...props }: PropsWithClassName<InputProps>) => {
-  const _onChange = (e) => {
-    onChange(e.target.value);
-  };
-
-  return (
-    <input
-      {...props}
-      onChange={_onChange}
-      className={`${className} h-input bg-white flex items-center flex-grow text-xl text-black py-2 rounded-lg placeholder-gray-400 border-none outline-none focus:ring-0`}
-    />
-  );
-};
+export function InputErrorLabel({ error }) {
+  if (!error) return null;
+  return <label className="text-base text-red-600">{error}</label>;
+}

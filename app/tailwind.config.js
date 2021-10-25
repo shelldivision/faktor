@@ -22,18 +22,7 @@ module.exports = {
         600: "#3733FF"
       }
     },
-    extend: {
-      minWidth: {
-        card: "32rem"
-      },
-      width: {
-        card: "32rem"
-      },
-      height: {
-        input: "3.5rem",
-        card: "28rem"
-      }
-    }
+    extend: {}
   },
   variants: {
     extend: {
