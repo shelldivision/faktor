@@ -28,7 +28,7 @@ export function MintAmountInput() {
   return (
     <div className="flex flex-row flex-1 space-x-2">
       <MintInput />
-      <InputField type="number" label="Amount" placeholder="0.00" step="1" onChange={() => {}} />
+      <InputField type="number" placeholder="0.00" step="1" onChange={() => {}} />
     </div>
   );
 }
@@ -41,11 +41,10 @@ function MintInput() {
 
   return (
     <div
-      className={`flex flex-col flex-1 bg-white border rounded-lg ${
+      className={`flex flex-col w-1/3 pb-1 bg-white border rounded-lg ${
         error ? "border-red-600" : `border-gray-200`
       }`}
     >
-      <label className={`text-gray-600 font-medium text-sm ml-3 mt-2`}>Mint</label>
       <DropdownButton
         selectedMint={selectedMint}
         setSelectedMint={setSelectedMint}

@@ -46,7 +46,7 @@ export function HomeView() {
   // Page state
   const [currentTab, setCurrentTab] = useState(Tab.Incoming);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isCreatePaymentModalOpen, setIsCreatePaymentModalOpen] = useState(false);
+  const [isCreatePaymentModalOpen, setIsCreatePaymentModalOpen] = useState(true); // FIXME set to false before pushing
 
   // Cached data
   const [payments, setPayments] = useState<PaymentsFeed>({
@@ -58,7 +58,7 @@ export function HomeView() {
   // Refresh page on load
   useEffect(() => {
     refresh();
-  }, [refresh]);
+  }, []);
 
   async function refresh() {
     setIsRefreshing(true);
