@@ -44,16 +44,16 @@ export function PaymentsTable({
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {(payments ?? []).map((cashflow: any, i: number) => {
+              {(payments ?? []).map((payment: any, i: number) => {
                 const balance = (
-                  cashflow.account.balance / LAMPORTS_PER_SOL
+                  payment.account.balance / LAMPORTS_PER_SOL
                 ).toString();
 
                 return (
                   <tr key={i} className="bg-white">
                     <td className="w-full px-6 py-4 text-sm text-gray-900 max-w-0 whitespace-nowrap">
                       <p className="text-gray-500 truncate group-hover:text-gray-900">
-                        {cashflow.account.memo}
+                        {payment.account.memo}
                       </p>
                     </td>
                     <td className="px-6 py-4 text-sm text-right text-gray-500 whitespace-nowrap">
@@ -130,17 +130,17 @@ export function PaymentsTable({
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-right text-gray-500 whitespace-nowrap">
-                      <span>{abbreviate(cashflow.account.sender)}</span>
+                      <span>{abbreviate(payment.account.sender)}</span>
                     </td>
                     <td className="px-6 py-4 text-sm text-right text-gray-500 whitespace-nowrap">
-                      <span>{abbreviate(cashflow.account.receiver)}</span>
+                      <span>{abbreviate(payment.account.receiver)}</span>
                     </td>
                     {currentTab === "Payables" && (
                       <td className="px-6 py-4 text-sm text-right text-gray-500 whitespace-nowrap">
                         <button
                           onClick={() => {
                             setIsPayModalOpen(true);
-                            setCurrentPayment(cashflow);
+                            setCurrentPayment(payment);
                           }}
                           type="button"
                           className="inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-white bg-green-600 rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"

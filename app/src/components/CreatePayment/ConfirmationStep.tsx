@@ -15,7 +15,7 @@ export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
 }) => {
   return (
     <div className="w-full bg-gray-50">
-      <h1 className="copy-title">Confirm cashflow</h1>
+      <h1 className="copy-title">Confirm Payment</h1>
       <div className="flex flex-col mt-8 space-y-4">
         <Section>
           <Label>Receiver</Label>

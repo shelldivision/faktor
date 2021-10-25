@@ -3,7 +3,7 @@ import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { useEffect, useMemo, useState } from "react";
 import {
-  CreateCashflowModal,
+  CreatePaymentModal,
   PaymentsTable,
   WalletButton,
 } from "src/components";
@@ -56,7 +56,7 @@ export function HomeView() {
   // Page state
   const [currentTab, setCurrentTab] = useState(Tab.Incoming);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isCreateCashflowModalOpen, setIsCreateCashflowModalOpen] =
+  const [isCreatePaymentModalOpen, setIsCreatePaymentModalOpen] =
     useState(false);
 
   // Cached data
@@ -76,7 +76,7 @@ export function HomeView() {
 
   async function refresh() {
     setIsRefreshing(true);
-    const payments: any = await program.account.cashflow.all();
+    const payments: any = await program.account.payment.all();
     setPayments({
       incoming: payments.filter(
         (inv: any) =>
@@ -101,7 +101,7 @@ export function HomeView() {
               setCurrentTab={setCurrentTab}
               isRefreshing={isRefreshing}
               refresh={refresh}
-              setIsCreateCashflowModalOpen={setIsCreateCashflowModalOpen}
+              setIsCreatePaymentModalOpen={setIsCreatePaymentModalOpen}
             />
           )}
           <PaymentsTable
@@ -113,9 +113,9 @@ export function HomeView() {
         </div>
       </main>
       {wallet && (
-        <CreateCashflowModal
-          open={isCreateCashflowModalOpen}
-          setOpen={setIsCreateCashflowModalOpen}
+        <CreatePaymentModal
+          open={isCreatePaymentModalOpen}
+          setOpen={setIsCreatePaymentModalOpen}
           program={program}
           refresh={refresh}
           provider={provider}
@@ -150,7 +150,7 @@ function Toolbar({
   setCurrentTab,
   isRefreshing,
   refresh,
-  setIsCreateCashflowModalOpen,
+  setIsCreatePaymentModalOpen,
 }) {
   return (
     <div className="flex items-center justify-between">
@@ -177,9 +177,7 @@ function Toolbar({
       {/* Right side */}
       <div className="space-x-2">
         {/* <RefreshButton refresh={refresh} isRefreshing={isRefreshing} /> */}
-        <NewPaymentButton
-          showModal={() => setIsCreateCashflowModalOpen(true)}
-        />
+        <NewPaymentButton showModal={() => setIsCreatePaymentModalOpen(true)} />
       </div>
     </div>
   );
