@@ -1,6 +1,6 @@
-import { BN, Program } from "@project-serum/anchor";
-import { SystemProgram } from "@solana/web3.js";
-import { assertExists } from "@utils";
+import { BN, Program } from '@project-serum/anchor';
+import { SystemProgram } from '@solana/web3.js';
+import { assertExists } from '@utils';
 
 export type PayInvoiceRequest = {
   program?: Program;
@@ -21,8 +21,8 @@ export const payInvoice = async (req: PayInvoiceRequest): Promise<any> => {
         invoice: req.invoice.publicKey,
         creditor: req.invoice.account.creditor,
         debtor: req.invoice.account.debtor,
-        systemProgram: SystemProgram.programId,
-      },
+        systemProgram: SystemProgram.programId
+      }
     });
     return null;
   } catch (error: any) {

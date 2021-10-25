@@ -1,11 +1,11 @@
-import { Dialog, Transition } from "@headlessui/react";
-import { Fragment, useMemo } from "react";
-import { payInvoice, PayInvoiceRequest } from "@api/payInvoice";
-import { ConfirmationForm } from "./ConfirmationForm";
+import { Dialog, Transition } from '@headlessui/react';
+import { Fragment, useMemo } from 'react';
+import { payInvoice, PayInvoiceRequest } from '@api/payInvoice';
+import { ConfirmationForm } from './ConfirmationForm';
 
 export enum PayInvoiceSteps {
   Editing = 0,
-  Confirmation = 1,
+  Confirmation = 1
 }
 interface PayModalProps {
   invoice: any;
@@ -15,18 +15,12 @@ interface PayModalProps {
   program: any;
 }
 
-export const PayModal: React.FC<PayModalProps> = ({
-  invoice,
-  open,
-  setOpen,
-  refresh,
-  program,
-}) => {
+export const PayModal: React.FC<PayModalProps> = ({ invoice, open, setOpen, refresh, program }) => {
   const request: PayInvoiceRequest = useMemo(() => {
     return {
       program,
       invoice,
-      amount: invoice.account.balance,
+      amount: invoice.account.balance
     };
   }, [program, invoice]);
 
@@ -37,7 +31,7 @@ export const PayModal: React.FC<PayModalProps> = ({
         refresh();
       })
       .catch((error) => {
-        console.warn("Failed to pay invoice: ", error.message);
+        console.warn('Failed to pay invoice: ', error.message);
       });
   };
 
@@ -47,11 +41,7 @@ export const PayModal: React.FC<PayModalProps> = ({
 
   return (
     <Transition.Root show={open} as={Fragment}>
-      <Dialog
-        as="div"
-        className="fixed inset-0 z-10 overflow-y-auto"
-        onClose={setOpen}
-      >
+      <Dialog as="div" className="fixed inset-0 z-10 overflow-y-auto" onClose={setOpen}>
         <div className="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block">
           {/* Background overlay */}
           <Transition.Child
@@ -67,10 +57,7 @@ export const PayModal: React.FC<PayModalProps> = ({
           </Transition.Child>
 
           {/* This element is to trick the browser into centering the modal contents. */}
-          <span
-            className="hidden sm:inline-block sm:align-middle sm:h-screen"
-            aria-hidden="true"
-          >
+          <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
             &#8203;
           </span>
 
@@ -86,11 +73,7 @@ export const PayModal: React.FC<PayModalProps> = ({
           >
             <div className="inline-block w-full max-w-2xl px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform rounded-lg shadow-xl bg-gray-50 sm:my-8 sm:align-middle sm:p-6">
               <div className="flex items-center my-4 divide-x-2">
-                <ConfirmationForm
-                  request={request}
-                  onCancel={onClose}
-                  onConfirm={onConfirm}
-                />
+                <ConfirmationForm request={request} onCancel={onClose} onConfirm={onConfirm} />
               </div>
             </div>
           </Transition.Child>
@@ -113,7 +96,5 @@ export const Label: React.FC = ({ children }) => {
 };
 
 export const Value: React.FC = ({ children }) => {
-  return (
-    <span className="text-lg font-semibold text-gray-800">{children}</span>
-  );
+  return <span className="text-lg font-semibold text-gray-800">{children}</span>;
 };

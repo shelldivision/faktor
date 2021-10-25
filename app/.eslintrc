@@ -24,6 +24,7 @@
     "@typescript-eslint/ban-types": "off",
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/ban-ts-comment": "off",
+    "@typescript-eslint/no-empty-function": "off",
     "function-call-argument-newline": ["error", "consistent"],
     "function-paren-newline": "off",
     "rest-spread-spacing": "error",

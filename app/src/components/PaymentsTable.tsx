@@ -1,8 +1,8 @@
-import { CashIcon } from "@heroicons/react/solid";
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { useState } from "react";
-import { PayModal } from "@components/Pay";
-import { abbreviate } from "@utils";
+import { CashIcon } from '@heroicons/react/solid';
+import { LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { useState } from 'react';
+import { PayModal } from '@components/Pay';
+import { abbreviate } from '@utils';
 
 export type PaymentsTableProps = {
   payments: any;
@@ -11,12 +11,7 @@ export type PaymentsTableProps = {
   refresh: any;
 };
 
-export function PaymentsTable({
-  payments,
-  currentTab,
-  program,
-  refresh,
-}: PaymentsTableProps) {
+export function PaymentsTable({ payments, currentTab, program, refresh }: PaymentsTableProps) {
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
   const [currentPayment, setCurrentPayment] = useState<any>();
   return (
@@ -38,16 +33,14 @@ export function PaymentsTable({
                 <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase bg-gray-50">
                   To
                 </th>
-                {currentTab === "Payables" && (
+                {currentTab === 'Payables' && (
                   <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase bg-gray-50"></th>
                 )}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {(payments ?? []).map((payment: any, i: number) => {
-                const balance = (
-                  payment.account.balance / LAMPORTS_PER_SOL
-                ).toString();
+                const balance = (payment.account.balance / LAMPORTS_PER_SOL).toString();
 
                 return (
                   <tr key={i} className="bg-white">
@@ -58,9 +51,7 @@ export function PaymentsTable({
                     </td>
                     <td className="px-6 py-4 text-sm text-right text-gray-500 whitespace-nowrap">
                       <div className="flex space-x-2">
-                        <span className="font-medium text-gray-900">
-                          {balance}
-                        </span>
+                        <span className="font-medium text-gray-900">{balance}</span>
                         <div className="flex items-center">
                           SOL
                           <svg
@@ -118,11 +109,7 @@ export function PaymentsTable({
                                 <stop offset="1" stop-color="#DC1FFF" />
                               </linearGradient>
                               <clipPath id="clip0">
-                                <rect
-                                  width="397.7"
-                                  height="311.7"
-                                  fill="white"
-                                />
+                                <rect width="397.7" height="311.7" fill="white" />
                               </clipPath>
                             </defs>
                           </svg>
@@ -135,7 +122,7 @@ export function PaymentsTable({
                     <td className="px-6 py-4 text-sm text-right text-gray-500 whitespace-nowrap">
                       <span>{abbreviate(payment.account.receiver)}</span>
                     </td>
-                    {currentTab === "Payables" && (
+                    {currentTab === 'Payables' && (
                       <td className="px-6 py-4 text-sm text-right text-gray-500 whitespace-nowrap">
                         <button
                           onClick={() => {
@@ -161,9 +148,7 @@ export function PaymentsTable({
             <CashIcon className="w-6 h-6 text-gray-500" aria-hidden="true" />
           </div>
           <div className="mt-3 text-center sm:mt-5">
-            <h3 className="text-lg font-medium leading-6 text-gray-900">
-              No payments found
-            </h3>
+            <h3 className="text-lg font-medium leading-6 text-gray-900">No payments found</h3>
           </div>
         </div>
       )}

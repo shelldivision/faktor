@@ -1,8 +1,8 @@
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import React from "react";
-import { PayInvoiceRequest } from "@api/payInvoice";
-import { abbreviate } from "@utils";
-import { PrimaryAction, SecondaryAction } from "../ActionButtons";
+import { LAMPORTS_PER_SOL } from '@solana/web3.js';
+import React from 'react';
+import { PayInvoiceRequest } from '@api/payInvoice';
+import { abbreviate } from '@utils';
+import { PrimaryAction, SecondaryAction } from '../ActionButtons';
 
 interface ConfirmationFormProps {
   request: PayInvoiceRequest;
@@ -13,7 +13,7 @@ interface ConfirmationFormProps {
 export const ConfirmationForm: React.FC<ConfirmationFormProps> = ({
   request,
   onCancel,
-  onConfirm,
+  onConfirm
 }) => {
   return (
     <form onSubmit={onConfirm} className="w-full">
@@ -25,9 +25,7 @@ export const ConfirmationForm: React.FC<ConfirmationFormProps> = ({
         </Section>
         <Section>
           <Label>Balance</Label>
-          <Value>
-            {request.invoice.account.balance / LAMPORTS_PER_SOL} SOL
-          </Value>
+          <Value>{request.invoice.account.balance / LAMPORTS_PER_SOL} SOL</Value>
         </Section>
         <Section>
           <Label>Memo</Label>
@@ -59,7 +57,5 @@ export const Label: React.FC = ({ children }) => {
 };
 
 export const Value: React.FC = ({ children }) => {
-  return (
-    <span className="text-lg font-semibold text-gray-800">{children}</span>
-  );
+  return <span className="text-lg font-semibold text-gray-800">{children}</span>;
 };
