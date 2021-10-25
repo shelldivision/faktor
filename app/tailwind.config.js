@@ -13,7 +13,7 @@ module.exports = {
       },
       gray: {
         ...defaultColors.gray,
-        100: "#F1F1F1",
+        100: "#F7F9FC",
         800: "#292929",
         900: "#1F1F1F"
       },

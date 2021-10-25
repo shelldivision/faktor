@@ -17,7 +17,8 @@ export function Web3Provider({ children }) {
   const network = WalletAdapterNetwork.Devnet;
 
   // You can also provide a custom RPC endpoint
-  const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+  const endpoint = "localhost:8899";
+  // useMemo(() => clusterApiUrl(network), [network]);
 
   // @solana/wallet-adapter-wallets includes all the adapters but supports tree shaking --
   // Only the wallets you configure here will be compiled into your application
