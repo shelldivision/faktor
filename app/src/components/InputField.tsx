@@ -38,7 +38,7 @@ export const InputField: React.FC<InputFieldProps> = ({
       <input
         {...{ value, placeholder, autoComplete, step }}
         type={type}
-        className={`text-lg text-black py-2 rounded-lg placeholder-gray-400 border-none outline-none`}
+        className={`text-lg text-black py-2 rounded-lg placeholder-gray-400 border-none outline-none focus:ring-0`}
         onChange={_onChange}
         required
       />
