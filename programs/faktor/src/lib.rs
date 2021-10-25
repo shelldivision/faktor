@@ -76,7 +76,6 @@ pub mod faktor {
         let creditor = &ctx.accounts.creditor;
         let creditor_tokens = &ctx.accounts.creditor_tokens;
         let mint = &ctx.accounts.mint;
-        let program_authority = &ctx.accounts.program_authority;
         let system_program = &ctx.accounts.system_program;
         let token_program = &ctx.accounts.token_program;
         let clock = &ctx.accounts.clock;
@@ -141,13 +140,10 @@ pub mod faktor {
     ) -> ProgramResult {
         // Get accounts.
         let payment = &mut ctx.accounts.payment;
-        let debtor = &mut ctx.accounts.debtor;
         let debtor_tokens = &ctx.accounts.debtor_tokens;
-        let creditor = &ctx.accounts.creditor;
         let creditor_tokens = &ctx.accounts.creditor_tokens;
         let distributor = &ctx.accounts.distributor;
         let treasury = &ctx.accounts.treasury;
-        let program_authority = &ctx.accounts.program_authority;
         let token_program = &ctx.accounts.token_program;
         let clock = &ctx.accounts.clock;
 
@@ -178,13 +174,10 @@ pub mod faktor {
                     from: debtor_tokens.to_account_info(),
                     to: creditor_tokens.to_account_info(),
                 },
-                &[&[PAYMENT_SEED, debtor.key().as_ref(), creditor.key().as_ref(), &[payment.bump]]]
+                &[&[PAYMENT_SEED, payment.debtor.as_ref(), payment.creditor.as_ref(), &[payment.bump]]]
             ),
             payment.amount,
         )?;
-
-        // Draw down the authorized balance.
-        payment.authorized_balance -= payment.amount;
 
         // Pay distributor transfer fee from payment to distributor.
         **payment.to_account_info().try_borrow_mut_lamports()? -= TRANSFER_FEE_DISTRIBUTOR;
@@ -193,6 +186,9 @@ pub mod faktor {
         // Pay program transfer fee from payment to treasury.
         **payment.to_account_info().try_borrow_mut_lamports()? -= TRANSFER_FEE_PROGRAM;
         **treasury.to_account_info().try_borrow_mut_lamports()? += TRANSFER_FEE_PROGRAM;
+
+        // Draw down the authorized balance.
+        payment.authorized_balance -= payment.amount;
 
         return Ok(());
     } 
