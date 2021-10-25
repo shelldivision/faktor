@@ -18,6 +18,7 @@ export const InputField: React.FC<InputFieldProps> = ({
   placeholder,
   error,
   autoComplete = "off",
+  step,
 }) => {
   const _onChange = (e) => {
     onChange(e.target.value);
@@ -26,7 +27,7 @@ export const InputField: React.FC<InputFieldProps> = ({
   return (
     <div
       className={`flex flex-col flex-1 bg-white border rounded-lg ${
-        error ? "border-red-600" : `border-gray-100`
+        error ? "border-red-600" : `border-gray-200`
       }`}
     >
       {label && (
@@ -35,7 +36,7 @@ export const InputField: React.FC<InputFieldProps> = ({
         </label>
       )}
       <input
-        {...{ value, placeholder, autoComplete }}
+        {...{ value, placeholder, autoComplete, step }}
         type={type}
         className={`text-lg text-black py-2 rounded-lg placeholder-gray-400 border-none outline-none`}
         onChange={_onChange}

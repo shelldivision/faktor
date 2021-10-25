@@ -1,18 +1,12 @@
 import { Program, Provider, web3 } from "@project-serum/anchor";
-import {
-  AnchorWallet,
-  useAnchorWallet,
-  useConnection,
-} from "@solana/wallet-adapter-react";
-import {
-  WalletMultiButton,
-  WalletDisconnectButton,
-  useWalletModal,
-} from "@solana/wallet-adapter-react-ui";
+import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { useEffect, useMemo, useState } from "react";
-import { CreateCashflowModal, CashflowTable } from "src/components";
-import { abbreviate } from "src/utils";
+import {
+  CreateCashflowModal,
+  CashflowTable,
+  WalletButton,
+} from "src/components";
 import idl from "../idl.json";
 
 const programID = new PublicKey(idl.metadata.address);
@@ -52,11 +46,11 @@ export function HomeView() {
   const { connection } = useConnection();
   const provider = useMemo(
     () => new Provider(connection, wallet, opts),
-    [connection, wallet, opts]
+    [connection, wallet]
   );
   const program = useMemo(
     () => new Program(idl as any, programID, provider),
-    [idl, programID, provider]
+    [provider]
   );
 
   // Page state
@@ -78,7 +72,7 @@ export function HomeView() {
   // Refresh page on load
   useEffect(() => {
     refresh();
-  }, []);
+  }, [refresh]);
 
   async function refresh() {
     setIsRefreshing(true);
@@ -143,44 +137,12 @@ function Header() {
 function HomeButton() {
   return (
     <a href="/" className="flex h-12 px-2 my-auto transform">
-      <img className="h-6 my-auto" src="/wordmark-orange-black.svg" />
+      <img
+        className="h-6 my-auto"
+        src="/svg/logo/logo-wordmark-orange-black.svg"
+      />
     </a>
   );
-}
-
-function WalletButton() {
-  const wallet = useAnchorWallet();
-
-  const { visible, setVisible: setWalletModalVisible } = useWalletModal();
-
-  function onClickConnectWallet(e: any) {
-    e.preventDefault();
-    setWalletModalVisible(true);
-  }
-
-  function onClickWallet(e: any) {
-    e.preventDefault();
-    // TODO
-  }
-
-  if (wallet)
-    return (
-      <button
-        className="px-6 py-3 my-auto text-lg font-semibold text-gray-900 transition duration-200 rounded-full hover:bg-gray-200"
-        onClick={onClickWallet}
-      >
-        {abbreviate(wallet.publicKey)}
-      </button>
-    );
-  else
-    return (
-      <button
-        className="px-6 py-3 my-auto text-lg font-semibold text-gray-900 transition duration-200 rounded-full hover:bg-gray-200"
-        onClick={onClickConnectWallet}
-      >
-        Connect wallet
-      </button>
-    );
 }
 
 function Toolbar({
@@ -228,7 +190,7 @@ function NewPaymentButton({ showModal }) {
     <button
       onClick={showModal}
       type="button"
-      className="px-5 py-3 font-bold text-white transition duration-200 bg-orange-500 shadow-sm rounded-tl-3xl rounded-br-3xl hover:bg-orange-400"
+      className="px-5 py-3 text-lg font-semibold text-white transition duration-200 bg-orange-500 rounded-lg shadow hover:bg-orange-400 hover:shadow-lg"
     >
       New Payment
     </button>

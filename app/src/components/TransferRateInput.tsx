@@ -4,9 +4,8 @@ export function TransferRateInput() {
   return (
     <div className="space-y-3">
       <InputField
-        type="date"
-        label="Scheduled for"
-        placeholder="Begin at"
+        type="datetime-local"
+        label="Schedule for"
         onChange={(v) => {}}
       />
       <div className="flex justify-end pr-1 space-x-3">
