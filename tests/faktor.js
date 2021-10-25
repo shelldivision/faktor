@@ -63,9 +63,9 @@ describe("faktor", () => {
     const bob = await createAccount();
     const charlie = await createAccount();
     const dana = await createAccount();
-    const [cashflow, cashflowBump] = await PublicKey.findProgramAddress(
+    const [payment, paymentBump] = await PublicKey.findProgramAddress(
       [
-        "cashflow",
+        "payment",
         alice.keys.publicKey.toBuffer(),
         bob.keys.publicKey.toBuffer(),
       ],
@@ -76,11 +76,11 @@ describe("faktor", () => {
       bob,
       charlie,
       dana,
-      cashflow: {
+      payment: {
         keys: {
-          publicKey: cashflow,
+          publicKey: payment,
         },
-        bump: cashflowBump,
+        bump: paymentBump,
       },
     };
   }
@@ -122,8 +122,8 @@ describe("faktor", () => {
         SOL: await getBalance(accounts.dana.keys.publicKey),
         wSOL: await getTokenBalance(accounts.dana),
       },
-      cashflow: {
-        SOL: await getBalance(accounts.cashflow.keys.publicKey),
+      payment: {
+        SOL: await getBalance(accounts.payment.keys.publicKey),
       },
       treasury: {
         SOL: await getBalance(treasury),
@@ -134,28 +134,26 @@ describe("faktor", () => {
   /** API **/
 
   /**
-   * createCashflow - Alice creates a cashflow to send SOL to Bob.
+   * createPayment - Alice creates a payment to send SOL to Bob.
    */
-  async function createCashflow(
+  async function createPayment(
     accounts,
-    name,
     memo,
     balance,
     deltaBalance,
     deltaTime,
     factorableBalance
   ) {
-    await program.rpc.createCashflow(
-      name,
+    await program.rpc.createPayment(
       memo,
       new BN(balance),
       new BN(deltaBalance),
       new BN(deltaTime),
       new BN(factorableBalance),
-      accounts.cashflow.bump,
+      accounts.payment.bump,
       {
         accounts: {
-          cashflow: accounts.cashflow.keys.publicKey,
+          payment: accounts.payment.keys.publicKey,
           sender: accounts.alice.keys.publicKey,
           senderTokens: accounts.alice.tokens,
           receiver: accounts.bob.keys.publicKey,
@@ -172,12 +170,12 @@ describe("faktor", () => {
   }
 
   /**
-   * distributeCashflow - Dana distributes a cashflow from Alice to Bob.
+   * distributePayment - Dana distributes a payment from Alice to Bob.
    */
-  async function distributeCashflow(accounts) {
-    await program.rpc.distributeCashflow({
+  async function distributePayment(accounts) {
+    await program.rpc.distributePayment({
       accounts: {
-        cashflow: accounts.cashflow.keys.publicKey,
+        payment: accounts.payment.keys.publicKey,
         sender: accounts.alice.keys.publicKey,
         senderTokens: accounts.alice.tokens,
         receiver: accounts.bob.keys.publicKey,
@@ -220,21 +218,19 @@ describe("faktor", () => {
 
   /** TESTS **/
 
-  it("Alice creates a cashflow to Bob.", async () => {
+  it("Alice creates a payment to Bob.", async () => {
     // Setup
     const accounts = await createAccounts();
 
     // Test
     const initialBalances = await getBalances(accounts);
-    const name = "Abc";
-    const memo = "123";
+    const memo = "Abc";
     const balance = 1000;
     const deltaBalance = 100;
     const deltaTime = 50;
     const factorableBalance = 50;
-    await createCashflow(
+    await createPayment(
       accounts,
-      name,
       memo,
       balance,
       deltaBalance,
@@ -242,27 +238,26 @@ describe("faktor", () => {
       factorableBalance
     );
 
-    // Validate cashflow data.
-    let expectedRent = 2498640;
+    // Validate payment data.
+    let expectedRent = 2449920;
     let expectedTransferFee =
       (balance / deltaBalance) *
       (TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_TREASURY);
 
-    const cashflow = await program.account.cashflow.fetch(
-      accounts.cashflow.keys.publicKey
+    const payment = await program.account.payment.fetch(
+      accounts.payment.keys.publicKey
     );
-    assert.ok(cashflow.name === "Abc");
-    assert.ok(cashflow.memo === "123");
+    assert.ok(payment.memo === "Abc");
     assert.ok(
-      cashflow.sender.toString() === accounts.alice.keys.publicKey.toString()
+      payment.sender.toString() === accounts.alice.keys.publicKey.toString()
     );
     assert.ok(
-      cashflow.receiver.toString() === accounts.bob.keys.publicKey.toString()
+      payment.receiver.toString() === accounts.bob.keys.publicKey.toString()
     );
-    assert.ok(cashflow.balance.toNumber() === balance);
-    assert.ok(cashflow.deltaBalance.toNumber() === deltaBalance);
-    assert.ok(cashflow.deltaTime.toNumber() === deltaTime);
-    assert.ok(cashflow.factorableBalance.toNumber() === factorableBalance);
+    assert.ok(payment.balance.toNumber() === balance);
+    assert.ok(payment.deltaBalance.toNumber() === deltaBalance);
+    assert.ok(payment.deltaTime.toNumber() === deltaTime);
+    assert.ok(payment.factorableBalance.toNumber() === factorableBalance);
 
     // Validate SOL balances.
     const finalBalances = await getBalances(accounts);
@@ -274,8 +269,8 @@ describe("faktor", () => {
     assert.ok(finalBalances.charlie.SOL === initialBalances.charlie.SOL);
     assert.ok(finalBalances.dana.SOL === initialBalances.dana.SOL);
     assert.ok(
-      finalBalances.cashflow.SOL ===
-        initialBalances.cashflow.SOL + expectedRent + expectedTransferFee
+      finalBalances.payment.SOL ===
+        initialBalances.payment.SOL + expectedRent + expectedTransferFee
     );
     assert.ok(finalBalances.treasury.SOL === initialBalances.treasury.SOL);
 
@@ -286,18 +281,16 @@ describe("faktor", () => {
     assert.ok(finalBalances.dana.wSOL === initialBalances.dana.wSOL);
   });
 
-  it("Alice approves additional cashflow to Bob.", async () => {
+  it("Alice approves additional payment to Bob.", async () => {
     // Setup
     const accounts = await createAccounts();
-    const name = "Abc";
-    const memo = "123";
+    const memo = "Abc";
     const balance = 1000;
     const deltaBalance = 100;
     const deltaTime = 50;
     const factorableBalance = 50;
-    await createCashflow(
+    await createPayment(
       accounts,
-      name,
       memo,
       balance,
       deltaBalance,
@@ -308,9 +301,9 @@ describe("faktor", () => {
     // Test
     const initialBalances = await getBalances(accounts);
     const additionalBalance = 500;
-    await program.rpc.approveCashflow(new BN(additionalBalance), {
+    await program.rpc.approvePayment(new BN(additionalBalance), {
       accounts: {
-        cashflow: accounts.cashflow.keys.publicKey,
+        payment: accounts.payment.keys.publicKey,
         sender: accounts.alice.keys.publicKey,
         senderTokens: accounts.alice.tokens,
         receiver: accounts.bob.keys.publicKey,
@@ -321,25 +314,24 @@ describe("faktor", () => {
       signers: [accounts.alice.keys],
     });
 
-    // Validate cashflow data.
+    // Validate payment data.
     let expectedTransferFee =
       (additionalBalance / deltaBalance) *
       (TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_TREASURY);
-    const cashflow = await program.account.cashflow.fetch(
-      accounts.cashflow.keys.publicKey
+    const payment = await program.account.payment.fetch(
+      accounts.payment.keys.publicKey
     );
-    assert.ok(cashflow.name === "Abc");
-    assert.ok(cashflow.memo === "123");
+    assert.ok(payment.memo === "Abc");
     assert.ok(
-      cashflow.sender.toString() === accounts.alice.keys.publicKey.toString()
+      payment.sender.toString() === accounts.alice.keys.publicKey.toString()
     );
     assert.ok(
-      cashflow.receiver.toString() === accounts.bob.keys.publicKey.toString()
+      payment.receiver.toString() === accounts.bob.keys.publicKey.toString()
     );
-    assert.ok(cashflow.balance.toNumber() === balance + additionalBalance);
-    assert.ok(cashflow.deltaBalance.toNumber() === deltaBalance);
-    assert.ok(cashflow.deltaTime.toNumber() === deltaTime);
-    assert.ok(cashflow.factorableBalance.toNumber() === factorableBalance);
+    assert.ok(payment.balance.toNumber() === balance + additionalBalance);
+    assert.ok(payment.deltaBalance.toNumber() === deltaBalance);
+    assert.ok(payment.deltaTime.toNumber() === deltaTime);
+    assert.ok(payment.factorableBalance.toNumber() === factorableBalance);
 
     // Validate SOL balances.
     const finalBalances = await getBalances(accounts);
@@ -351,8 +343,8 @@ describe("faktor", () => {
     assert.ok(finalBalances.charlie.SOL === initialBalances.charlie.SOL);
     assert.ok(finalBalances.dana.SOL === initialBalances.dana.SOL);
     assert.ok(
-      finalBalances.cashflow.SOL ===
-        initialBalances.cashflow.SOL + expectedTransferFee
+      finalBalances.payment.SOL ===
+        initialBalances.payment.SOL + expectedTransferFee
     );
     assert.ok(finalBalances.treasury.SOL === initialBalances.treasury.SOL);
 
@@ -363,18 +355,16 @@ describe("faktor", () => {
     assert.ok(finalBalances.dana.wSOL === initialBalances.dana.wSOL);
   });
 
-  it("Dana distributes a cashflow from Alice to Bob.", async () => {
+  it("Dana distributes a payment from Alice to Bob.", async () => {
     // Setup
     const accounts = await createAccounts();
-    const name = "Abc";
-    const memo = "123";
+    const memo = "Abc";
     const balance = 1000;
     const deltaBalance = 100;
     const deltaTime = 50;
     const factorableBalance = 50;
-    await createCashflow(
+    await createPayment(
       accounts,
-      name,
       memo,
       balance,
       deltaBalance,
@@ -384,24 +374,23 @@ describe("faktor", () => {
 
     // Test
     const initialBalances = await getBalances(accounts);
-    await distributeCashflow(accounts);
+    await distributePayment(accounts);
 
-    // Validate cashflow data.
-    const cashflow = await program.account.cashflow.fetch(
-      accounts.cashflow.keys.publicKey
+    // Validate payment data.
+    const payment = await program.account.payment.fetch(
+      accounts.payment.keys.publicKey
     );
-    assert.ok(cashflow.name === "Abc");
-    assert.ok(cashflow.memo === "123");
+    assert.ok(payment.memo === "Abc");
     assert.ok(
-      cashflow.sender.toString() === accounts.alice.keys.publicKey.toString()
+      payment.sender.toString() === accounts.alice.keys.publicKey.toString()
     );
     assert.ok(
-      cashflow.receiver.toString() === accounts.bob.keys.publicKey.toString()
+      payment.receiver.toString() === accounts.bob.keys.publicKey.toString()
     );
-    assert.ok(cashflow.balance.toNumber() === balance - deltaBalance);
-    assert.ok(cashflow.deltaBalance.toNumber() === deltaBalance);
-    assert.ok(cashflow.deltaTime.toNumber() === deltaTime);
-    assert.ok(cashflow.factorableBalance.toNumber() === factorableBalance);
+    assert.ok(payment.balance.toNumber() === balance - deltaBalance);
+    assert.ok(payment.deltaBalance.toNumber() === deltaBalance);
+    assert.ok(payment.deltaTime.toNumber() === deltaTime);
+    assert.ok(payment.factorableBalance.toNumber() === factorableBalance);
 
     // Validate SOL balances.
     const finalBalances = await getBalances(accounts);
@@ -413,8 +402,8 @@ describe("faktor", () => {
         initialBalances.dana.SOL + TRANSFER_FEE_DISTRIBUTOR
     );
     assert.ok(
-      finalBalances.cashflow.SOL ===
-        initialBalances.cashflow.SOL -
+      finalBalances.payment.SOL ===
+        initialBalances.payment.SOL -
           TRANSFER_FEE_DISTRIBUTOR -
           TRANSFER_FEE_TREASURY
     );

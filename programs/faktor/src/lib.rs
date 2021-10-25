@@ -23,7 +23,7 @@ use {
     std::clone::Clone,
 };
 
-declare_id!("9LjA6DjxKDB2uEQPH1kipq5L7Z2hRKGz2yd9EQD9fGhU");
+declare_id!("B67a7z2ttQ39KJcFWHERXG6bUoWY2GPXgQfAeE6K89vN");
 
 // PDA seeds
 static PROGRAM_AUTHORITY_SEED: &[u8] = b"program_authority";
@@ -42,7 +42,7 @@ static TRANSFER_FEE_PROGRAM: u64 = 1000;
 pub mod faktor {
     use super::*;
     pub fn initialize_program(
-        ctx: Context<Initialize>, 
+        ctx: Context<InitializeProgram>, 
         program_authority_bump: u8,
         treasury_bump: u8
     ) -> ProgramResult {
@@ -59,12 +59,12 @@ pub mod faktor {
         return Ok(());
     }
 
-    pub fn approve_cashflow(
-        ctx: Context<ApproveCashflow>,
+    pub fn approve_payment(
+        ctx: Context<ApprovePayment>,
         additional_balance: u64
     ) -> ProgramResult {
         // Get accounts.
-        let cashflow = &mut ctx.accounts.cashflow;
+        let payment = &mut ctx.accounts.payment;
         let sender = &ctx.accounts.sender;
         let sender_tokens = &mut ctx.accounts.sender_tokens;
         let token_program = &ctx.accounts.token_program;
@@ -73,12 +73,12 @@ pub mod faktor {
 
         // Validate request data.
         require!(
-            additional_balance >= cashflow.delta_balance, 
+            additional_balance >= payment.delta_balance, 
             ErrorCode::InvalidRequest
         );
 
         // Validate sender has sufficient lamports to cover transfer fee.
-        let num_transfers = additional_balance / cashflow.delta_balance;
+        let num_transfers = additional_balance / payment.delta_balance;
         let transfer_fee = num_transfers * (TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_PROGRAM);
         require!(
             sender.to_account_info().lamports() >= transfer_fee,
@@ -86,7 +86,7 @@ pub mod faktor {
         );
 
         // Approve program authority to initiate transfers from the sender's token account.
-        let new_balance = cashflow.balance + additional_balance;
+        let new_balance = payment.balance + additional_balance;
         approve(
             CpiContext::new(
                 token_program.to_account_info(),
@@ -99,15 +99,15 @@ pub mod faktor {
             new_balance,
         )?;
 
-        // Update cashflow balance.
-        cashflow.balance = new_balance;
+        // Update payment balance.
+        payment.balance = new_balance;
 
         // Collect transfer fee from sender.
         invoke(
-            &system_instruction::transfer(&sender.key(), &cashflow.key(), transfer_fee),
+            &system_instruction::transfer(&sender.key(), &payment.key(), transfer_fee),
             &[
                 sender.to_account_info().clone(),
-                cashflow.to_account_info().clone(),
+                payment.to_account_info().clone(),
                 system_program.to_account_info().clone(),
             ],
         )?;
@@ -115,9 +115,8 @@ pub mod faktor {
         return Ok(())
     }
 
-    pub fn create_cashflow(
-        ctx: Context<CreateCashflow>, 
-        name: String,
+    pub fn create_payment(
+        ctx: Context<CreatePayment>, 
         memo: String,
         balance: u64,
         delta_balance: u64,
@@ -126,7 +125,7 @@ pub mod faktor {
         bump: u8
     ) -> ProgramResult {
         // Get accounts.
-        let cashflow = &mut ctx.accounts.cashflow;
+        let payment = &mut ctx.accounts.payment;
         let sender = &mut ctx.accounts.sender;
         let sender_tokens = &mut ctx.accounts.sender_tokens;
         let receiver = &ctx.accounts.receiver;
@@ -151,21 +150,20 @@ pub mod faktor {
             ErrorCode::InsufficientLamports
         );
 
-        // Initialize cashflow account.
-        cashflow.name = name;
-        cashflow.memo = memo;
-        cashflow.sender = sender.key();
-        cashflow.sender_tokens = sender_tokens.key();
-        cashflow.receiver = receiver.key();
-        cashflow.receiver_tokens = receiver_tokens.key();
-        cashflow.mint = mint.key();
-        cashflow.balance = balance;
-        cashflow.delta_balance = delta_balance;
-        cashflow.delta_time = delta_time;
-        cashflow.factorable_balance = factorable_balance;
-        cashflow.next_transfer_at = clock.unix_timestamp as u64; // TODO this should be a user variable
-        cashflow.created_at = clock.unix_timestamp as u64;
-        cashflow.bump = bump;
+        // Initialize payment account.
+        payment.memo = memo;
+        payment.sender = sender.key();
+        payment.sender_tokens = sender_tokens.key();
+        payment.receiver = receiver.key();
+        payment.receiver_tokens = receiver_tokens.key();
+        payment.mint = mint.key();
+        payment.balance = balance;
+        payment.delta_balance = delta_balance;
+        payment.delta_time = delta_time;
+        payment.factorable_balance = factorable_balance;
+        payment.next_transfer_at = clock.unix_timestamp as u64; // TODO this should be a user variable
+        payment.created_at = clock.unix_timestamp as u64;
+        payment.bump = bump;
 
         // Approve program authority to initiate transfers from the sender's token account.
         approve(
@@ -182,10 +180,10 @@ pub mod faktor {
 
         // Collect total transfer fee from sender.
         invoke(
-            &system_instruction::transfer(&sender.key(), &cashflow.key(), transfer_fee),
+            &system_instruction::transfer(&sender.key(), &payment.key(), transfer_fee),
             &[
                 sender.to_account_info().clone(),
-                cashflow.to_account_info().clone(),
+                payment.to_account_info().clone(),
                 system_program.to_account_info().clone(),
             ],
         )?;
@@ -193,11 +191,11 @@ pub mod faktor {
         return Ok(());
     }
 
-    pub fn distribute_cashflow(
-        ctx: Context<DistributeCashflow>
+    pub fn distribute_payment(
+        ctx: Context<DistributePayment>
     ) -> ProgramResult {
         // Get accounts.
-        let cashflow = &mut ctx.accounts.cashflow;
+        let payment = &mut ctx.accounts.payment;
         let sender_tokens = &ctx.accounts.sender_tokens;
         let receiver_tokens = &ctx.accounts.receiver_tokens;
         let distributor = &ctx.accounts.distributor;
@@ -209,16 +207,16 @@ pub mod faktor {
         // Validate current timestamp.
         let now = clock.unix_timestamp as u64;
         require!(
-            cashflow.next_transfer_at <= now,
+            payment.next_transfer_at <= now,
             ErrorCode::TooEarly
         );
 
         // Set timestamp for next transfer attempt.
-        cashflow.next_transfer_at += cashflow.delta_time;
+        payment.next_transfer_at += payment.delta_time;
 
         // Validate balances.
         require!(
-            cashflow.balance >= cashflow.delta_balance,
+            payment.balance >= payment.delta_balance,
             ErrorCode::InsufficientBalance
         );
 
@@ -233,18 +231,18 @@ pub mod faktor {
                 },
                 &[&[PROGRAM_AUTHORITY_SEED, &[program_authority.bump]]]
             ),
-            cashflow.delta_balance,
+            payment.delta_balance,
         )?;
 
         // Draw down the balance.
-        cashflow.balance -= cashflow.delta_balance;
+        payment.balance -= payment.delta_balance;
 
-        // Pay distributor transfer fee from cashflow to distributor.
-        **cashflow.to_account_info().try_borrow_mut_lamports()? -= TRANSFER_FEE_DISTRIBUTOR;
+        // Pay distributor transfer fee from payment to distributor.
+        **payment.to_account_info().try_borrow_mut_lamports()? -= TRANSFER_FEE_DISTRIBUTOR;
         **distributor.to_account_info().try_borrow_mut_lamports()? += TRANSFER_FEE_DISTRIBUTOR;
         
-        // Pay program transfer fee from cashflow to treasury.
-        **cashflow.to_account_info().try_borrow_mut_lamports()? -= TRANSFER_FEE_PROGRAM;
+        // Pay program transfer fee from payment to treasury.
+        **payment.to_account_info().try_borrow_mut_lamports()? -= TRANSFER_FEE_PROGRAM;
         **treasury.to_account_info().try_borrow_mut_lamports()? += TRANSFER_FEE_PROGRAM;
 
         return Ok(());
@@ -262,7 +260,7 @@ pub mod faktor {
     program_authority_bump: u8,
     treasury_bump: u8
 )]
-pub struct Initialize<'info> {
+pub struct InitializeProgram<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
     #[account(
@@ -286,15 +284,15 @@ pub struct Initialize<'info> {
 }
 
 #[derive(Accounts)]
-pub struct ApproveCashflow<'info> {
+pub struct ApprovePayment<'info> {
     #[account(
         mut,
-        seeds = [b"cashflow", sender.key().as_ref(), receiver.key().as_ref()],
-        bump = cashflow.bump,
+        seeds = [b"payment", sender.key().as_ref(), receiver.key().as_ref()],
+        bump = payment.bump,
         has_one = sender,
         has_one = receiver,
     )]
-    pub cashflow: Account<'info, Cashflow>,
+    pub payment: Account<'info, Payment>,
     #[account(mut)]
     pub sender: Signer<'info>,
     #[account(mut)]
@@ -310,7 +308,6 @@ pub struct ApproveCashflow<'info> {
 
 #[derive(Accounts)]
 #[instruction(
-    name: String, 
     memo: String, 
     balance: u64,
     delta_balance: u64, 
@@ -318,15 +315,15 @@ pub struct ApproveCashflow<'info> {
     factorable_balance: u64,
     bump: u8,
 )]
-pub struct CreateCashflow<'info> {
+pub struct CreatePayment<'info> {
     #[account(
         init,
-        seeds = [b"cashflow", sender.key().as_ref(), receiver.key().as_ref()],
+        seeds = [b"payment", sender.key().as_ref(), receiver.key().as_ref()],
         bump = bump,
         payer = sender,
-        space = 8 + (4 + name.len()) + (4 + memo.len()) + 32 + 32 + 32 + 32 + 32 + 8 + 8 + 8 + 8 + 8 + 8 + 1,
+        space = 8 + (4 + memo.len()) + 32 + 32 + 32 + 32 + 32 + 8 + 8 + 8 + 8 + 8 + 8 + 1,
     )]
-    pub cashflow: Account<'info, Cashflow>,
+    pub payment: Account<'info, Payment>,
     #[account(mut)]
     pub sender: Signer<'info>,
     #[account(mut)]
@@ -344,15 +341,15 @@ pub struct CreateCashflow<'info> {
 }
 
 #[derive(Accounts)]
-pub struct DistributeCashflow<'info> {
+pub struct DistributePayment<'info> {
     #[account(
         mut,
-        seeds = [b"cashflow", sender.key().as_ref(), receiver.key().as_ref()],
-        bump = cashflow.bump,
+        seeds = [b"payment", sender.key().as_ref(), receiver.key().as_ref()],
+        bump = payment.bump,
         has_one = sender,
         has_one = receiver,
     )]
-    pub cashflow: Account<'info, Cashflow>,
+    pub payment: Account<'info, Payment>,
     pub sender: AccountInfo<'info>,
     #[account(mut)]
     pub sender_tokens: Account<'info, TokenAccount>,
@@ -378,8 +375,7 @@ pub struct DistributeCashflow<'info> {
 ////////////////
 
 #[account]
-pub struct Cashflow {
-    pub name: String,
+pub struct Payment {
     pub memo: String,
     pub sender: Pubkey,
     pub sender_tokens: Pubkey,
