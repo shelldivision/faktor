@@ -45,7 +45,6 @@ export function HomeView() {
 
   // Page state
   const [currentTab, setCurrentTab] = useState(Tab.Incoming);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isCreatePaymentModalOpen, setIsCreatePaymentModalOpen] = useState(false);
 
   // Cached data
@@ -55,13 +54,8 @@ export function HomeView() {
   });
   const visiblePayments = useMemo(() => payments[currentTab.toString()], [payments, currentTab]);
 
-  // Refresh page on load
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
   async function refresh() {
-    setIsRefreshing(true);
+    console.log("REFRESHING HOME VIEW...");
     const payments: any = await program.account.payment.all();
     setPayments({
       incoming: payments.filter(
@@ -71,11 +65,15 @@ export function HomeView() {
         (inv: any) => inv.account.sender.toString() === wallet.publicKey.toString()
       )
     });
-    setIsRefreshing(false);
   }
 
+  // Refresh page on load
+  useEffect(() => {
+    refresh();
+  }, []);
+
   return (
-    <div className="flex flex-1 h-screen overflow-auto overflow-hidden bg-gray-100 focus:outline-none">
+    <div className="flex flex-1 h-screen overflow-auto bg-gray-100 focus:outline-none">
       <main className="z-0 flex-1 max-w-4xl py-8 mx-auto space-y-8">
         <Header />
         <div className="space-y-4">
@@ -83,8 +81,6 @@ export function HomeView() {
             <Toolbar
               currentTab={currentTab}
               setCurrentTab={setCurrentTab}
-              isRefreshing={isRefreshing}
-              refresh={refresh}
               setIsCreatePaymentModalOpen={setIsCreatePaymentModalOpen}
             />
           )}
@@ -126,13 +122,7 @@ function HomeButton() {
   );
 }
 
-function Toolbar({
-  currentTab,
-  setCurrentTab,
-  isRefreshing,
-  refresh,
-  setIsCreatePaymentModalOpen
-}) {
+function Toolbar({ currentTab, setCurrentTab, setIsCreatePaymentModalOpen }) {
   return (
     <div className="flex items-center justify-between">
       {/* Left side */}
@@ -157,7 +147,6 @@ function Toolbar({
       </nav>
       {/* Right side */}
       <div className="space-x-2">
-        {/* <RefreshButton refresh={refresh} isRefreshing={isRefreshing} /> */}
         <NewPaymentButton showModal={() => setIsCreatePaymentModalOpen(true)} />
       </div>
     </div>
@@ -172,18 +161,6 @@ function NewPaymentButton({ showModal }) {
       className="px-5 py-3 text-lg font-semibold text-white transition duration-200 bg-orange-500 rounded-lg shadow hover:bg-orange-400 hover:shadow-lg"
     >
       New Payment
-    </button>
-  );
-}
-
-function RefreshButton({ refresh, isRefreshing }) {
-  return (
-    <button
-      onClick={refresh}
-      disabled={isRefreshing}
-      className="px-4 py-3 font-semibold text-gray-600 rounded-md hover:text-gray-900 hover:bg-gray-200"
-    >
-      {isRefreshing ? "Refreshing..." : "Refresh"}
     </button>
   );
 }
