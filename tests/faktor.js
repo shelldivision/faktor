@@ -154,10 +154,10 @@ describe("faktor", () => {
       {
         accounts: {
           payment: accounts.payment.keys.publicKey,
-          sender: accounts.alice.keys.publicKey,
-          senderTokens: accounts.alice.tokens,
-          receiver: accounts.bob.keys.publicKey,
-          receiverTokens: accounts.bob.tokens,
+          debtor: accounts.alice.keys.publicKey,
+          debtorTokens: accounts.alice.tokens,
+          creditor: accounts.bob.keys.publicKey,
+          creditorTokens: accounts.bob.tokens,
           mint: WSOL_MINT,
           programAuthority: programAuthority,
           systemProgram: SystemProgram.programId,
@@ -176,10 +176,10 @@ describe("faktor", () => {
     await program.rpc.distributePayment({
       accounts: {
         payment: accounts.payment.keys.publicKey,
-        sender: accounts.alice.keys.publicKey,
-        senderTokens: accounts.alice.tokens,
-        receiver: accounts.bob.keys.publicKey,
-        receiverTokens: accounts.bob.tokens,
+        debtor: accounts.alice.keys.publicKey,
+        debtorTokens: accounts.alice.tokens,
+        creditor: accounts.bob.keys.publicKey,
+        creditorTokens: accounts.bob.tokens,
         distributor: accounts.dana.keys.publicKey,
         programAuthority: programAuthority,
         treasury: treasury,
@@ -249,10 +249,10 @@ describe("faktor", () => {
     );
     assert.ok(payment.memo === "Abc");
     assert.ok(
-      payment.sender.toString() === accounts.alice.keys.publicKey.toString()
+      payment.debtor.toString() === accounts.alice.keys.publicKey.toString()
     );
     assert.ok(
-      payment.receiver.toString() === accounts.bob.keys.publicKey.toString()
+      payment.creditor.toString() === accounts.bob.keys.publicKey.toString()
     );
     assert.ok(payment.balance.toNumber() === balance);
     assert.ok(payment.deltaBalance.toNumber() === deltaBalance);
@@ -304,9 +304,9 @@ describe("faktor", () => {
     await program.rpc.approvePayment(new BN(additionalBalance), {
       accounts: {
         payment: accounts.payment.keys.publicKey,
-        sender: accounts.alice.keys.publicKey,
-        senderTokens: accounts.alice.tokens,
-        receiver: accounts.bob.keys.publicKey,
+        debtor: accounts.alice.keys.publicKey,
+        debtorTokens: accounts.alice.tokens,
+        creditor: accounts.bob.keys.publicKey,
         programAuthority: programAuthority,
         systemProgram: SystemProgram.programId,
         tokenProgram: spl.TOKEN_PROGRAM_ID,
@@ -323,10 +323,10 @@ describe("faktor", () => {
     );
     assert.ok(payment.memo === "Abc");
     assert.ok(
-      payment.sender.toString() === accounts.alice.keys.publicKey.toString()
+      payment.debtor.toString() === accounts.alice.keys.publicKey.toString()
     );
     assert.ok(
-      payment.receiver.toString() === accounts.bob.keys.publicKey.toString()
+      payment.creditor.toString() === accounts.bob.keys.publicKey.toString()
     );
     assert.ok(payment.balance.toNumber() === balance + additionalBalance);
     assert.ok(payment.deltaBalance.toNumber() === deltaBalance);
@@ -382,10 +382,10 @@ describe("faktor", () => {
     );
     assert.ok(payment.memo === "Abc");
     assert.ok(
-      payment.sender.toString() === accounts.alice.keys.publicKey.toString()
+      payment.debtor.toString() === accounts.alice.keys.publicKey.toString()
     );
     assert.ok(
-      payment.receiver.toString() === accounts.bob.keys.publicKey.toString()
+      payment.creditor.toString() === accounts.bob.keys.publicKey.toString()
     );
     assert.ok(payment.balance.toNumber() === balance - deltaBalance);
     assert.ok(payment.deltaBalance.toNumber() === deltaBalance);

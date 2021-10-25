@@ -65,8 +65,8 @@ pub mod faktor {
     ) -> ProgramResult {
         // Get accounts.
         let payment = &mut ctx.accounts.payment;
-        let sender = &ctx.accounts.sender;
-        let sender_tokens = &mut ctx.accounts.sender_tokens;
+        let debtor = &ctx.accounts.debtor;
+        let debtor_tokens = &mut ctx.accounts.debtor_tokens;
         let token_program = &ctx.accounts.token_program;
         let program_authority = &ctx.accounts.program_authority;
         let system_program = &ctx.accounts.system_program;
@@ -77,23 +77,23 @@ pub mod faktor {
             ErrorCode::InvalidRequest
         );
 
-        // Validate sender has sufficient lamports to cover transfer fee.
+        // Validate debtor has sufficient lamports to cover transfer fee.
         let num_transfers = additional_balance / payment.delta_balance;
         let transfer_fee = num_transfers * (TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_PROGRAM);
         require!(
-            sender.to_account_info().lamports() >= transfer_fee,
+            debtor.to_account_info().lamports() >= transfer_fee,
             ErrorCode::InsufficientLamports
         );
 
-        // Approve program authority to initiate transfers from the sender's token account.
+        // Approve program authority to initiate transfers from the debtor's token account.
         let new_balance = payment.balance + additional_balance;
         approve(
             CpiContext::new(
                 token_program.to_account_info(),
                 Approve {
-                    authority: sender.to_account_info(),
+                    authority: debtor.to_account_info(),
                     delegate: program_authority.to_account_info(),
-                    to: sender_tokens.to_account_info(),
+                    to: debtor_tokens.to_account_info(),
                 }
             ),
             new_balance,
@@ -102,11 +102,11 @@ pub mod faktor {
         // Update payment balance.
         payment.balance = new_balance;
 
-        // Collect transfer fee from sender.
+        // Collect transfer fee from debtor.
         invoke(
-            &system_instruction::transfer(&sender.key(), &payment.key(), transfer_fee),
+            &system_instruction::transfer(&debtor.key(), &payment.key(), transfer_fee),
             &[
-                sender.to_account_info().clone(),
+                debtor.to_account_info().clone(),
                 payment.to_account_info().clone(),
                 system_program.to_account_info().clone(),
             ],
@@ -126,10 +126,10 @@ pub mod faktor {
     ) -> ProgramResult {
         // Get accounts.
         let payment = &mut ctx.accounts.payment;
-        let sender = &mut ctx.accounts.sender;
-        let sender_tokens = &mut ctx.accounts.sender_tokens;
-        let receiver = &ctx.accounts.receiver;
-        let receiver_tokens = &ctx.accounts.receiver_tokens;
+        let debtor = &mut ctx.accounts.debtor;
+        let debtor_tokens = &mut ctx.accounts.debtor_tokens;
+        let creditor = &ctx.accounts.creditor;
+        let creditor_tokens = &ctx.accounts.creditor_tokens;
         let mint = &ctx.accounts.mint;
         let program_authority = &ctx.accounts.program_authority;
         let system_program = &ctx.accounts.system_program;
@@ -142,20 +142,20 @@ pub mod faktor {
             ErrorCode::InvalidRequest
         );
         
-        // Validate sender has sufficient lamports to cover the transfer fee.
+        // Validate debtor has sufficient lamports to cover the transfer fee.
         let num_transfers = balance / delta_balance;
         let transfer_fee = num_transfers * (TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_PROGRAM);
         require!(
-            sender.to_account_info().lamports() >= transfer_fee,
+            debtor.to_account_info().lamports() >= transfer_fee,
             ErrorCode::InsufficientLamports
         );
 
         // Initialize payment account.
         payment.memo = memo;
-        payment.sender = sender.key();
-        payment.sender_tokens = sender_tokens.key();
-        payment.receiver = receiver.key();
-        payment.receiver_tokens = receiver_tokens.key();
+        payment.debtor = debtor.key();
+        payment.debtor_tokens = debtor_tokens.key();
+        payment.creditor = creditor.key();
+        payment.creditor_tokens = creditor_tokens.key();
         payment.mint = mint.key();
         payment.balance = balance;
         payment.delta_balance = delta_balance;
@@ -165,24 +165,24 @@ pub mod faktor {
         payment.created_at = clock.unix_timestamp as u64;
         payment.bump = bump;
 
-        // Approve program authority to initiate transfers from the sender's token account.
+        // Approve program authority to initiate transfers from the debtor's token account.
         approve(
             CpiContext::new(
                 token_program.to_account_info(),
                 Approve {
-                    authority: sender.to_account_info(),
+                    authority: debtor.to_account_info(),
                     delegate: program_authority.to_account_info(),
-                    to: sender_tokens.to_account_info(),
+                    to: debtor_tokens.to_account_info(),
                 }
             ),
             balance,
         )?;
 
-        // Collect total transfer fee from sender.
+        // Collect total transfer fee from debtor.
         invoke(
-            &system_instruction::transfer(&sender.key(), &payment.key(), transfer_fee),
+            &system_instruction::transfer(&debtor.key(), &payment.key(), transfer_fee),
             &[
-                sender.to_account_info().clone(),
+                debtor.to_account_info().clone(),
                 payment.to_account_info().clone(),
                 system_program.to_account_info().clone(),
             ],
@@ -196,8 +196,8 @@ pub mod faktor {
     ) -> ProgramResult {
         // Get accounts.
         let payment = &mut ctx.accounts.payment;
-        let sender_tokens = &ctx.accounts.sender_tokens;
-        let receiver_tokens = &ctx.accounts.receiver_tokens;
+        let debtor_tokens = &ctx.accounts.debtor_tokens;
+        let creditor_tokens = &ctx.accounts.creditor_tokens;
         let distributor = &ctx.accounts.distributor;
         let treasury = &ctx.accounts.treasury;
         let program_authority = &ctx.accounts.program_authority;
@@ -220,14 +220,14 @@ pub mod faktor {
             ErrorCode::InsufficientBalance
         );
 
-        // Transfer tokens from sender to receiver.
+        // Transfer tokens from debtor to creditor.
         transfer(
             CpiContext::new_with_signer(
                 token_program.to_account_info(),
                 Transfer {
                     authority: program_authority.to_account_info(),
-                    from: sender_tokens.to_account_info(),
-                    to: receiver_tokens.to_account_info(),
+                    from: debtor_tokens.to_account_info(),
+                    to: creditor_tokens.to_account_info(),
                 },
                 &[&[PROGRAM_AUTHORITY_SEED, &[program_authority.bump]]]
             ),
@@ -287,17 +287,17 @@ pub struct InitializeProgram<'info> {
 pub struct ApprovePayment<'info> {
     #[account(
         mut,
-        seeds = [b"payment", sender.key().as_ref(), receiver.key().as_ref()],
+        seeds = [b"payment", debtor.key().as_ref(), creditor.key().as_ref()],
         bump = payment.bump,
-        has_one = sender,
-        has_one = receiver,
+        has_one = debtor,
+        has_one = creditor,
     )]
     pub payment: Account<'info, Payment>,
     #[account(mut)]
-    pub sender: Signer<'info>,
+    pub debtor: Signer<'info>,
     #[account(mut)]
-    pub sender_tokens: Account<'info, TokenAccount>,
-    pub receiver: AccountInfo<'info>,
+    pub debtor_tokens: Account<'info, TokenAccount>,
+    pub creditor: AccountInfo<'info>,
     #[account(mut, seeds = [PROGRAM_AUTHORITY_SEED], bump = program_authority.bump)]
     pub program_authority: Account<'info, ProgramAuthority>,
     #[account(address = SYSTEM_PROGRAM_ID)]
@@ -318,18 +318,18 @@ pub struct ApprovePayment<'info> {
 pub struct CreatePayment<'info> {
     #[account(
         init,
-        seeds = [b"payment", sender.key().as_ref(), receiver.key().as_ref()],
+        seeds = [b"payment", debtor.key().as_ref(), creditor.key().as_ref()],
         bump = bump,
-        payer = sender,
+        payer = debtor,
         space = 8 + (4 + memo.len()) + 32 + 32 + 32 + 32 + 32 + 8 + 8 + 8 + 8 + 8 + 8 + 1,
     )]
     pub payment: Account<'info, Payment>,
     #[account(mut)]
-    pub sender: Signer<'info>,
+    pub debtor: Signer<'info>,
     #[account(mut)]
-    pub sender_tokens: Account<'info, TokenAccount>,
-    pub receiver: AccountInfo<'info>,
-    pub receiver_tokens: Account<'info, TokenAccount>,
+    pub debtor_tokens: Account<'info, TokenAccount>,
+    pub creditor: AccountInfo<'info>,
+    pub creditor_tokens: Account<'info, TokenAccount>,
     pub mint: Account<'info, Mint>,
     #[account(mut, seeds = [PROGRAM_AUTHORITY_SEED], bump = program_authority.bump)]
     pub program_authority: Account<'info, ProgramAuthority>,
@@ -344,19 +344,19 @@ pub struct CreatePayment<'info> {
 pub struct DistributePayment<'info> {
     #[account(
         mut,
-        seeds = [b"payment", sender.key().as_ref(), receiver.key().as_ref()],
+        seeds = [b"payment", debtor.key().as_ref(), creditor.key().as_ref()],
         bump = payment.bump,
-        has_one = sender,
-        has_one = receiver,
+        has_one = debtor,
+        has_one = creditor,
     )]
     pub payment: Account<'info, Payment>,
-    pub sender: AccountInfo<'info>,
+    pub debtor: AccountInfo<'info>,
     #[account(mut)]
-    pub sender_tokens: Account<'info, TokenAccount>,
+    pub debtor_tokens: Account<'info, TokenAccount>,
     #[account(mut)]
-    pub receiver: AccountInfo<'info>,
+    pub creditor: AccountInfo<'info>,
     #[account(mut)]
-    pub receiver_tokens: Account<'info, TokenAccount>,
+    pub creditor_tokens: Account<'info, TokenAccount>,
     #[account(mut)]
     pub distributor: Signer<'info>,
     #[account(mut, seeds = [PROGRAM_AUTHORITY_SEED], bump = program_authority.bump)]
@@ -377,10 +377,10 @@ pub struct DistributePayment<'info> {
 #[account]
 pub struct Payment {
     pub memo: String,
-    pub sender: Pubkey,
-    pub sender_tokens: Pubkey,
-    pub receiver: Pubkey,
-    pub receiver_tokens: Pubkey,
+    pub debtor: Pubkey,
+    pub debtor_tokens: Pubkey,
+    pub creditor: Pubkey,
+    pub creditor_tokens: Pubkey,
     pub mint: Pubkey,
     pub balance: u64,
     pub delta_balance: u64,
