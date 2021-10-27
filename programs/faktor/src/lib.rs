@@ -23,7 +23,7 @@ use {
     std::clone::Clone,
 };
 
-declare_id!("B67a7z2ttQ39KJcFWHERXG6bUoWY2GPXgQfAeE6K89vN");
+declare_id!("H4URXdsQfSNqKNvZJdNxhKVgeNqHjMtZznF14bDeV64b");
 
 // PDA seeds
 static PAYMENT_SEED: &[u8] = b"payment";
@@ -65,7 +65,6 @@ pub mod faktor {
         memo: String, 
         amount: u64,
         authorized_balance: u64, 
-        factorable_balance: u64,
         recurrence_interval: u64,
         bump: u8,
     ) -> ProgramResult {
@@ -103,7 +102,6 @@ pub mod faktor {
         payment.mint = mint.key();
         payment.amount = amount;
         payment.authorized_balance = authorized_balance;
-        payment.factorable_balance = factorable_balance;
         payment.recurrence_interval = recurrence_interval;
         payment.next_transfer_at = clock.unix_timestamp as u64; // TODO this should be a user variable
         payment.created_at = clock.unix_timestamp as u64;
@@ -233,7 +231,6 @@ pub struct InitializeProgram<'info> {
     memo: String, 
     amount: u64,
     authorized_balance: u64, 
-    factorable_balance: u64,
     recurrence_interval: u64,
     bump: u8,
 )]
@@ -243,7 +240,7 @@ pub struct CreatePayment<'info> {
         seeds = [PAYMENT_SEED, debtor.key().as_ref(), creditor.key().as_ref()],
         bump = bump,
         payer = debtor,
-        space = 8 + (4 + memo.len()) + 32 + 32 + 32 + 32 + 32 + 8 + 8 + 8 + 8 + 8 + 8 + 1,
+        space = 8 + (4 + memo.len()) + 32 + 32 + 32 + 32 + 32 + 8 + 8 + 8 + 8 + 8 + 1,
     )]
     pub payment: Account<'info, Payment>,
     #[account(mut)]
@@ -306,7 +303,6 @@ pub struct Payment {
     pub mint: Pubkey,
     pub amount: u64,
     pub authorized_balance: u64,
-    pub factorable_balance: u64,
     pub recurrence_interval: u64,
     pub next_transfer_at: u64,
     pub created_at: u64,

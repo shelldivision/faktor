@@ -142,14 +142,12 @@ describe("faktor", () => {
     memo,
     amount,
     authorizedBalance,
-    factorableBalance,
     recurrenceInterval
   ) {
     await program.rpc.createPayment(
       memo,
       new BN(amount),
       new BN(authorizedBalance),
-      new BN(factorableBalance),
       new BN(recurrenceInterval),
       accounts.payment.bump,
       {
@@ -228,14 +226,12 @@ describe("faktor", () => {
     const memo = "Abc";
     const amount = 100;
     const authorizedBalance = 1000;
-    const factorableBalance = 25;
     const recurrenceInterval = 50;
     await createPayment(
       accounts,
       memo,
       amount,
       authorizedBalance,
-      factorableBalance,
       recurrenceInterval
     );
 
@@ -256,7 +252,6 @@ describe("faktor", () => {
     );
     assert.ok(payment.amount.toNumber() === amount);
     assert.ok(payment.authorizedBalance.toNumber() === authorizedBalance);
-    assert.ok(payment.factorableBalance.toNumber() === factorableBalance);
     assert.ok(payment.recurrenceInterval.toNumber() === recurrenceInterval);
 
     // Validate SOL balances.
@@ -287,14 +282,12 @@ describe("faktor", () => {
     const memo = "Abc";
     const amount = 100;
     const authorizedBalance = 1000;
-    const factorableBalance = 25;
     const recurrenceInterval = 50;
     await createPayment(
       accounts,
       memo,
       amount,
       authorizedBalance,
-      factorableBalance,
       recurrenceInterval
     );
 
@@ -317,7 +310,6 @@ describe("faktor", () => {
     assert.ok(
       payment.authorizedBalance.toNumber() === authorizedBalance - amount
     );
-    assert.ok(payment.factorableBalance.toNumber() === factorableBalance);
     assert.ok(payment.recurrenceInterval.toNumber() === recurrenceInterval);
 
     // Validate SOL balances.
