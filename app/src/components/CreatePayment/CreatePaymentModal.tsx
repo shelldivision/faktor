@@ -1,10 +1,9 @@
 import { Fragment, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { Program, Provider } from "@project-serum/anchor";
-import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { createPayment, CreatePaymentRequest } from "@api";
 import { InputStep } from "./InputStep";
 import { ConfirmationStep } from "./ConfirmationStep";
+import { useWeb3 } from "@components";
 
 export enum CreatePaymentStep {
   Input = 0,
@@ -15,27 +14,15 @@ interface CreatePaymentModalProps {
   open: any;
   setOpen: any;
   refresh: () => void;
-  provider: Provider;
-  program: Program;
 }
 
-export function CreatePaymentModal({
-  open,
-  setOpen,
-  refresh,
-  provider,
-  program
-}: CreatePaymentModalProps) {
-  const wallet = useAnchorWallet();
+export function CreatePaymentModal({ open, setOpen, refresh }: CreatePaymentModalProps) {
+  const { faktor, provider, wallet } = useWeb3();
+
   const [step, setStep] = useState(CreatePaymentStep.Input);
-  const [request, setRequest] = useState<CreatePaymentRequest | null>(
-    wallet
-      ? {
-          program,
-          debtor: provider.wallet.publicKey
-        }
-      : null
-  );
+  const [request, setRequest] = useState<CreatePaymentRequest>({
+    debtor: provider.wallet.publicKey
+  });
 
   const onSubmit = (data: CreatePaymentRequest) => {
     setRequest({
@@ -49,7 +36,7 @@ export function CreatePaymentModal({
 
   const onConfirm = async () => {
     if (!wallet) return;
-    createPayment(request)
+    createPayment(faktor, request)
       .then(() => {
         onClose();
         refresh();
@@ -63,7 +50,6 @@ export function CreatePaymentModal({
     setOpen(false);
     setStep(CreatePaymentStep.Input);
     setRequest({
-      program,
       debtor: provider.wallet.publicKey
     });
   };

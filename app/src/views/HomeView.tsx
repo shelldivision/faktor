@@ -1,47 +1,9 @@
-import { Program, Provider, web3 } from "@project-serum/anchor";
-import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
-import { PublicKey } from "@solana/web3.js";
 import { useEffect, useMemo, useState } from "react";
-import { CreatePaymentModal, PaymentsTable, WalletButton } from "@components";
-import idl from "../idl.json";
-
-const programID = new PublicKey(idl.metadata.address);
-
-const opts: web3.ConfirmOptions = {
-  preflightCommitment: "processed"
-};
-
-enum Tab {
-  Incoming = "incoming",
-  Outgoing = "outgoing"
-}
-
-const tabs = [Tab.Incoming, Tab.Outgoing];
-
-function getTabName(tab: Tab) {
-  switch (tab) {
-    case Tab.Incoming:
-      return "Incoming";
-    case Tab.Outgoing:
-      return "Outgoing";
-    default:
-      return "";
-  }
-}
-
-// const tabs = [{ name: "Incoming" }, { name: "Outgoing" }];
-
-interface PaymentsFeed {
-  incoming: any[];
-  outgoing: any[];
-}
+import { CreatePaymentModal, PaymentsTable, useWeb3, WalletButton } from "@components";
 
 export function HomeView() {
   // Web3
-  const wallet = useAnchorWallet();
-  const { connection } = useConnection();
-  const provider = useMemo(() => new Provider(connection, wallet, opts), [connection, wallet]);
-  const program = useMemo(() => new Program(idl as any, programID, provider), [provider]);
+  const { wallet, faktor } = useWeb3();
 
   // Page state
   const [currentTab, setCurrentTab] = useState(Tab.Incoming);
@@ -61,7 +23,7 @@ export function HomeView() {
   }, []);
 
   async function refresh() {
-    const payments: any = await program.account.payment.all();
+    const payments: any = await faktor.account.payment.all();
     setPayments({
       incoming: payments.filter(
         (inv: any) => inv.account.receiver.toString() === wallet.publicKey.toString()
@@ -84,21 +46,14 @@ export function HomeView() {
               setIsCreatePaymentModalOpen={setIsCreatePaymentModalOpen}
             />
           )}
-          <PaymentsTable
-            payments={visiblePayments}
-            currentTab={currentTab}
-            program={program}
-            refresh={refresh}
-          />
+          <PaymentsTable payments={visiblePayments} currentTab={currentTab} refresh={refresh} />
         </div>
       </main>
       {wallet && (
         <CreatePaymentModal
           open={isCreatePaymentModalOpen}
           setOpen={setIsCreatePaymentModalOpen}
-          program={program}
           refresh={refresh}
-          provider={provider}
         />
       )}
     </div>
@@ -163,4 +118,27 @@ function NewPaymentButton({ showModal }) {
       New Payment
     </button>
   );
+}
+
+enum Tab {
+  Incoming = "incoming",
+  Outgoing = "outgoing"
+}
+
+const tabs = [Tab.Incoming, Tab.Outgoing];
+
+function getTabName(tab: Tab) {
+  switch (tab) {
+    case Tab.Incoming:
+      return "Incoming";
+    case Tab.Outgoing:
+      return "Outgoing";
+    default:
+      return "";
+  }
+}
+
+interface PaymentsFeed {
+  incoming: any[];
+  outgoing: any[];
 }
