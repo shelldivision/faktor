@@ -1,6 +1,6 @@
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { CreatePaymentRequest } from "@api";
-import { SecondaryAction, PrimaryAction } from "../ActionButtons";
+import { SecondaryAction, PrimaryAction } from "@components";
 
 export interface ConfirmationStepProps {
   request: CreatePaymentRequest;
@@ -8,11 +8,7 @@ export interface ConfirmationStepProps {
   onConfirm: () => void;
 }
 
-export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
-  request,
-  onBack,
-  onConfirm
-}) => {
+export function ConfirmationStep({ request, onBack, onConfirm }: ConfirmationStepProps) {
   return (
     <div className="w-full bg-gray-50">
       <h1 className="copy-title">Confirm Payment</h1>
@@ -40,7 +36,7 @@ export const ConfirmationStep: React.FC<ConfirmationStepProps> = ({
       </div>
     </div>
   );
-};
+}
 
 export function Section({ children }) {
   return (

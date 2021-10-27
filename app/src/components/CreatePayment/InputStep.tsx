@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { SecondaryAction, PrimaryAction } from "../ActionButtons";
-import { checkWalletAddressExists, CreatePaymentRequest } from "@api";
-import { InputField } from "../InputField";
+import { CreatePaymentRequest } from "@api";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
-import { useConnection } from "@solana/wallet-adapter-react";
-import { TransferRateInput } from "../TransferRateInput";
-import { MintInputField, MintSelect } from "@components";
+import {
+  MintInputField,
+  SecondaryAction,
+  PrimaryAction,
+  InputField,
+  TransferRateInput
+} from "@components";
 
 export interface InputStepProps {
   request: CreatePaymentRequest;
@@ -13,7 +15,7 @@ export interface InputStepProps {
   onSubmit: (request: CreatePaymentRequest) => void;
 }
 
-export const InputStep: React.FC<InputStepProps> = ({ request, onCancel, onSubmit }) => {
+export function InputStep({ request, onCancel, onSubmit }: InputStepProps) {
   const [isSubmitEnabled, setIsSubmitEnabled] = useState(false);
 
   const [creditor, setReceiver] = useState(request.creditor?.toString() ?? "");
@@ -21,8 +23,6 @@ export const InputStep: React.FC<InputStepProps> = ({ request, onCancel, onSubmi
 
   const [balance, setBalance] = useState(request.balance?.toString() ?? "");
   const [memo, setMemo] = useState(request.memo?.toString() ?? "");
-
-  const { connection } = useConnection();
 
   const _onSubmit = () => {
     onSubmit({
@@ -86,4 +86,4 @@ export const InputStep: React.FC<InputStepProps> = ({ request, onCancel, onSubmi
       </div>
     </form>
   );
-};
+}
