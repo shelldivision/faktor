@@ -1,16 +1,14 @@
 import { CashIcon } from "@heroicons/react/solid";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { useState } from "react";
 import { abbreviate } from "@utils";
 
 export type PaymentsTableProps = {
   payments: any;
   currentTab: string;
-  program: any;
   refresh: any;
 };
 
-export function PaymentsTable({ payments, currentTab, program, refresh }: PaymentsTableProps) {
+export function PaymentsTable({ payments, currentTab, refresh }: PaymentsTableProps) {
   return (
     <div className="flex flex-col min-w-full overflow-hidden overflow-x-auto bg-white rounded-lg shadow">
       {payments.length > 0 ? (
