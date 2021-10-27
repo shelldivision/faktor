@@ -1,7 +1,6 @@
 import { CashIcon } from "@heroicons/react/solid";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { useState } from "react";
-import { PayModal } from "@components";
 import { abbreviate } from "@utils";
 
 export type PaymentsTableProps = {
@@ -12,8 +11,6 @@ export type PaymentsTableProps = {
 };
 
 export function PaymentsTable({ payments, currentTab, program, refresh }: PaymentsTableProps) {
-  const [isPayModalOpen, setIsPayModalOpen] = useState(false);
-  const [currentPayment, setCurrentPayment] = useState<any>();
   return (
     <div className="flex flex-col min-w-full overflow-hidden overflow-x-auto bg-white rounded-lg shadow">
       {payments.length > 0 ? (
@@ -125,10 +122,7 @@ export function PaymentsTable({ payments, currentTab, program, refresh }: Paymen
                     {currentTab === "Payables" && (
                       <td className="px-6 py-4 text-sm text-right text-gray-500 whitespace-nowrap">
                         <button
-                          onClick={() => {
-                            setIsPayModalOpen(true);
-                            setCurrentPayment(payment);
-                          }}
+                          onClick={() => {}}
                           type="button"
                           className="inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-white bg-green-600 rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                         >
@@ -151,15 +145,6 @@ export function PaymentsTable({ payments, currentTab, program, refresh }: Paymen
             <h3 className="text-lg font-medium leading-6 text-gray-900">No payments found</h3>
           </div>
         </div>
-      )}
-      {currentPayment && (
-        <PayModal
-          invoice={currentPayment}
-          open={isPayModalOpen}
-          setOpen={setIsPayModalOpen}
-          program={program}
-          refresh={refresh}
-        />
       )}
     </div>
   );

@@ -45,7 +45,6 @@ export function HomeView() {
 
   // Page state
   const [currentTab, setCurrentTab] = useState(Tab.Incoming);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isCreatePaymentModalOpen, setIsCreatePaymentModalOpen] = useState(false);
 
   // Cached data
