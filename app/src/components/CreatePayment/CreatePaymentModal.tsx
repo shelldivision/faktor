@@ -1,10 +1,10 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { createPayment, CreatePaymentRequest, FaktorIdl } from "@api";
+import { createPayment, CreatePaymentRequest } from "@api";
 import { InputStep } from "./InputStep";
 import { ConfirmationStep } from "./ConfirmationStep";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
-import { Program } from "@project-serum/anchor";
+import { useFaktor } from "@components";
 
 export enum CreatePaymentStep {
   Input = 0,
@@ -38,10 +38,11 @@ function isValid(formData: CreatePaymentFormData) {
 interface CreatePaymentModalProps {
   open: any;
   setOpen: any;
-  faktor: Program<FaktorIdl>;
 }
 
-export function CreatePaymentModal({ open, setOpen, faktor }: CreatePaymentModalProps) {
+export function CreatePaymentModal({ open, setOpen }: CreatePaymentModalProps) {
+  const faktor = useFaktor();
+
   const [step, setStep] = useState(CreatePaymentStep.Input);
   const [formData, setFormData] = useState<CreatePaymentFormData>(DEFAULT_FORM_DATA);
 

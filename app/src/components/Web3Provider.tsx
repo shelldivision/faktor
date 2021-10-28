@@ -38,7 +38,7 @@ export function Web3Provider({ children }: React.PropsWithChildren<{}>) {
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider logo="/logo512.png">
-          <Web3ContextProvider>{children}</Web3ContextProvider>
+          <FaktorProvider>{children}</FaktorProvider>
         </WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
@@ -49,24 +49,23 @@ const opts: ConfirmOptions = {
   preflightCommitment: "processed"
 };
 
-const Web3Context = createContext<Program<FaktorIdl> | null>(null);
+const FaktorContext = createContext<Program<FaktorIdl> | null>(null);
 
-export function Web3ContextProvider({ children }: PropsWithChildren<{}>) {
+export function FaktorProvider({ children }: PropsWithChildren<{}>) {
   const wallet = useAnchorWallet();
   const { connection } = useConnection();
 
   const value = useMemo(() => {
     if (!wallet) return null;
-
     const provider = new Provider(connection, wallet, opts);
-    const faktor = new Program<FaktorIdl>(FAKTOR_IDL, FAKTOR_PROGRAM_ID, provider);
-
-    return faktor;
+    return new Program<FaktorIdl>(FAKTOR_IDL, FAKTOR_PROGRAM_ID, provider);
   }, [wallet, connection]);
 
-  return <Web3Context.Provider value={value}>{children}</Web3Context.Provider>;
+  return <FaktorContext.Provider value={value}>{children}</FaktorContext.Provider>;
 }
 
-export function useWeb3() {
-  return useContext(Web3Context);
+export function useFaktor() {
+  const faktor = useContext(FaktorContext);
+  if (!faktor) throw new Error("Faktor program is not initialized.");
+  return faktor;
 }

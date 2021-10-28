@@ -1,4 +1,4 @@
-import { useWeb3 } from "@components";
+import { useFaktor } from "@components";
 import { CashIcon } from "@heroicons/react/solid";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { abbreviate } from "@utils";
@@ -14,10 +14,8 @@ type PaymentsFeed = {
 };
 
 export function PaymentsTable({ currentTab }: PaymentsTableProps) {
-  // Either faktor and/or wallet could be null, but in theory,
-  // both of them will be null/non-null at the same time so
-  // we shouldn't have
-  const faktor = useWeb3();
+  // Get Faktor program
+  const faktor = useFaktor();
 
   // Cached data
   const [payments, setPayments] = useState<PaymentsFeed>({
@@ -37,7 +35,6 @@ export function PaymentsTable({ currentTab }: PaymentsTableProps) {
 
   async function refresh() {
     if (!faktor) return;
-
     const payments: any = await faktor.account.payment.all();
     const wallet = faktor.provider.wallet;
     setPayments({

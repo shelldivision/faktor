@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { CreatePaymentModal, PaymentsTable, useWeb3, WalletButton } from "@components";
+import { CreatePaymentModal, PaymentsTable, useFaktor, WalletButton } from "@components";
 
 export function HomeView() {
   // Web3
-  const faktor = useWeb3();
+  const faktor = useFaktor();
 
   // Page state
   const [currentTab, setCurrentTab] = useState(Tab.Incoming);
@@ -24,7 +24,6 @@ export function HomeView() {
               <PaymentsTable currentTab={currentTab} />
             </div>
             <CreatePaymentModal
-              faktor={faktor}
               open={isCreatePaymentModalOpen}
               setOpen={setIsCreatePaymentModalOpen}
             />
