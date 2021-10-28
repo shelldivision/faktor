@@ -1,12 +1,10 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { createPayment, CreatePaymentRequest, FAKTOR_IDL, FAKTOR_PROGRAM_ID } from "@api";
+import { createPayment, CreatePaymentRequest, FaktorIdl } from "@api";
 import { InputStep } from "./InputStep";
 import { ConfirmationStep } from "./ConfirmationStep";
-import { useWeb3 } from "@components";
-import { ConfirmOptions, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
-import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
-import { Program, Provider } from "@project-serum/anchor";
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import { Program } from "@project-serum/anchor";
 
 export enum CreatePaymentStep {
   Input = 0,
@@ -40,23 +38,17 @@ function isValid(formData: CreatePaymentFormData) {
 interface CreatePaymentModalProps {
   open: any;
   setOpen: any;
-  // refresh: () => void;
+  faktor: Program<FaktorIdl>;
 }
 
-const opts: ConfirmOptions = {
-  preflightCommitment: "processed"
-};
-
-export function CreatePaymentModal({ open, setOpen }: CreatePaymentModalProps) {
-  const { faktor, provider } = useWeb3();
-
+export function CreatePaymentModal({ open, setOpen, faktor }: CreatePaymentModalProps) {
   const [step, setStep] = useState(CreatePaymentStep.Input);
   const [formData, setFormData] = useState<CreatePaymentFormData>(DEFAULT_FORM_DATA);
 
   const request = useMemo<CreatePaymentRequest | null>(() => {
     if (!isValid(formData)) return null;
     return {
-      debtor: provider.wallet.publicKey,
+      debtor: faktor.provider.wallet.publicKey,
       creditor: new PublicKey(formData.creditor),
       memo: formData.memo,
       amount: parseFloat(formData.amount) * LAMPORTS_PER_SOL,
@@ -75,6 +67,7 @@ export function CreatePaymentModal({ open, setOpen }: CreatePaymentModalProps) {
   }
 
   async function onConfirm() {
+    if (!request) return;
     createPayment(faktor, request)
       .then(() => {
         onClose();
@@ -127,7 +120,7 @@ export function CreatePaymentModal({ open, setOpen }: CreatePaymentModalProps) {
                 {step === CreatePaymentStep.Input && (
                   <InputStep formData={formData} onCancel={onClose} onSubmit={onSubmit} />
                 )}
-                {step === CreatePaymentStep.Confirmation && (
+                {step === CreatePaymentStep.Confirmation && request && (
                   <ConfirmationStep
                     request={request}
                     onBack={() => setStep(step - 1)}

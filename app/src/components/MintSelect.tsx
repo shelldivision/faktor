@@ -27,7 +27,7 @@ export function MintSelect() {
   );
 }
 
-function DropdownButton({ onClick, selectedMint }) {
+function DropdownButton({ onClick, selectedMint }: { onClick: () => void; selectedMint: Mint }) {
   return (
     <button
       type="button"
@@ -40,7 +40,7 @@ function DropdownButton({ onClick, selectedMint }) {
   );
 }
 
-function DropdownList({ children }) {
+function DropdownList({ children }: React.PropsWithChildren<{}>) {
   return (
     <ul
       className="absolute z-10 w-full py-2 mt-1 space-y-0 overflow-y-auto text-base bg-white rounded-lg shadow-lg max-h-48 focus:outline-none sm:text-sm"

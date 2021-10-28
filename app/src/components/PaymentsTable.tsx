@@ -14,7 +14,10 @@ type PaymentsFeed = {
 };
 
 export function PaymentsTable({ currentTab }: PaymentsTableProps) {
-  const { faktor, wallet } = useWeb3();
+  // Either faktor and/or wallet could be null, but in theory,
+  // both of them will be null/non-null at the same time so
+  // we shouldn't have
+  const faktor = useWeb3();
 
   // Cached data
   const [payments, setPayments] = useState<PaymentsFeed>({
@@ -22,7 +25,10 @@ export function PaymentsTable({ currentTab }: PaymentsTableProps) {
     outgoing: []
   });
 
-  const visiblePayments = useMemo(() => payments[currentTab.toString()], [payments, currentTab]);
+  const visiblePayments = useMemo(
+    () => payments[currentTab.toString() as keyof typeof payments],
+    [payments, currentTab]
+  );
 
   // Refresh page on load
   useEffect(() => {
@@ -30,7 +36,10 @@ export function PaymentsTable({ currentTab }: PaymentsTableProps) {
   }, []);
 
   async function refresh() {
+    if (!faktor) return;
+
     const payments: any = await faktor.account.payment.all();
+    const wallet = faktor.provider.wallet;
     setPayments({
       incoming: payments.filter(
         (inv: any) => inv.account.creditor.toString() === wallet.publicKey.toString()
@@ -40,6 +49,7 @@ export function PaymentsTable({ currentTab }: PaymentsTableProps) {
       )
     });
   }
+
   return (
     <div className="flex flex-col min-w-full overflow-hidden overflow-x-auto bg-white rounded-lg shadow">
       {visiblePayments.length > 0 ? (

@@ -1,6 +1,7 @@
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { CreatePaymentRequest } from "@api";
 import { SecondaryAction, PrimaryAction } from "@components";
+import React from "react";
 
 export interface ConfirmationStepProps {
   request: CreatePaymentRequest;
@@ -39,7 +40,7 @@ export function ConfirmationStep({ request, onBack, onConfirm }: ConfirmationSte
   );
 }
 
-export function Section({ children }) {
+export function Section({ children }: React.PropsWithChildren<{}>) {
   return (
     <div className="flex flex-col justify-center border border-gray-200 rounded-md px-3 py-2 w-full space-y-0.5">
       {children}
@@ -47,10 +48,10 @@ export function Section({ children }) {
   );
 }
 
-export function Label({ children }) {
+export function Label({ children }: React.PropsWithChildren<{}>) {
   return <span className="mb-2 font-medium text-gray-500">{children}</span>;
 }
 
-export function Value({ children }) {
+export function Value({ children }: React.PropsWithChildren<{}>) {
   return <span className="text-lg font-semibold text-gray-800">{children}</span>;
 }

@@ -1,3 +1,5 @@
+import React from "react";
+
 export interface InputFieldProps {
   type: string;
   label: string;
@@ -8,8 +10,8 @@ export interface InputFieldProps {
 }
 
 export function InputField({ type, error, label, placeholder, value, onChange }: InputFieldProps) {
-  async function _onChange(e: any) {
-    onChange(e.target.value);
+  async function _onChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onChange && onChange(e.target.value);
   }
 
   return (
@@ -25,7 +27,11 @@ export function InputField({ type, error, label, placeholder, value, onChange }:
   );
 }
 
-export function InputContainer({ children, error, label }) {
+export function InputContainer({
+  children,
+  error,
+  label
+}: React.PropsWithChildren<{ error: string | undefined | null; label?: string }>) {
   return (
     <div className="flex flex-col flex-1">
       <InputBox label={label} error={error}>
@@ -36,7 +42,11 @@ export function InputContainer({ children, error, label }) {
   );
 }
 
-export function InputBox({ children, error, label }) {
+export function InputBox({
+  children,
+  error,
+  label = ""
+}: React.PropsWithChildren<{ error: string | undefined | null; label?: string }>) {
   return (
     <div
       className={`pt-2 flex flex-col flex-1 bg-white rounded-lg ${
@@ -49,11 +59,11 @@ export function InputBox({ children, error, label }) {
   );
 }
 
-export function InputLabel({ title }) {
+export function InputLabel({ title }: { title: string }) {
   return <label className={`mt-2 ml-3 text-gray-600 font-medium text-sm leading-3`}>{title}</label>;
 }
 
-export function InputErrorLabel({ error }) {
+export function InputErrorLabel({ error }: { error: string | undefined | null }) {
   if (!error) return null;
   return <label className="mx-1 mt-1 text-base text-red-600">{error}</label>;
 }

@@ -3,7 +3,7 @@ import { CreatePaymentModal, PaymentsTable, useWeb3, WalletButton } from "@compo
 
 export function HomeView() {
   // Web3
-  const { wallet } = useWeb3();
+  const faktor = useWeb3();
 
   // Page state
   const [currentTab, setCurrentTab] = useState(Tab.Incoming);
@@ -13,20 +13,24 @@ export function HomeView() {
     <div className="flex flex-1 h-screen overflow-auto bg-gray-100 focus:outline-none">
       <main className="z-0 flex-1 max-w-4xl px-2 py-8 mx-auto space-y-8 sm:px-4">
         <Header />
-        {wallet && (
-          <div className="space-y-4">
-            <Toolbar
-              currentTab={currentTab}
-              setCurrentTab={setCurrentTab}
-              setIsCreatePaymentModalOpen={setIsCreatePaymentModalOpen}
+        {faktor && (
+          <>
+            <div className="space-y-4">
+              <Toolbar
+                currentTab={currentTab}
+                setCurrentTab={setCurrentTab}
+                setIsCreatePaymentModalOpen={setIsCreatePaymentModalOpen}
+              />
+              <PaymentsTable currentTab={currentTab} />
+            </div>
+            <CreatePaymentModal
+              faktor={faktor}
+              open={isCreatePaymentModalOpen}
+              setOpen={setIsCreatePaymentModalOpen}
             />
-            <PaymentsTable currentTab={currentTab} />
-          </div>
+          </>
         )}
       </main>
-      {wallet && (
-        <CreatePaymentModal open={isCreatePaymentModalOpen} setOpen={setIsCreatePaymentModalOpen} />
-      )}
     </div>
   );
 }
@@ -48,7 +52,15 @@ function HomeButton() {
   );
 }
 
-function Toolbar({ currentTab, setCurrentTab, setIsCreatePaymentModalOpen }) {
+function Toolbar({
+  currentTab,
+  setCurrentTab,
+  setIsCreatePaymentModalOpen
+}: {
+  currentTab: Tab;
+  setCurrentTab: (tab: Tab) => void;
+  setIsCreatePaymentModalOpen: (val: boolean) => void;
+}) {
   return (
     <div className="flex items-center justify-between">
       {/* Left side */}
@@ -60,7 +72,7 @@ function Toolbar({ currentTab, setCurrentTab, setIsCreatePaymentModalOpen }) {
             }`}
           >
             <a
-              onClick={() => setCurrentTab(tab.toString())}
+              onClick={() => setCurrentTab(tab)}
               key={tab.toString()}
               className={`px-3 py-2 text hover:bg-gray-200 transition duration-200 rounded-md font-semibold cursor-pointer ${
                 currentTab === tab ? "text-gray-900" : "text-gray-400"
@@ -79,7 +91,7 @@ function Toolbar({ currentTab, setCurrentTab, setIsCreatePaymentModalOpen }) {
   );
 }
 
-function NewPaymentButton({ showModal }) {
+function NewPaymentButton({ showModal }: { showModal: () => void }) {
   return (
     <button
       onClick={showModal}
@@ -107,9 +119,4 @@ function getTabName(tab: Tab) {
     default:
       return "";
   }
-}
-
-interface PaymentsFeed {
-  incoming: any[];
-  outgoing: any[];
 }

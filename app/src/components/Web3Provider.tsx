@@ -3,8 +3,7 @@ import {
   ConnectionProvider,
   WalletProvider,
   useAnchorWallet,
-  useConnection,
-  AnchorWallet
+  useConnection
 } from "@solana/wallet-adapter-react";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import {
@@ -14,11 +13,11 @@ import {
   getSolflareWallet
 } from "@solana/wallet-adapter-wallets";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
-import { ConfirmOptions, clusterApiUrl, Connection } from "@solana/web3.js";
+import { ConfirmOptions, clusterApiUrl } from "@solana/web3.js";
 import { Program, Provider } from "@project-serum/anchor";
-import { FAKTOR_IDL, FAKTOR_PROGRAM_ID } from "@api";
+import { FaktorIdl, FAKTOR_IDL, FAKTOR_PROGRAM_ID } from "@api";
 
-export function Web3Provider({ children }) {
+export function Web3Provider({ children }: React.PropsWithChildren<{}>) {
   // Can be set to 'devnet', 'testnet', or 'mainnet-beta'
   const endpoint = useMemo(
     () =>
@@ -50,32 +49,22 @@ const opts: ConfirmOptions = {
   preflightCommitment: "processed"
 };
 
-type Web3 = {
-  wallet: AnchorWallet;
-  connection: Connection;
-  provider: Provider;
-  faktor: Program;
-};
-
-const Web3Context = createContext<Web3 | null>(null);
+const Web3Context = createContext<Program<FaktorIdl> | null>(null);
 
 export function Web3ContextProvider({ children }: PropsWithChildren<{}>) {
   const wallet = useAnchorWallet();
   const { connection } = useConnection();
-  const provider = useMemo(() => new Provider(connection, wallet, opts), [connection, wallet]);
-  const faktor = useMemo(() => new Program(FAKTOR_IDL, FAKTOR_PROGRAM_ID, provider), [provider]);
-  return (
-    <Web3Context.Provider
-      value={{
-        wallet,
-        connection,
-        provider,
-        faktor
-      }}
-    >
-      {children}
-    </Web3Context.Provider>
-  );
+
+  const value = useMemo(() => {
+    if (!wallet) return null;
+
+    const provider = new Provider(connection, wallet, opts);
+    const faktor = new Program<FaktorIdl>(FAKTOR_IDL, FAKTOR_PROGRAM_ID, provider);
+
+    return faktor;
+  }, [wallet, connection]);
+
+  return <Web3Context.Provider value={value}>{children}</Web3Context.Provider>;
 }
 
 export function useWeb3() {
