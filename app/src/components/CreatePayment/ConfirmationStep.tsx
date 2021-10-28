@@ -9,6 +9,7 @@ export interface ConfirmationStepProps {
 }
 
 export function ConfirmationStep({ request, onBack, onConfirm }: ConfirmationStepProps) {
+  if (!request) return null;
   return (
     <div className="w-full bg-gray-50">
       <h1 className="copy-title">Confirm Payment</h1>
@@ -19,7 +20,7 @@ export function ConfirmationStep({ request, onBack, onConfirm }: ConfirmationSte
         </Section>
         <Section>
           <Label>Balance</Label>
-          <Value>{request.balance / LAMPORTS_PER_SOL} SOL</Value>
+          <Value>{(request.amount ?? 0) / LAMPORTS_PER_SOL} SOL</Value>
         </Section>
         <Section>
           <Label>Memo</Label>

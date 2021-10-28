@@ -1,50 +1,49 @@
 import { useEffect, useState } from "react";
-import { CreatePaymentRequest } from "@api";
-import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import {
   MintInputField,
   SecondaryAction,
   PrimaryAction,
   InputField,
-  TransferRateInput
+  TransferRateInput,
+  CreatePaymentFormData
 } from "@components";
 
 export interface InputStepProps {
-  request: CreatePaymentRequest;
+  formData: CreatePaymentFormData;
+  onSubmit: (formData: CreatePaymentFormData) => void;
   onCancel: () => void;
-  onSubmit: (request: CreatePaymentRequest) => void;
 }
 
-export function InputStep({ request, onCancel, onSubmit }: InputStepProps) {
+export function InputStep({ formData, onCancel, onSubmit }: InputStepProps) {
   const [isSubmitEnabled, setIsSubmitEnabled] = useState(false);
 
-  const [creditor, setReceiver] = useState(request.creditor?.toString() ?? "");
-  const [creditorError, setReceiverError] = useState("");
+  const [creditor, setCreditor] = useState(formData.creditor?.toString() ?? "");
+  const [creditorError, setCreditorError] = useState("");
 
-  const [balance, setBalance] = useState(request.balance?.toString() ?? "");
-  const [memo, setMemo] = useState(request.memo?.toString() ?? "");
+  const [memo, setMemo] = useState(formData.memo?.toString() ?? "");
+  const [amount, setAmount] = useState(formData.amount?.toString() ?? "");
 
   const _onSubmit = () => {
     onSubmit({
-      creditor: new PublicKey(creditor),
-      balance: parseFloat(balance) * LAMPORTS_PER_SOL,
-      memo: memo
+      creditor: creditor,
+      memo: memo,
+      amount: amount
     });
   };
 
   useEffect(() => {
-    // TODO input validation (valid address, non-negative balance, etc.)
-    setIsSubmitEnabled(creditor !== "" && balance !== "" && memo !== "");
-  }, [creditor, balance, memo]);
+    // TODO input validation (valid address, non-negative amount, etc.)
+    setIsSubmitEnabled(creditor !== "" && amount !== "" && memo !== "");
+  }, [creditor, amount, memo]);
 
   useEffect(() => {
     if (creditor) {
-      setReceiverError("");
+      setCreditorError("");
       try {
         const _ = new PublicKey(creditor);
       } catch (e) {
-        console.log("HEY");
-        setReceiverError("Invalid address");
+        setCreditorError("Invalid address");
       }
     }
   }, [creditor]);
@@ -59,7 +58,7 @@ export function InputStep({ request, onCancel, onSubmit }: InputStepProps) {
           type="text"
           placeholder="Public address"
           value={creditor}
-          onChange={(v) => setReceiver(v)}
+          onChange={(v) => setCreditor(v)}
         />
 
         <InputField
@@ -72,7 +71,12 @@ export function InputStep({ request, onCancel, onSubmit }: InputStepProps) {
 
         <div className="flex flex-row flex-1 space-x-2">
           <MintInputField error={null} onChange={() => {}} />
-          <InputField label="Amount" type="number" placeholder="0.00" />
+          <InputField
+            label="Amount"
+            type="number"
+            placeholder="0.00"
+            onChange={(v) => setAmount(v)}
+          />
         </div>
         <TransferRateInput />
       </div>

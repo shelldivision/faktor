@@ -20,10 +20,12 @@ import { FAKTOR_IDL, FAKTOR_PROGRAM_ID } from "@api";
 
 export function Web3Provider({ children }) {
   // Can be set to 'devnet', 'testnet', or 'mainnet-beta'
-  const network = WalletAdapterNetwork.Devnet;
   const endpoint = useMemo(
-    () => (process.env.NODE_ENV === "development" ? "localhost:8899" : clusterApiUrl(network)),
-    [network]
+    () =>
+      process.env.NODE_ENV === "development"
+        ? "http://localhost:8899"
+        : clusterApiUrl(WalletAdapterNetwork.Devnet),
+    []
   );
 
   // @solana/wallet-adapter-wallets includes all the adapters but supports tree shaking --
