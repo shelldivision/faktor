@@ -27,7 +27,7 @@ export const createPayment = async (faktor: Program, req: CreatePaymentRequest):
     FAKTOR_PROGRAM_ID
   );
 
-  // Associated token account
+  // Associated token accounts
   const debtorATA = await getOrCreateATA({
     provider: faktor.provider,
     mint: MINTS.WSOL.address,
