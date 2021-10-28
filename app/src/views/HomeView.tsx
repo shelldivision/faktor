@@ -48,7 +48,15 @@ function HomeButton() {
   );
 }
 
-function Toolbar({ currentTab, setCurrentTab, setIsCreatePaymentModalOpen }) {
+function Toolbar({
+  currentTab,
+  setCurrentTab,
+  setIsCreatePaymentModalOpen
+}: {
+  currentTab: Tab;
+  setCurrentTab: (tab: Tab) => void;
+  setIsCreatePaymentModalOpen: (val: boolean) => void;
+}) {
   return (
     <div className="flex items-center justify-between">
       {/* Left side */}
@@ -60,7 +68,7 @@ function Toolbar({ currentTab, setCurrentTab, setIsCreatePaymentModalOpen }) {
             }`}
           >
             <a
-              onClick={() => setCurrentTab(tab.toString())}
+              onClick={() => setCurrentTab(tab)}
               key={tab.toString()}
               className={`px-3 py-2 text hover:bg-gray-200 transition duration-200 rounded-md font-semibold cursor-pointer ${
                 currentTab === tab ? "text-gray-900" : "text-gray-400"
@@ -79,7 +87,7 @@ function Toolbar({ currentTab, setCurrentTab, setIsCreatePaymentModalOpen }) {
   );
 }
 
-function NewPaymentButton({ showModal }) {
+function NewPaymentButton({ showModal }: { showModal: () => void }) {
   return (
     <button
       onClick={showModal}

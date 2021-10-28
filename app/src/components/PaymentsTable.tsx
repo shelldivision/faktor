@@ -22,7 +22,10 @@ export function PaymentsTable({ currentTab }: PaymentsTableProps) {
     outgoing: []
   });
 
-  const visiblePayments = useMemo(() => payments[currentTab.toString()], [payments, currentTab]);
+  const visiblePayments = useMemo(
+    () => payments[currentTab.toString() as keyof typeof payments],
+    [payments, currentTab]
+  );
 
   // Refresh page on load
   useEffect(() => {

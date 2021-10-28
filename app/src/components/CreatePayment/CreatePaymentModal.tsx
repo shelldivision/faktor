@@ -1,12 +1,10 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { createPayment, CreatePaymentRequest, FAKTOR_IDL, FAKTOR_PROGRAM_ID } from "@api";
+import { createPayment, CreatePaymentRequest } from "@api";
 import { InputStep } from "./InputStep";
 import { ConfirmationStep } from "./ConfirmationStep";
 import { useWeb3 } from "@components";
-import { ConfirmOptions, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
-import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
-import { Program, Provider } from "@project-serum/anchor";
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 
 export enum CreatePaymentStep {
   Input = 0,
@@ -43,10 +41,6 @@ interface CreatePaymentModalProps {
   // refresh: () => void;
 }
 
-const opts: ConfirmOptions = {
-  preflightCommitment: "processed"
-};
-
 export function CreatePaymentModal({ open, setOpen }: CreatePaymentModalProps) {
   const { faktor, provider } = useWeb3();
 
@@ -75,6 +69,7 @@ export function CreatePaymentModal({ open, setOpen }: CreatePaymentModalProps) {
   }
 
   async function onConfirm() {
+    if (!request) return;
     createPayment(faktor, request)
       .then(() => {
         onClose();
@@ -127,7 +122,7 @@ export function CreatePaymentModal({ open, setOpen }: CreatePaymentModalProps) {
                 {step === CreatePaymentStep.Input && (
                   <InputStep formData={formData} onCancel={onClose} onSubmit={onSubmit} />
                 )}
-                {step === CreatePaymentStep.Confirmation && (
+                {step === CreatePaymentStep.Confirmation && request && (
                   <ConfirmationStep
                     request={request}
                     onBack={() => setStep(step - 1)}

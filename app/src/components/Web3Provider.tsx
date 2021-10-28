@@ -18,7 +18,7 @@ import { ConfirmOptions, clusterApiUrl, Connection } from "@solana/web3.js";
 import { Program, Provider } from "@project-serum/anchor";
 import { FAKTOR_IDL, FAKTOR_PROGRAM_ID } from "@api";
 
-export function Web3Provider({ children }) {
+export function Web3Provider({ children }: React.PropsWithChildren<{}>) {
   // Can be set to 'devnet', 'testnet', or 'mainnet-beta'
   const endpoint = useMemo(
     () =>
