@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@project-serum/anchor": "^0.18.0",
+    "@solana/spl-token": "^0.1.8",
     "@solana/wallet-adapter-base": "^0.6.0",
     "@solana/wallet-adapter-react": "^0.12.1",
     "@solana/wallet-adapter-react-ui": "^0.4.1",
@@ -54,6 +55,7 @@
     "@types/node": "^16.9.6",
     "@types/react": "^17.0.24",
     "@types/react-dom": "^17.0.9",
+    "@types/react-router-dom": "^5.3.2",
     "@typescript-eslint/eslint-plugin": "^5.2.0",
     "@typescript-eslint/parser": "^5.2.0",
     "autoprefixer": "^9",
