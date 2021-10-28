@@ -1,28 +1,6 @@
-import { PublicKey } from "@solana/web3.js";
 import { useRef, useState } from "react";
 import { useOnClickOutside } from "@hooks";
-
-export type Mint = {
-  address: PublicKey;
-  name: string;
-  ticker: string;
-  icon: string;
-};
-
-const MINTS = [
-  {
-    address: new PublicKey("So11111111111111111111111111111111111111112"),
-    name: "Solana",
-    ticker: "wSOL",
-    icon: "/svg/token/sol.svg"
-  },
-  {
-    address: new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
-    name: "USD Coin",
-    ticker: "USDC",
-    icon: "/svg/token/usdc.svg"
-  }
-];
+import { Mint, MINTS } from "@utils";
 
 export function MintSelect() {
   const [selectedMint, setSelectedMint] = useState(MINTS[0]);
@@ -39,7 +17,7 @@ export function MintSelect() {
       <div className="relative">
         {isDropdownVisible && (
           <DropdownList>
-            {MINTS.map((mint) => (
+            {Object.values(MINTS).map((mint) => (
               <DropdownItem mint={mint} />
             ))}
           </DropdownList>

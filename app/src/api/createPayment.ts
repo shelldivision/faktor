@@ -6,11 +6,10 @@ import {
   SYSVAR_CLOCK_PUBKEY,
   TransactionInstruction
 } from "@solana/web3.js";
-import { Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { getATAAddress, getOrCreateATA } from "./ata";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { getOrCreateATA, MINTS } from "@utils";
 
 const PAYMENT_SEED: Buffer = Buffer.from("payment");
-const WSOL_MINT = new PublicKey("So11111111111111111111111111111111111111112");
 
 export type CreatePaymentRequest = {
   debtor: PublicKey;
@@ -31,13 +30,13 @@ export const createPayment = async (faktor: Program, req: CreatePaymentRequest):
   // Associated token account
   const debtorATA = await getOrCreateATA({
     provider: faktor.provider,
-    mint: WSOL_MINT,
+    mint: MINTS.WSOL.address,
     owner: req.debtor,
     payer: req.debtor
   });
   const creditorATA = await getOrCreateATA({
     provider: faktor.provider,
-    mint: WSOL_MINT,
+    mint: MINTS.WSOL.address,
     owner: req.creditor,
     payer: req.debtor
   });
@@ -60,7 +59,7 @@ export const createPayment = async (faktor: Program, req: CreatePaymentRequest):
         debtorTokens: debtorATA.address,
         creditor: req.creditor,
         creditorTokens: creditorATA.address,
-        mint: WSOL_MINT,
+        mint: MINTS.WSOL.address,
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
         clock: SYSVAR_CLOCK_PUBKEY
