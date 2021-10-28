@@ -1656,10 +1656,10 @@
     schema-utils "^2.6.5"
     source-map "^0.7.3"
 
-"@project-serum/anchor@^0.17.1-beta.1":
-  version "0.17.1-beta.1"
-  resolved "https://registry.yarnpkg.com/@project-serum/anchor/-/anchor-0.17.1-beta.1.tgz#0532b4534c6a86e67e8530040c717979240f1dbe"
-  integrity sha512-W23rI48nNm6sM+3L6jUh4kSWh5cLJWwJHiohB2AnnG+9jYs/NSgCcope8dP0g2DeHITCo5E/VpZpZc4Fulqqpg==
+"@project-serum/anchor@^0.18.0":
+  version "0.18.0"
+  resolved "https://registry.yarnpkg.com/@project-serum/anchor/-/anchor-0.18.0.tgz#867144282e59482230f797f73ee9f5634f846061"
+  integrity sha512-WTm+UB93MoxyCbjnHIibv/uUEoO/5gL4GEtE/aMioLF8Z4i0vCMPnvAN0xpk9VBu3t7ld2DcCE/L+6Z7dwU++w==
   dependencies:
     "@project-serum/borsh" "^0.2.2"
     "@solana/web3.js" "^1.17.0"
