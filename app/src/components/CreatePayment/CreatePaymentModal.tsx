@@ -42,7 +42,7 @@ interface CreatePaymentModalProps {
 }
 
 export function CreatePaymentModal({ open, setOpen }: CreatePaymentModalProps) {
-  const { faktor, provider } = useWeb3();
+  const { faktor } = useWeb3();
 
   const [step, setStep] = useState(CreatePaymentStep.Input);
   const [formData, setFormData] = useState<CreatePaymentFormData>(DEFAULT_FORM_DATA);

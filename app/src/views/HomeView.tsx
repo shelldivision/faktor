@@ -3,7 +3,7 @@ import { CreatePaymentModal, PaymentsTable, useWeb3, WalletButton } from "@compo
 
 export function HomeView() {
   // Web3
-  const { wallet } = useWeb3();
+  const { provider } = useWeb3();
 
   // Page state
   const [currentTab, setCurrentTab] = useState(Tab.Incoming);
