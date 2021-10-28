@@ -41,7 +41,7 @@ export function InputStep({ formData, onCancel, onSubmit }: InputStepProps) {
     if (creditor) {
       setCreditorError("");
       try {
-        const _ = new PublicKey(creditor);
+        new PublicKey(creditor);
       } catch (e) {
         setCreditorError("Invalid address");
       }
