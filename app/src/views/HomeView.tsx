@@ -3,7 +3,7 @@ import { CreatePaymentModal, PaymentsTable, useWeb3, WalletButton } from "@compo
 
 export function HomeView() {
   // Web3
-  const { provider } = useWeb3();
+  const faktor = useWeb3();
 
   // Page state
   const [currentTab, setCurrentTab] = useState(Tab.Incoming);
@@ -13,20 +13,24 @@ export function HomeView() {
     <div className="flex flex-1 h-screen overflow-auto bg-gray-100 focus:outline-none">
       <main className="z-0 flex-1 max-w-4xl px-2 py-8 mx-auto space-y-8 sm:px-4">
         <Header />
-        {wallet && (
-          <div className="space-y-4">
-            <Toolbar
-              currentTab={currentTab}
-              setCurrentTab={setCurrentTab}
-              setIsCreatePaymentModalOpen={setIsCreatePaymentModalOpen}
+        {faktor && (
+          <>
+            <div className="space-y-4">
+              <Toolbar
+                currentTab={currentTab}
+                setCurrentTab={setCurrentTab}
+                setIsCreatePaymentModalOpen={setIsCreatePaymentModalOpen}
+              />
+              <PaymentsTable currentTab={currentTab} />
+            </div>
+            <CreatePaymentModal
+              faktor={faktor}
+              open={isCreatePaymentModalOpen}
+              setOpen={setIsCreatePaymentModalOpen}
             />
-            <PaymentsTable currentTab={currentTab} />
-          </div>
+          </>
         )}
       </main>
-      {wallet && (
-        <CreatePaymentModal open={isCreatePaymentModalOpen} setOpen={setIsCreatePaymentModalOpen} />
-      )}
     </div>
   );
 }
@@ -115,9 +119,4 @@ function getTabName(tab: Tab) {
     default:
       return "";
   }
-}
-
-interface PaymentsFeed {
-  incoming: any[];
-  outgoing: any[];
 }
