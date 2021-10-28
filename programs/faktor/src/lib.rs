@@ -248,9 +248,17 @@ pub struct CreatePayment<'info> {
     pub payment: Account<'info, Payment>,
     #[account(mut)]
     pub debtor: Signer<'info>,
-    #[account(mut)]
+    #[account(
+        mut,
+        constraint = debtor_tokens.owner == debtor.key(),
+        constraint = debtor_tokens.mint == mint.key()
+    )]
     pub debtor_tokens: Account<'info, TokenAccount>,
     pub creditor: AccountInfo<'info>,
+    #[account(
+        constraint = creditor_tokens.owner == creditor.key(),
+        constraint = creditor_tokens.mint == mint.key()
+    )]
     pub creditor_tokens: Account<'info, TokenAccount>,
     pub mint: Account<'info, Mint>,
     #[account(address = SYSTEM_PROGRAM_ID)]
@@ -267,15 +275,25 @@ pub struct DistributePayment<'info> {
         seeds = [PAYMENT_SEED, debtor.key().as_ref(), creditor.key().as_ref()],
         bump = payment.bump,
         has_one = debtor,
+        has_one = debtor_tokens,
         has_one = creditor,
+        has_one = creditor_tokens
     )]
     pub payment: Account<'info, Payment>,
     pub debtor: AccountInfo<'info>,
-    #[account(mut)]
+    #[account(
+        mut,
+        constraint = debtor_tokens.owner == payment.debtor,
+        constraint = debtor_tokens.mint == payment.mint
+    )]
     pub debtor_tokens: Account<'info, TokenAccount>,
     #[account(mut)]
     pub creditor: AccountInfo<'info>,
-    #[account(mut)]
+    #[account(
+        mut,
+        constraint = creditor_tokens.owner == payment.creditor,
+        constraint = creditor_tokens.mint == payment.mint
+    )]
     pub creditor_tokens: Account<'info, TokenAccount>,
     #[account(mut)]
     pub distributor: Signer<'info>,
