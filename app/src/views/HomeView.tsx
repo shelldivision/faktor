@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { CreatePaymentModal, PaymentsTable, useFaktor, WalletButton } from "@components";
+import { CreatePaymentModal, PaymentsTable, WalletButton } from "@components";
+import { useAnchorWallet } from "@solana/wallet-adapter-react";
 
 export function HomeView() {
-  // Web3
-  const faktor = useFaktor();
+  // Get the connected wallet
+  const wallet = useAnchorWallet();
 
   // Page state
   const [currentTab, setCurrentTab] = useState(Tab.Incoming);
@@ -13,7 +14,7 @@ export function HomeView() {
     <div className="flex flex-1 h-screen overflow-auto bg-gray-100 focus:outline-none">
       <main className="z-0 flex-1 max-w-4xl px-2 py-8 mx-auto space-y-8 sm:px-4">
         <Header />
-        {faktor && (
+        {wallet && (
           <>
             <div className="space-y-4">
               <Toolbar
