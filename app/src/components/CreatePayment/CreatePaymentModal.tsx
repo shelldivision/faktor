@@ -1,58 +1,94 @@
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { createPayment, CreatePaymentRequest } from "@api";
+import { createPayment, CreatePaymentRequest, FAKTOR_IDL, FAKTOR_PROGRAM_ID } from "@api";
 import { InputStep } from "./InputStep";
 import { ConfirmationStep } from "./ConfirmationStep";
 import { useWeb3 } from "@components";
+import { ConfirmOptions, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
+import { Program, Provider } from "@project-serum/anchor";
 
 export enum CreatePaymentStep {
   Input = 0,
   Confirmation = 1
 }
 
+// TODO add mint to form data
+export type CreatePaymentFormData = {
+  creditor: string;
+  memo: string;
+  amount: string;
+};
+
+const DEFAULT_FORM_DATA = {
+  creditor: "",
+  memo: "",
+  amount: ""
+};
+
+function isValid(formData: CreatePaymentFormData) {
+  try {
+    new PublicKey(formData.creditor);
+    parseFloat(formData.amount);
+    return true;
+  } catch (e) {
+    console.log(e);
+    return false;
+  }
+}
+
 interface CreatePaymentModalProps {
   open: any;
   setOpen: any;
-  refresh: () => void;
+  // refresh: () => void;
 }
 
-export function CreatePaymentModal({ open, setOpen, refresh }: CreatePaymentModalProps) {
-  const { faktor, provider, wallet } = useWeb3();
+const opts: ConfirmOptions = {
+  preflightCommitment: "processed"
+};
+
+export function CreatePaymentModal({ open, setOpen }: CreatePaymentModalProps) {
+  const { faktor, provider } = useWeb3();
 
   const [step, setStep] = useState(CreatePaymentStep.Input);
-  const [request, setRequest] = useState<CreatePaymentRequest>({
-    debtor: provider.wallet.publicKey
-  });
+  const [formData, setFormData] = useState<CreatePaymentFormData>(DEFAULT_FORM_DATA);
 
-  const onSubmit = (data: CreatePaymentRequest) => {
-    setRequest({
-      creditor: data.creditor,
-      balance: data.balance,
-      memo: data.memo,
-      ...request
-    });
-    setStep(CreatePaymentStep.Confirmation);
-  };
+  const request = useMemo<CreatePaymentRequest | null>(() => {
+    if (!isValid(formData)) return null;
+    return {
+      debtor: provider.wallet.publicKey,
+      creditor: new PublicKey(formData.creditor),
+      memo: formData.memo,
+      amount: parseFloat(formData.amount) * LAMPORTS_PER_SOL,
+      authorizedBalance: parseFloat(formData.amount) * LAMPORTS_PER_SOL,
+      recurrenceInterval: 0
+    };
+  }, [formData]);
 
-  const onConfirm = async () => {
-    if (!wallet) return;
+  useEffect(() => {
+    if (!request) setStep(CreatePaymentStep.Input);
+    else setStep(CreatePaymentStep.Confirmation);
+  }, [request]);
+
+  function onSubmit(data: CreatePaymentFormData) {
+    setFormData(data);
+  }
+
+  async function onConfirm() {
     createPayment(faktor, request)
       .then(() => {
         onClose();
-        refresh();
+        // refresh();
       })
       .catch((error) => {
-        console.warn("Failed to issue invoice: ", error.message);
+        console.warn("Failed to create payment: ", error.message);
       });
-  };
+  }
 
-  const onClose = () => {
+  function onClose() {
     setOpen(false);
-    setStep(CreatePaymentStep.Input);
-    setRequest({
-      debtor: provider.wallet.publicKey
-    });
-  };
+    setFormData(DEFAULT_FORM_DATA);
+  }
 
   return (
     <Transition.Root show={open} as={Fragment}>
@@ -89,7 +125,7 @@ export function CreatePaymentModal({ open, setOpen, refresh }: CreatePaymentModa
             <div className="inline-block w-full max-w-2xl px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-gray-100 rounded-lg shadow-xl sm:my-8 sm:align-middle sm:p-6">
               <div className="flex items-center my-4 divide-x-2">
                 {step === CreatePaymentStep.Input && (
-                  <InputStep request={request} onCancel={onClose} onSubmit={onSubmit} />
+                  <InputStep formData={formData} onCancel={onClose} onSubmit={onSubmit} />
                 )}
                 {step === CreatePaymentStep.Confirmation && (
                   <ConfirmationStep

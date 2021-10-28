@@ -93,6 +93,9 @@ pub mod faktor {
             ErrorCode::InsufficientLamports
         );
 
+        // Derive creditor associated token account
+        // let creditor_tokens = get_associated_token_address(&creditor.key(), &mint.key());
+
         // Initialize payment account.
         payment.memo = memo;
         payment.debtor = debtor.key();
@@ -250,8 +253,6 @@ pub struct CreatePayment<'info> {
     pub creditor: AccountInfo<'info>,
     pub creditor_tokens: Account<'info, TokenAccount>,
     pub mint: Account<'info, Mint>,
-    #[account(mut, seeds = [PROGRAM_AUTHORITY_SEED], bump = program_authority.bump)]
-    pub program_authority: Account<'info, ProgramAuthority>,
     #[account(address = SYSTEM_PROGRAM_ID)]
     pub system_program: Program<'info, System>,
     #[account(address = TOKEN_PROGRAM_ID)]

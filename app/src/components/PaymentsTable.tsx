@@ -1,17 +1,48 @@
+import { useWeb3 } from "@components";
 import { CashIcon } from "@heroicons/react/solid";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { abbreviate } from "@utils";
+import { useEffect, useMemo, useState } from "react";
 
 export type PaymentsTableProps = {
-  payments: any;
   currentTab: string;
-  refresh: any;
 };
 
-export function PaymentsTable({ payments, currentTab, refresh }: PaymentsTableProps) {
+type PaymentsFeed = {
+  incoming: any[];
+  outgoing: any[];
+};
+
+export function PaymentsTable({ currentTab }: PaymentsTableProps) {
+  const { faktor, wallet } = useWeb3();
+
+  // Cached data
+  const [payments, setPayments] = useState<PaymentsFeed>({
+    incoming: [],
+    outgoing: []
+  });
+
+  const visiblePayments = useMemo(() => payments[currentTab.toString()], [payments, currentTab]);
+
+  // Refresh page on load
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  async function refresh() {
+    const payments: any = await faktor.account.payment.all();
+    setPayments({
+      incoming: payments.filter(
+        (inv: any) => inv.account.creditor.toString() === wallet.publicKey.toString()
+      ),
+      outgoing: payments.filter(
+        (inv: any) => inv.account.debtor.toString() === wallet.publicKey.toString()
+      )
+    });
+  }
   return (
     <div className="flex flex-col min-w-full overflow-hidden overflow-x-auto bg-white rounded-lg shadow">
-      {payments.length > 0 ? (
+      {visiblePayments.length > 0 ? (
         <>
           <table className="min-w-full divide-y divide-gray-200">
             <thead>
@@ -20,13 +51,13 @@ export function PaymentsTable({ payments, currentTab, refresh }: PaymentsTablePr
                   Memo
                 </th>
                 <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase bg-gray-50">
-                  Amount
+                  To
                 </th>
                 <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase bg-gray-50">
                   From
                 </th>
                 <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase bg-gray-50">
-                  To
+                  Amount
                 </th>
                 {currentTab === "Payables" && (
                   <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase bg-gray-50"></th>
@@ -34,8 +65,8 @@ export function PaymentsTable({ payments, currentTab, refresh }: PaymentsTablePr
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {(payments ?? []).map((payment: any, i: number) => {
-                const balance = (payment.account.balance / LAMPORTS_PER_SOL).toString();
+              {(visiblePayments ?? []).map((payment: any, i: number) => {
+                const amount = (payment.account.amount / LAMPORTS_PER_SOL).toString();
 
                 return (
                   <tr key={i} className="bg-white">
@@ -45,10 +76,17 @@ export function PaymentsTable({ payments, currentTab, refresh }: PaymentsTablePr
                       </p>
                     </td>
                     <td className="px-6 py-4 text-sm text-right text-gray-500 whitespace-nowrap">
+                      <span>{abbreviate(payment.account.creditor)}</span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-right text-gray-500 whitespace-nowrap">
+                      <span>{abbreviate(payment.account.debtor)}</span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-right text-gray-500 whitespace-nowrap">
                       <div className="flex space-x-2">
-                        <span className="font-medium text-gray-900">{balance}</span>
+                        <span className="font-medium text-gray-900">{amount}</span>
                         <div className="flex items-center">
                           SOL
+                          {}
                           <svg
                             className="w-4 h-4 ml-1"
                             viewBox="0 0 398 312"
@@ -110,12 +148,6 @@ export function PaymentsTable({ payments, currentTab, refresh }: PaymentsTablePr
                           </svg>
                         </div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-right text-gray-500 whitespace-nowrap">
-                      <span>{abbreviate(payment.account.sender)}</span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-right text-gray-500 whitespace-nowrap">
-                      <span>{abbreviate(payment.account.receiver)}</span>
                     </td>
                     {currentTab === "Payables" && (
                       <td className="px-6 py-4 text-sm text-right text-gray-500 whitespace-nowrap">

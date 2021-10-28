@@ -71,11 +71,6 @@
           "isSigner": false
         },
         {
-          "name": "programAuthority",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -102,10 +97,6 @@
         },
         {
           "name": "authorizedBalance",
-          "type": "u64"
-        },
-        {
-          "name": "factorableBalance",
           "type": "u64"
         },
         {
@@ -211,10 +202,6 @@
           },
           {
             "name": "authorizedBalance",
-            "type": "u64"
-          },
-          {
-            "name": "factorableBalance",
             "type": "u64"
           },
           {

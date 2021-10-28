@@ -1,60 +1,31 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { CreatePaymentModal, PaymentsTable, useWeb3, WalletButton } from "@components";
 
 export function HomeView() {
   // Web3
-  const { wallet, faktor } = useWeb3();
+  const { wallet } = useWeb3();
 
   // Page state
   const [currentTab, setCurrentTab] = useState(Tab.Incoming);
   const [isCreatePaymentModalOpen, setIsCreatePaymentModalOpen] = useState(false);
 
-  // Cached data
-  const [payments, setPayments] = useState<PaymentsFeed>({
-    incoming: [],
-    outgoing: []
-  });
-
-  const visiblePayments = useMemo(() => payments[currentTab.toString()], [payments, currentTab]);
-
-  // Refresh page on load
-  useEffect(() => {
-    refresh();
-  }, []);
-
-  async function refresh() {
-    const payments: any = await faktor.account.payment.all();
-    setPayments({
-      incoming: payments.filter(
-        (inv: any) => inv.account.receiver.toString() === wallet.publicKey.toString()
-      ),
-      outgoing: payments.filter(
-        (inv: any) => inv.account.sender.toString() === wallet.publicKey.toString()
-      )
-    });
-  }
-
   return (
     <div className="flex flex-1 h-screen overflow-auto bg-gray-100 focus:outline-none">
       <main className="z-0 flex-1 max-w-4xl px-2 py-8 mx-auto space-y-8 sm:px-4">
         <Header />
-        <div className="space-y-4">
-          {wallet && (
+        {wallet && (
+          <div className="space-y-4">
             <Toolbar
               currentTab={currentTab}
               setCurrentTab={setCurrentTab}
               setIsCreatePaymentModalOpen={setIsCreatePaymentModalOpen}
             />
-          )}
-          <PaymentsTable payments={visiblePayments} currentTab={currentTab} refresh={refresh} />
-        </div>
+            <PaymentsTable currentTab={currentTab} />
+          </div>
+        )}
       </main>
       {wallet && (
-        <CreatePaymentModal
-          open={isCreatePaymentModalOpen}
-          setOpen={setIsCreatePaymentModalOpen}
-          refresh={refresh}
-        />
+        <CreatePaymentModal open={isCreatePaymentModalOpen} setOpen={setIsCreatePaymentModalOpen} />
       )}
     </div>
   );

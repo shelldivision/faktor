@@ -158,7 +158,6 @@ describe("faktor", () => {
           creditor: accounts.bob.keys.publicKey,
           creditorTokens: accounts.bob.tokens,
           mint: WSOL_MINT,
-          programAuthority: programAuthority,
           systemProgram: SystemProgram.programId,
           tokenProgram: spl.TOKEN_PROGRAM_ID,
           clock: SYSVAR_CLOCK_PUBKEY,
@@ -236,7 +235,7 @@ describe("faktor", () => {
     );
 
     // Validate payment data.
-    let expectedRent = 2449920;
+    let expectedRent = 2394240;
     let expectedTransferFee =
       (authorizedBalance / amount) *
       (TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_TREASURY);
