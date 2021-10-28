@@ -3,7 +3,7 @@ import { useOnClickOutside } from "@hooks";
 import { Mint, MINTS } from "@utils";
 
 export function MintSelect() {
-  const [selectedMint, setSelectedMint] = useState(MINTS[0]);
+  const [selectedMint, setSelectedMint] = useState(MINTS.WSOL);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [error, setError] = useState(null);
 
