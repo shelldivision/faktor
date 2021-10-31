@@ -179,7 +179,6 @@ describe("faktor", () => {
         creditor: accounts.bob.keys.publicKey,
         creditorTokens: accounts.bob.tokens,
         distributor: accounts.dana.keys.publicKey,
-        programAuthority: programAuthority,
         treasury: treasury,
         tokenProgram: spl.TOKEN_PROGRAM_ID,
         clock: SYSVAR_CLOCK_PUBKEY,

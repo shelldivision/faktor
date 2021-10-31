@@ -297,8 +297,6 @@ pub struct DistributePayment<'info> {
     pub creditor_tokens: Account<'info, TokenAccount>,
     #[account(mut)]
     pub distributor: Signer<'info>,
-    #[account(mut, seeds = [PROGRAM_AUTHORITY_SEED], bump = program_authority.bump)]
-    pub program_authority: Account<'info, ProgramAuthority>,
     #[account(mut, seeds = [TREASURY_SEED], bump = treasury.bump)]
     pub treasury: Account<'info, Treasury>,
     #[account(address = TOKEN_PROGRAM_ID)]

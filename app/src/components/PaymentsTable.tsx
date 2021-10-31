@@ -74,6 +74,7 @@ export function PaymentsTable({ currentTab }: PaymentsTableProps) {
             <tbody className="bg-white divide-y divide-gray-200">
               {(visiblePayments ?? []).map((payment: any, i: number) => {
                 const amount = (payment.account.amount / LAMPORTS_PER_SOL).toString();
+                console.log("Payment: ", payment.publicKey.toString());
 
                 return (
                   <tr key={i} className="bg-white">
