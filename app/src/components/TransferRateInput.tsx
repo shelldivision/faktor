@@ -3,7 +3,6 @@ import { InputField } from "./InputField";
 export function TransferRateInput() {
   return (
     <div className="space-y-3">
-      <InputField type="datetime-local" label="Schedule for" onChange={() => {}} />
       <div className="flex justify-end pr-1 space-x-3">
         <span className="flex flex-col">
           <span className="my-auto text-sm font-medium text-gray-900">

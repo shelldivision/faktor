@@ -16,12 +16,14 @@ export type CreatePaymentFormData = {
   creditor: string;
   memo: string;
   amount: string;
+  nextTransferAt: string;
 };
 
 const DEFAULT_FORM_DATA = {
   creditor: "",
   memo: "",
-  amount: ""
+  amount: "",
+  nextTransferAt: ""
 };
 
 function isValid(formData: CreatePaymentFormData) {
@@ -48,12 +50,15 @@ export function CreatePaymentModal({ open, setOpen }: CreatePaymentModalProps) {
 
   const request = useMemo<CreatePaymentRequest | null>(() => {
     if (!isValid(formData)) return null;
+    console.log("Date: ", formData.nextTransferAt);
+    console.log(Date.parse(formData.nextTransferAt));
     return {
       debtor: faktor.provider.wallet.publicKey,
       creditor: new PublicKey(formData.creditor),
       memo: formData.memo,
       amount: parseFloat(formData.amount) * LAMPORTS_PER_SOL,
-      authorizedBalance: parseFloat(formData.amount) * LAMPORTS_PER_SOL,
+      nextTransferAt: new Date(), // formData.nextTransferAt,
+      completedAt: new Date(), // formData.nextTransferAt,
       recurrenceInterval: 0
     };
   }, [formData]);

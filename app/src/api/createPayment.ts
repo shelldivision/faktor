@@ -16,8 +16,9 @@ export type CreatePaymentRequest = {
   creditor: PublicKey;
   memo: string;
   amount: number;
-  authorizedBalance: number;
   recurrenceInterval: number;
+  nextTransferAt: Date;
+  completedAt: Date;
 };
 
 export const createPayment = async (faktor: Program, req: CreatePaymentRequest): Promise<any> => {
@@ -49,8 +50,9 @@ export const createPayment = async (faktor: Program, req: CreatePaymentRequest):
   await faktor.rpc.createPayment(
     req.memo,
     new BN(req.amount),
-    new BN(req.authorizedBalance),
     new BN(req.recurrenceInterval),
+    new BN(dateToSeconds(req.nextTransferAt)),
+    new BN(dateToSeconds(req.completedAt)),
     paymentBump,
     {
       accounts: {
@@ -69,3 +71,7 @@ export const createPayment = async (faktor: Program, req: CreatePaymentRequest):
   );
   return await faktor.account.payment.fetch(paymentAddress);
 };
+
+function dateToSeconds(date: Date) {
+  return Math.floor(date.getTime() / 1000);
+}
