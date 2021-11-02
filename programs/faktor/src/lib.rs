@@ -97,6 +97,7 @@ pub mod faktor {
         payment.creditor = creditor.key();
         payment.creditor_tokens = creditor_tokens.key();
         payment.mint = mint.key();
+        payment.status = PaymentStatus::Scheduled;
         payment.amount = amount;
         payment.authorized_balance = authorized_balance;
         payment.recurrence_interval = recurrence_interval;
@@ -226,7 +227,7 @@ pub struct CreatePayment<'info> {
         seeds = [PAYMENT_SEED, debtor.key().as_ref(), creditor.key().as_ref()],
         bump = bump,
         payer = debtor,
-        space = 8 + (4 + memo.len()) + 32 + 32 + 32 + 32 + 32 + 8 + 8 + 8 + 8 + 8 + 1,
+        space = 8 + (4 + memo.len()) + 32 + 32 + 32 + 32 + 32 + 8 + 8 + 8 + 8 + 8 + 8 + 1,
     )]
     pub payment: Account<'info, Payment>,
     #[account(mut)]
@@ -301,12 +302,35 @@ pub struct Payment {
     pub creditor: Pubkey,
     pub creditor_tokens: Pubkey,
     pub mint: Pubkey,
+    pub status: PaymentStatus,
     pub amount: u64,
     pub authorized_balance: u64,
     pub recurrence_interval: u64,
     pub next_transfer_at: u64,
     pub created_at: u64,
     pub bump: u8,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub enum PaymentStatus {
+    Scheduled,
+    Completed,
+}
+
+#[account]
+pub struct TransferLog {
+    pub payment: Pubkey,
+    pub distributor: Pubkey,
+    pub status: TransferStatus,
+    pub amount: u64,
+    pub timestamp: u64,
+    pub bump: u8,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub enum TransferStatus {
+    Failed,
+    Succeeded,
 }
 
 #[account]

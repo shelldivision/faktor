@@ -224,7 +224,7 @@ describe("faktor", () => {
     );
 
     // Validate payment data.
-    let expectedRent = 2394240;
+    let expectedRent = 2449920;
     let expectedTransferFee =
       (authorizedBalance / amount) *
       (TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_TREASURY);
