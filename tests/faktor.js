@@ -19,12 +19,10 @@ const TRANSFER_FEE_TREASURY = 1000;
 
 // Seeds
 const PAYMENT_SEED = Buffer.from("payment");
-const PROGRAM_AUTHORITY_SEED = Buffer.from("program_authority");
 const TREASURY_SEED = Buffer.from("treasury");
 
 describe("faktor", () => {
   // Test environment
-  var programAuthority;
   var treasury;
   const provider = Provider.local();
   const program = anchor.workspace.Faktor;
@@ -190,21 +188,13 @@ describe("faktor", () => {
   before(async () => {
     const signer = Keypair.generate();
     await airdrop(signer.publicKey, 1);
-    const [_programAuthority, programAuthorityBump] =
-      await anchor.web3.PublicKey.findProgramAddress(
-        [PROGRAM_AUTHORITY_SEED],
-        program.programId
-      );
-    programAuthority = _programAuthority;
-    const [_treasury, treasuryBump] =
-      await anchor.web3.PublicKey.findProgramAddress(
-        [TREASURY_SEED],
-        program.programId
-      );
+    const [_treasury, bump] = await anchor.web3.PublicKey.findProgramAddress(
+      [TREASURY_SEED],
+      program.programId
+    );
     treasury = _treasury;
-    await program.rpc.initializeProgram(programAuthorityBump, treasuryBump, {
+    await program.rpc.initializeTreasury(bump, {
       accounts: {
-        programAuthority: programAuthority,
         treasury: treasury,
         signer: signer.publicKey,
         systemProgram: SystemProgram.programId,

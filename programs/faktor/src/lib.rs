@@ -23,11 +23,10 @@ use {
     std::clone::Clone,
 };
 
-declare_id!("H4URXdsQfSNqKNvZJdNxhKVgeNqHjMtZznF14bDeV64b");
+declare_id!("BiDuVFN3h7iWsBFywQci8XnS1xPbwhZY5ARkcivDJVu2");
 
 // PDA seeds
 static PAYMENT_SEED: &[u8] = b"payment";
-static PROGRAM_AUTHORITY_SEED: &[u8] = b"program_authority";
 static TREASURY_SEED: &[u8] = b"treasury";
 
 // Fees
@@ -42,20 +41,15 @@ static TRANSFER_FEE_PROGRAM: u64 = 1000;
 #[program]
 pub mod faktor {
     use super::*;
-    pub fn initialize_program(
-        ctx: Context<InitializeProgram>, 
-        program_authority_bump: u8,
-        treasury_bump: u8
+    pub fn initialize_treasury(
+        ctx: Context<InitializeTreasury>, 
+        bump: u8
     ) -> ProgramResult {
         // Get accounts.
-        let program_authority = &mut ctx.accounts.program_authority;
         let treasury = &mut ctx.accounts.treasury;
 
-        // Initialize program authorty.
-        program_authority.bump = program_authority_bump;
-
         // Initialize treasury.
-        treasury.bump = treasury_bump;
+        treasury.bump = bump;
 
         return Ok(());
     }
@@ -202,25 +196,14 @@ pub mod faktor {
 ////////////////////
 
 #[derive(Accounts)]
-#[instruction(
-    program_authority_bump: u8,
-    treasury_bump: u8
-)]
-pub struct InitializeProgram<'info> {
+#[instruction(bump: u8)]
+pub struct InitializeTreasury<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
     #[account(
         init, 
-        seeds = [PROGRAM_AUTHORITY_SEED], 
-        bump = program_authority_bump, 
-        payer = signer, 
-        space = 8 + 1
-    )]
-    pub program_authority: Account<'info, ProgramAuthority>,
-    #[account(
-        init, 
         seeds = [TREASURY_SEED], 
-        bump = treasury_bump, 
+        bump = bump, 
         payer = signer, 
         space = 8 + 1
     )]

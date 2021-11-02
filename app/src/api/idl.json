@@ -143,11 +143,6 @@
           "isSigner": true
         },
         {
-          "name": "programAuthority",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "treasury",
           "isMut": true,
           "isSigner": false
@@ -276,6 +271,6 @@
     }
   ],
   "metadata": {
-    "address": "H4URXdsQfSNqKNvZJdNxhKVgeNqHjMtZznF14bDeV64b"
+    "address": "BiDuVFN3h7iWsBFywQci8XnS1xPbwhZY5ARkcivDJVu2"
   }
 }
