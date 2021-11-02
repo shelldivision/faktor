@@ -3,17 +3,12 @@
   "name": "faktor",
   "instructions": [
     {
-      "name": "initializeProgram",
+      "name": "initializeTreasury",
       "accounts": [
         {
           "name": "signer",
           "isMut": true,
           "isSigner": true
-        },
-        {
-          "name": "programAuthority",
-          "isMut": true,
-          "isSigner": false
         },
         {
           "name": "treasury",
@@ -28,11 +23,7 @@
       ],
       "args": [
         {
-          "name": "programAuthorityBump",
-          "type": "u8"
-        },
-        {
-          "name": "treasuryBump",
+          "name": "bump",
           "type": "u8"
         }
       ]
