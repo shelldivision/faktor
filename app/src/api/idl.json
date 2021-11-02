@@ -87,11 +87,15 @@
           "type": "u64"
         },
         {
-          "name": "authorizedBalance",
+          "name": "transferInterval",
           "type": "u64"
         },
         {
-          "name": "recurrenceInterval",
+          "name": "nextTransferAt",
+          "type": "u64"
+        },
+        {
+          "name": "completedAt",
           "type": "u64"
         },
         {
@@ -183,15 +187,17 @@
             "type": "publicKey"
           },
           {
+            "name": "status",
+            "type": {
+              "defined": "PaymentStatus"
+            }
+          },
+          {
             "name": "amount",
             "type": "u64"
           },
           {
-            "name": "authorizedBalance",
-            "type": "u64"
-          },
-          {
-            "name": "recurrenceInterval",
+            "name": "transferInterval",
             "type": "u64"
           },
           {
@@ -199,7 +205,45 @@
             "type": "u64"
           },
           {
+            "name": "completedAt",
+            "type": "u64"
+          },
+          {
             "name": "createdAt",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TransferLog",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "payment",
+            "type": "publicKey"
+          },
+          {
+            "name": "distributor",
+            "type": "publicKey"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": "TransferStatus"
+            }
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
             "type": "u64"
           },
           {
@@ -234,6 +278,36 @@
       }
     }
   ],
+  "types": [
+    {
+      "name": "PaymentStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Scheduled"
+          },
+          {
+            "name": "Completed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TransferStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Failed"
+          },
+          {
+            "name": "Succeeded"
+          }
+        ]
+      }
+    }
+  ],
   "errors": [
     {
       "code": 300,
@@ -259,6 +333,11 @@
       "code": 304,
       "name": "TooEarly",
       "msg": "Too early to distribute"
+    },
+    {
+      "code": 305,
+      "name": "PaymentNotScheduled",
+      "msg": "Payment is not scheduled for distribution"
     }
   ],
   "metadata": {
