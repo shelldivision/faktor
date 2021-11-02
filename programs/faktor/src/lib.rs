@@ -23,7 +23,7 @@ use {
     std::clone::Clone,
 };
 
-declare_id!("BiDuVFN3h7iWsBFywQci8XnS1xPbwhZY5ARkcivDJVu2");
+declare_id!("ChgVP3grvVY4JxYQBh3eauSBHTfw8HpYwx3ejvCe7hVm");
 
 // PDA seeds
 static PAYMENT_SEED: &[u8] = b"payment";
