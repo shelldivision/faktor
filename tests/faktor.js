@@ -30,12 +30,6 @@ describe("faktor", () => {
 
   /** HELPERS **/
 
-  async function airdrop(publicKey, amount) {
-    await provider.connection
-      .requestAirdrop(publicKey, amount * LAMPORTS_PER_SOL)
-      .then((sig) => provider.connection.confirmTransaction(sig, "confirmed"));
-  }
-
   /**
    * createAccounts - Generates keypairs, token accounts, and PDAs for participants and program accounts needed in a test case
    *
@@ -44,7 +38,7 @@ describe("faktor", () => {
   async function createAccounts() {
     async function createAccount() {
       const keys = Keypair.generate();
-      await airdrop(keys.publicKey, 5);
+      await airdrop(provider.connection, keys.publicKey, 5);
       const tokens = await Token.createWrappedNativeAccount(
         provider.connection,
         TOKEN_PROGRAM_ID,
@@ -139,14 +133,16 @@ describe("faktor", () => {
     accounts,
     memo,
     amount,
-    authorizedBalance,
-    recurrenceInterval
+    transferInterval,
+    nextTransferAt,
+    completedAt
   ) {
     await program.rpc.createPayment(
       memo,
       new BN(amount),
-      new BN(authorizedBalance),
-      new BN(recurrenceInterval),
+      new BN(transferInterval),
+      new BN(nextTransferAt),
+      new BN(completedAt),
       accounts.payment.bump,
       {
         accounts: {
@@ -187,7 +183,7 @@ describe("faktor", () => {
 
   before(async () => {
     const signer = Keypair.generate();
-    await airdrop(signer.publicKey, 1);
+    await airdrop(provider.connection, signer.publicKey, 1);
     const [_treasury, bump] = await anchor.web3.PublicKey.findProgramAddress(
       [TREASURY_SEED],
       program.programId
@@ -205,7 +201,7 @@ describe("faktor", () => {
 
   /** TESTS **/
 
-  it("Alice creates a payment to Bob.", async () => {
+  it("Alice schedules a one-time payment to Bob.", async () => {
     // Setup
     const accounts = await createAccounts();
 
@@ -213,21 +209,22 @@ describe("faktor", () => {
     const initialBalances = await getBalances(accounts);
     const memo = "Abc";
     const amount = 100;
-    const authorizedBalance = 1000;
-    const recurrenceInterval = 50;
+    const transferInterval = 0;
+    const now = new Date();
+    const nextTransferAt = dateToSeconds(now);
+    const completedAt = dateToSeconds(now);
     await createPayment(
       accounts,
       memo,
       amount,
-      authorizedBalance,
-      recurrenceInterval
+      transferInterval,
+      nextTransferAt,
+      completedAt
     );
 
     // Validate payment data.
     let expectedRent = 2449920;
-    let expectedTransferFee =
-      (authorizedBalance / amount) *
-      (TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_TREASURY);
+    let expectedTransferFee = TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_TREASURY;
     const payment = await program.account.payment.fetch(
       accounts.payment.keys.publicKey
     );
@@ -236,11 +233,20 @@ describe("faktor", () => {
       payment.debtor.toString() === accounts.alice.keys.publicKey.toString()
     );
     assert.ok(
+      payment.debtorTokens.toString() === accounts.alice.tokens.toString()
+    );
+    assert.ok(
       payment.creditor.toString() === accounts.bob.keys.publicKey.toString()
     );
+    assert.ok(
+      payment.creditorTokens.toString() === accounts.bob.tokens.toString()
+    );
+    assert.ok(payment.mint.toString() === WSOL_MINT.toString());
+    assert.ok(payment.status.scheduled !== undefined);
     assert.ok(payment.amount.toNumber() === amount);
-    assert.ok(payment.authorizedBalance.toNumber() === authorizedBalance);
-    assert.ok(payment.recurrenceInterval.toNumber() === recurrenceInterval);
+    assert.ok(payment.transferInterval.toNumber() === transferInterval);
+    assert.ok(payment.nextTransferAt.toNumber() === nextTransferAt);
+    assert.ok(payment.completedAt.toNumber() === completedAt);
 
     // Validate SOL balances.
     const finalBalances = await getBalances(accounts);
@@ -264,20 +270,97 @@ describe("faktor", () => {
     assert.ok(finalBalances.dana.wSOL === initialBalances.dana.wSOL);
   });
 
-  it("Dana distributes a payment from Alice to Bob.", async () => {
+  it("Alice schedules a recurring payment to Bob.", async () => {
     // Setup
     const accounts = await createAccounts();
+
+    // Test
+    const initialBalances = await getBalances(accounts);
     const memo = "Abc";
     const amount = 100;
-    const authorizedBalance = 1000;
-    const recurrenceInterval = 50;
+    const transferInterval = 24 * 60 * 60; // Every 24 hours
+    const now = new Date();
+    const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+    const nextTransferAt = dateToSeconds(now);
+    const completedAt = dateToSeconds(threeDaysFromNow);
     await createPayment(
       accounts,
       memo,
       amount,
-      authorizedBalance,
-      recurrenceInterval
+      transferInterval,
+      nextTransferAt,
+      completedAt
     );
+
+    // Validate payment data.
+    let expectedRent = 2449920;
+    let exectedNumTransfers = 3;
+    let expectedTransferFee =
+      exectedNumTransfers * (TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_TREASURY);
+    const payment = await program.account.payment.fetch(
+      accounts.payment.keys.publicKey
+    );
+    assert.ok(payment.memo === "Abc");
+    assert.ok(
+      payment.debtor.toString() === accounts.alice.keys.publicKey.toString()
+    );
+    assert.ok(
+      payment.debtorTokens.toString() === accounts.alice.tokens.toString()
+    );
+    assert.ok(
+      payment.creditor.toString() === accounts.bob.keys.publicKey.toString()
+    );
+    assert.ok(
+      payment.creditorTokens.toString() === accounts.bob.tokens.toString()
+    );
+    assert.ok(payment.mint.toString() === WSOL_MINT.toString());
+    assert.ok(payment.status.scheduled !== undefined);
+    assert.ok(payment.amount.toNumber() === amount);
+    assert.ok(payment.transferInterval.toNumber() === transferInterval);
+    assert.ok(payment.nextTransferAt.toNumber() === nextTransferAt);
+    assert.ok(payment.completedAt.toNumber() === completedAt);
+
+    // Validate SOL balances.
+    const finalBalances = await getBalances(accounts);
+    assert.ok(
+      finalBalances.alice.SOL ===
+        initialBalances.alice.SOL - expectedRent - expectedTransferFee
+    );
+    assert.ok(finalBalances.bob.SOL === initialBalances.bob.SOL);
+    assert.ok(finalBalances.charlie.SOL === initialBalances.charlie.SOL);
+    assert.ok(finalBalances.dana.SOL === initialBalances.dana.SOL);
+    assert.ok(
+      finalBalances.payment.SOL ===
+        initialBalances.payment.SOL + expectedRent + expectedTransferFee
+    );
+    assert.ok(finalBalances.treasury.SOL === initialBalances.treasury.SOL);
+
+    // Validate wSOL balances.
+    assert.ok(finalBalances.alice.wSOL === initialBalances.alice.wSOL);
+    assert.ok(finalBalances.bob.wSOL === initialBalances.bob.wSOL);
+    assert.ok(finalBalances.charlie.wSOL === initialBalances.charlie.wSOL);
+    assert.ok(finalBalances.dana.wSOL === initialBalances.dana.wSOL);
+  });
+
+  it("Dana distributes one transfer of a recurring payment from Alice to Bob.", async () => {
+    // Setup
+    const accounts = await createAccounts();
+    const memo = "Abc";
+    const amount = 100;
+    const transferInterval = 24 * 60 * 60; // Every 24 hours
+    const now = new Date();
+    const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+    const nextTransferAt = dateToSeconds(now);
+    const completedAt = dateToSeconds(threeDaysFromNow);
+    await createPayment(
+      accounts,
+      memo,
+      amount,
+      transferInterval,
+      nextTransferAt,
+      completedAt
+    );
+    await sleep(500); // Wait 500 ms for the blockchain time to go past the nextTransferAt
 
     // Test
     const initialBalances = await getBalances(accounts);
@@ -292,13 +375,22 @@ describe("faktor", () => {
       payment.debtor.toString() === accounts.alice.keys.publicKey.toString()
     );
     assert.ok(
+      payment.debtorTokens.toString() === accounts.alice.tokens.toString()
+    );
+    assert.ok(
       payment.creditor.toString() === accounts.bob.keys.publicKey.toString()
     );
-    assert.ok(payment.amount.toNumber() === amount);
     assert.ok(
-      payment.authorizedBalance.toNumber() === authorizedBalance - amount
+      payment.creditorTokens.toString() === accounts.bob.tokens.toString()
     );
-    assert.ok(payment.recurrenceInterval.toNumber() === recurrenceInterval);
+    assert.ok(payment.mint.toString() === WSOL_MINT.toString());
+    assert.ok(payment.status.scheduled !== undefined);
+    assert.ok(payment.amount.toNumber() === amount);
+    assert.ok(payment.transferInterval.toNumber() === transferInterval);
+    assert.ok(
+      payment.nextTransferAt.toNumber() === nextTransferAt + transferInterval
+    );
+    assert.ok(payment.completedAt.toNumber() === completedAt);
 
     // Validate SOL balances.
     const finalBalances = await getBalances(accounts);
@@ -326,4 +418,110 @@ describe("faktor", () => {
     assert.ok(finalBalances.charlie.wSOL === initialBalances.charlie.wSOL);
     assert.ok(finalBalances.dana.wSOL === initialBalances.dana.wSOL);
   });
+
+  it("Dana distributes all transfers of a recurring payment from Alice to Bob.", async () => {
+    // Setup
+    const accounts = await createAccounts();
+    const memo = "Abc";
+    const amount = 100;
+    const transferInterval = 5; // Every 5 seconds
+    const now = new Date();
+    const twentySecondsFromNow = new Date(now.getTime() + 20 * 1000);
+    const nextTransferAt = dateToSeconds(now);
+    const completedAt = dateToSeconds(twentySecondsFromNow);
+    await createPayment(
+      accounts,
+      memo,
+      amount,
+      transferInterval,
+      nextTransferAt,
+      completedAt
+    );
+    await sleep(500); // Wait 500 ms for the blockchain time to go past the nextTransferAt
+
+    // Test
+    const initialBalances = await getBalances(accounts);
+    await distributePayment(accounts);
+    await sleep(5 * 1000);
+    await distributePayment(accounts);
+    await sleep(5 * 1000);
+    await distributePayment(accounts);
+    await sleep(5 * 1000);
+    await distributePayment(accounts);
+
+    // Validate payment data.
+    const numTransfers = 4;
+    const payment = await program.account.payment.fetch(
+      accounts.payment.keys.publicKey
+    );
+    assert.ok(payment.memo === "Abc");
+    assert.ok(
+      payment.debtor.toString() === accounts.alice.keys.publicKey.toString()
+    );
+    assert.ok(
+      payment.debtorTokens.toString() === accounts.alice.tokens.toString()
+    );
+    assert.ok(
+      payment.creditor.toString() === accounts.bob.keys.publicKey.toString()
+    );
+    assert.ok(
+      payment.creditorTokens.toString() === accounts.bob.tokens.toString()
+    );
+    assert.ok(payment.mint.toString() === WSOL_MINT.toString());
+    assert.ok(payment.status.completed !== undefined);
+    assert.ok(payment.amount.toNumber() === amount);
+    assert.ok(payment.transferInterval.toNumber() === transferInterval);
+    assert.ok(
+      payment.nextTransferAt.toNumber() ===
+        nextTransferAt + transferInterval * numTransfers
+    );
+    assert.ok(payment.completedAt.toNumber() === completedAt);
+
+    // Validate SOL balances.
+    const finalBalances = await getBalances(accounts);
+    assert.ok(finalBalances.alice.SOL === initialBalances.alice.SOL);
+    assert.ok(finalBalances.bob.SOL === initialBalances.bob.SOL);
+    assert.ok(finalBalances.charlie.SOL === initialBalances.charlie.SOL);
+    assert.ok(
+      finalBalances.dana.SOL ===
+        initialBalances.dana.SOL + TRANSFER_FEE_DISTRIBUTOR * numTransfers
+    );
+    assert.ok(
+      finalBalances.payment.SOL ===
+        initialBalances.payment.SOL -
+          (TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_TREASURY) * numTransfers
+    );
+    assert.ok(
+      finalBalances.treasury.SOL ===
+        initialBalances.treasury.SOL + TRANSFER_FEE_TREASURY * numTransfers
+    );
+
+    // Validate wSOL balances.
+    assert.ok(
+      finalBalances.alice.wSOL ===
+        initialBalances.alice.wSOL - amount * numTransfers
+    );
+    assert.ok(
+      finalBalances.bob.wSOL ===
+        initialBalances.bob.wSOL + amount * numTransfers
+    );
+    assert.ok(finalBalances.charlie.wSOL === initialBalances.charlie.wSOL);
+    assert.ok(finalBalances.dana.wSOL === initialBalances.dana.wSOL);
+  });
 });
+
+/** UTILITIES **/
+
+async function airdrop(connection, publicKey, amount) {
+  await connection
+    .requestAirdrop(publicKey, amount * LAMPORTS_PER_SOL)
+    .then((sig) => connection.confirmTransaction(sig, "confirmed"));
+}
+
+function dateToSeconds(date) {
+  return Math.floor(date.getTime() / 1000);
+}
+
+function sleep(time) {
+  return new Promise((resolve) => setTimeout(resolve, time));
+}

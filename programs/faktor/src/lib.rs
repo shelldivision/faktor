@@ -58,8 +58,9 @@ pub mod faktor {
         ctx: Context<CreatePayment>, 
         memo: String, 
         amount: u64,
-        authorized_balance: u64, 
-        recurrence_interval: u64,
+        transfer_interval: u64,
+        next_transfer_at: u64,
+        completed_at: u64,
         bump: u8,
     ) -> ProgramResult {
         // Get accounts.
@@ -74,21 +75,32 @@ pub mod faktor {
         let clock = &ctx.accounts.clock;
 
         // Validate request data.
-        require!(
-            authorized_balance >= amount, 
-            ErrorCode::InvalidRequest
-        );
+        if transfer_interval == 0 {
+            require!(
+                completed_at == next_transfer_at,
+                ErrorCode::InvalidRequest
+            );
+        } else {
+            require!(
+                completed_at > next_transfer_at,
+                ErrorCode::InvalidRequest
+            );
+            require!(
+                transfer_interval < completed_at - next_transfer_at,
+                ErrorCode::InvalidRequest
+            );
+        }
         
         // Validate debtor has sufficient lamports to cover the transfer fee.
-        let num_transfers = authorized_balance / amount;
+        let num_transfers = match transfer_interval {
+            0 => 1,
+            _ => (completed_at - next_transfer_at) / transfer_interval,
+        };
         let transfer_fee = num_transfers * (TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_PROGRAM);
         require!(
             debtor.to_account_info().lamports() >= transfer_fee,
             ErrorCode::InsufficientLamports
         );
-
-        // Derive creditor associated token account
-        // let creditor_tokens = get_associated_token_address(&creditor.key(), &mint.key());
 
         // Initialize payment account.
         payment.memo = memo;
@@ -99,9 +111,9 @@ pub mod faktor {
         payment.mint = mint.key();
         payment.status = PaymentStatus::Scheduled;
         payment.amount = amount;
-        payment.authorized_balance = authorized_balance;
-        payment.recurrence_interval = recurrence_interval;
-        payment.next_transfer_at = clock.unix_timestamp as u64; // TODO this should be a user variable
+        payment.transfer_interval = transfer_interval;
+        payment.next_transfer_at = next_transfer_at;
+        payment.completed_at = completed_at;
         payment.created_at = clock.unix_timestamp as u64;
         payment.bump = bump;
 
@@ -115,7 +127,7 @@ pub mod faktor {
                     to: debtor_tokens.to_account_info(),
                 }
             ),
-            authorized_balance,
+            num_transfers * amount,
         )?;
 
         // Collect total transfer fee from debtor.
@@ -143,22 +155,17 @@ pub mod faktor {
         let token_program = &ctx.accounts.token_program;
         let clock = &ctx.accounts.clock;
 
+        // Validate payment is schedued.
+        require!(
+            payment.status == PaymentStatus::Scheduled,
+            ErrorCode::PaymentNotScheduled
+        );
+
         // Validate current timestamp.
         let now = clock.unix_timestamp as u64;
         require!(
             payment.next_transfer_at <= now,
             ErrorCode::TooEarly
-        );
-
-        // Set timestamp for next transfer attempt.
-        if payment.recurrence_interval > 0 {
-            payment.next_transfer_at += payment.recurrence_interval;
-        }
-
-        // Validate balances.
-        require!(
-            payment.authorized_balance >= payment.amount,
-            ErrorCode::InsufficientBalance
         );
 
         // Transfer tokens from debtor to creditor.
@@ -183,8 +190,13 @@ pub mod faktor {
         **payment.to_account_info().try_borrow_mut_lamports()? -= TRANSFER_FEE_PROGRAM;
         **treasury.to_account_info().try_borrow_mut_lamports()? += TRANSFER_FEE_PROGRAM;
 
-        // Draw down the authorized balance.
-        payment.authorized_balance -= payment.amount;
+        // Set timestamp for next transfer attempt.
+        payment.next_transfer_at += payment.transfer_interval;
+
+        // Update payment status
+        if payment.next_transfer_at >= payment.completed_at {
+            payment.status = PaymentStatus::Completed;
+        }
 
         return Ok(());
     } 
@@ -217,8 +229,9 @@ pub struct InitializeTreasury<'info> {
 #[instruction(
     memo: String, 
     amount: u64,
-    authorized_balance: u64, 
-    recurrence_interval: u64,
+    transfer_interval: u64,
+    next_transfer_at: u64,
+    completed_at: u64,
     bump: u8,
 )]
 pub struct CreatePayment<'info> {
@@ -304,14 +317,14 @@ pub struct Payment {
     pub mint: Pubkey,
     pub status: PaymentStatus,
     pub amount: u64,
-    pub authorized_balance: u64,
-    pub recurrence_interval: u64,
+    pub transfer_interval: u64,
     pub next_transfer_at: u64,
+    pub completed_at: u64,
     pub created_at: u64,
     pub bump: u8,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq)]
 pub enum PaymentStatus {
     Scheduled,
     Completed,
@@ -361,4 +374,6 @@ pub enum ErrorCode {
     InvalidRequest,
     #[msg("Too early to distribute")]
     TooEarly,
+    #[msg("Payment is not scheduled for distribution")]
+    PaymentNotScheduled
 }

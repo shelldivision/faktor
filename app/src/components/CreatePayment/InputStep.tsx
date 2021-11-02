@@ -23,12 +23,14 @@ export function InputStep({ formData, onCancel, onSubmit }: InputStepProps) {
 
   const [memo, setMemo] = useState(formData.memo?.toString() ?? "");
   const [amount, setAmount] = useState(formData.amount?.toString() ?? "");
+  const [nextTransferAt, setNextTransferAt] = useState(formData.nextTransferAt ?? "");
 
   const _onSubmit = () => {
     onSubmit({
       creditor: creditor,
       memo: memo,
-      amount: amount
+      amount: amount,
+      nextTransferAt: nextTransferAt
     });
   };
 
@@ -60,7 +62,6 @@ export function InputStep({ formData, onCancel, onSubmit }: InputStepProps) {
           value={creditor}
           onChange={(v) => setCreditor(v)}
         />
-
         <InputField
           label="Memo"
           type="text"
@@ -68,7 +69,6 @@ export function InputStep({ formData, onCancel, onSubmit }: InputStepProps) {
           value={memo}
           onChange={(v) => setMemo(v)}
         />
-
         <div className="flex flex-row flex-1 space-x-2">
           <MintInputField error={null} onChange={() => {}} />
           <InputField
@@ -78,6 +78,12 @@ export function InputStep({ formData, onCancel, onSubmit }: InputStepProps) {
             onChange={(v) => setAmount(v)}
           />
         </div>
+        <InputField
+          type="datetime-local"
+          label="Schedule for"
+          value={nextTransferAt}
+          onChange={(v) => setNextTransferAt(v)}
+        />
         <TransferRateInput />
       </div>
       <div className="flex items-center justify-between w-full space-x-3">

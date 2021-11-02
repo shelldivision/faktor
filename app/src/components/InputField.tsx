@@ -2,8 +2,8 @@ import React from "react";
 
 export interface InputFieldProps {
   type: string;
+  value?: any;
   label: string;
-  value?: string;
   placeholder?: string;
   error?: string;
   onChange?: (val: any) => void;
