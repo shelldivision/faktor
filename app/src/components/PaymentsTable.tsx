@@ -1,11 +1,29 @@
+import { useEffect, useMemo, useState } from "react";
 import { useFaktor } from "@components";
 import { CashIcon } from "@heroicons/react/solid";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { abbreviate, MINTS } from "@utils";
-import { useEffect, useMemo, useState } from "react";
+
+export enum PaymentsFilter {
+  Incoming = "incoming",
+  Outgoing = "outgoing"
+}
+
+export const PAYMENTS_FILTERS = [PaymentsFilter.Outgoing, PaymentsFilter.Incoming];
+
+export function getPaymentsFilterName(filter: PaymentsFilter) {
+  switch (filter) {
+    case PaymentsFilter.Incoming:
+      return "Incoming";
+    case PaymentsFilter.Outgoing:
+      return "Outgoing";
+    default:
+      return "";
+  }
+}
 
 export type PaymentsTableProps = {
-  currentTab: string;
+  currentFilter: PaymentsFilter;
 };
 
 type PaymentsFeed = {
@@ -13,7 +31,7 @@ type PaymentsFeed = {
   outgoing: any[];
 };
 
-export function PaymentsTable({ currentTab }: PaymentsTableProps) {
+export function PaymentsTable({ currentFilter }: PaymentsTableProps) {
   // Get Faktor program
   const faktor = useFaktor();
 
@@ -24,8 +42,8 @@ export function PaymentsTable({ currentTab }: PaymentsTableProps) {
   });
 
   const visiblePayments = useMemo(
-    () => payments[currentTab.toString() as keyof typeof payments],
-    [payments, currentTab]
+    () => payments[currentFilter.toString() as keyof typeof payments],
+    [payments, currentFilter]
   );
 
   // Refresh page on load
@@ -52,65 +70,9 @@ export function PaymentsTable({ currentTab }: PaymentsTableProps) {
       {visiblePayments.length > 0 ? (
         <>
           <table className="min-w-full divide-y divide-gray-200">
-            <thead>
-              <tr>
-                <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase bg-gray-50">
-                  Memo
-                </th>
-                <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase bg-gray-50">
-                  To
-                </th>
-                <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase bg-gray-50">
-                  From
-                </th>
-                <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase bg-gray-50">
-                  Amount
-                </th>
-                {currentTab === "Payables" && (
-                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase bg-gray-50"></th>
-                )}
-              </tr>
-            </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {(visiblePayments ?? []).map((payment: any, i: number) => {
-                const amount = (payment.account.amount / LAMPORTS_PER_SOL).toString();
-                console.log("Payment: ", payment.publicKey.toString());
-
-                return (
-                  <tr key={i} className="bg-white">
-                    <td className="w-full px-6 py-4 text-sm text-gray-900 max-w-0 whitespace-nowrap">
-                      <p className="text-gray-500 truncate group-hover:text-gray-900">
-                        {payment.account.memo}
-                      </p>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-right text-gray-500 whitespace-nowrap">
-                      <span>{abbreviate(payment.account.creditor)}</span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-right text-gray-500 whitespace-nowrap">
-                      <span>{abbreviate(payment.account.debtor)}</span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-right text-gray-500 whitespace-nowrap">
-                      <div className="flex space-x-2">
-                        <span className="font-medium text-gray-900">{amount}</span>
-                        <div className="flex items-center">
-                          SOL
-                          <img src={MINTS.WSOL.icon} className="h-4 ml-2" />
-                        </div>
-                      </div>
-                    </td>
-                    {currentTab === "Payables" && (
-                      <td className="px-6 py-4 text-sm text-right text-gray-500 whitespace-nowrap">
-                        <button
-                          onClick={() => {}}
-                          type="button"
-                          className="inline-flex items-center px-3 py-2 text-sm font-medium leading-4 text-white bg-green-600 rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                        >
-                          Pay
-                        </button>
-                      </td>
-                    )}
-                  </tr>
-                );
+                return <PaymentCell key={i} currentFilter={currentFilter} payment={payment} />;
               })}
             </tbody>
           </table>
@@ -126,5 +88,40 @@ export function PaymentsTable({ currentTab }: PaymentsTableProps) {
         </div>
       )}
     </div>
+  );
+}
+
+type PaymentCellProps = {
+  payment: any;
+  currentFilter: PaymentsFilter;
+};
+
+function PaymentCell({ currentFilter, payment }: PaymentCellProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  console.log(payment.publicKey.toString());
+
+  const amount = (payment.account.amount / LAMPORTS_PER_SOL).toString();
+  const nextTransferAt = new Date(payment.account.nextTransferAt.toNumber() * 1000);
+  const status = Object.keys(payment.account.status)[0];
+
+  function onClick() {
+    setIsOpen(!isOpen);
+  }
+
+  return (
+    <button className={`flex flex-row w-full px-6 py-4 space-x-8`} onClick={onClick}>
+      <td className="my-auto mr-auto font-medium text-gray-900 truncate">{payment.account.memo}</td>
+      <span className="flex flex-row my-auto space-x-2">
+        <td className="my-auto text-gray-500 truncate">{amount}</td>
+        <td className="my-auto text-gray-500 truncate">wSOL</td>
+        <img src={MINTS.WSOL.icon} className="h-3 my-auto" />
+      </span>
+      <td className="my-auto text-gray-500 truncate">{abbreviate(payment.account.creditor)}</td>
+      <td className="flex flex-row my-auto text-gray-500 truncate">
+        {nextTransferAt.toLocaleString()}
+      </td>
+      <td className="flex flex-row my-auto text-gray-500 truncate">{status}</td>
+    </button>
   );
 }

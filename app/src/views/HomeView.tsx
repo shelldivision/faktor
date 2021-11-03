@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { CreatePaymentModal, PaymentsTable, WalletButton } from "@components";
+import {
+  CreatePaymentModal,
+  getPaymentsFilterName,
+  PaymentsTable,
+  PAYMENTS_FILTERS,
+  PaymentsFilter,
+  WalletButton
+} from "@components";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 
 export function HomeView() {
@@ -7,7 +14,7 @@ export function HomeView() {
   const wallet = useAnchorWallet();
 
   // Page state
-  const [currentTab, setCurrentTab] = useState(Tab.Incoming);
+  const [currentFilter, setCurrentFilter] = useState(PaymentsFilter.Outgoing);
   const [isCreatePaymentModalOpen, setIsCreatePaymentModalOpen] = useState(false);
 
   return (
@@ -18,11 +25,11 @@ export function HomeView() {
           <>
             <div className="space-y-4">
               <Toolbar
-                currentTab={currentTab}
-                setCurrentTab={setCurrentTab}
+                currentFilter={currentFilter}
+                setCurrentFilter={setCurrentFilter}
                 setIsCreatePaymentModalOpen={setIsCreatePaymentModalOpen}
               />
-              <PaymentsTable currentTab={currentTab} />
+              <PaymentsTable currentFilter={currentFilter} />
             </div>
             <CreatePaymentModal
               open={isCreatePaymentModalOpen}
@@ -53,32 +60,32 @@ function HomeButton() {
 }
 
 function Toolbar({
-  currentTab,
-  setCurrentTab,
+  currentFilter,
+  setCurrentFilter,
   setIsCreatePaymentModalOpen
 }: {
-  currentTab: Tab;
-  setCurrentTab: (tab: Tab) => void;
+  currentFilter: PaymentsFilter;
+  setCurrentFilter: (filter: PaymentsFilter) => void;
   setIsCreatePaymentModalOpen: (val: boolean) => void;
 }) {
   return (
     <div className="flex items-center justify-between">
       {/* Left side */}
       <nav className="flex space-x-4" aria-label="Tabs">
-        {tabs.map((tab) => (
+        {PAYMENTS_FILTERS.map((filter) => (
           <div
             className={`flex border-b-2 transition duration-200 ${
-              currentTab === tab ? "border-orange-500" : "border-none"
+              currentFilter === filter ? "border-orange-500" : "border-none"
             }`}
           >
             <a
-              onClick={() => setCurrentTab(tab)}
-              key={tab.toString()}
+              onClick={() => setCurrentFilter(filter)}
+              key={filter.toString()}
               className={`px-3 py-2 text hover:bg-gray-200 transition duration-200 rounded-md font-semibold cursor-pointer ${
-                currentTab === tab ? "text-gray-900" : "text-gray-400"
+                currentFilter === filter ? "text-gray-900" : "text-gray-400"
               }`}
             >
-              {getTabName(tab)}
+              {getPaymentsFilterName(filter)}
             </a>
           </div>
         ))}
@@ -101,22 +108,4 @@ function NewPaymentButton({ showModal }: { showModal: () => void }) {
       New Payment
     </button>
   );
-}
-
-enum Tab {
-  Incoming = "incoming",
-  Outgoing = "outgoing"
-}
-
-const tabs = [Tab.Incoming, Tab.Outgoing];
-
-function getTabName(tab: Tab) {
-  switch (tab) {
-    case Tab.Incoming:
-      return "Incoming";
-    case Tab.Outgoing:
-      return "Outgoing";
-    default:
-      return "";
-  }
 }

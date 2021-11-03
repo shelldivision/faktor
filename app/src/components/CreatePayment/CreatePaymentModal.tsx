@@ -11,7 +11,9 @@ export enum CreatePaymentStep {
   Confirmation = 1
 }
 
-// TODO add mint to form data
+// TODO add mint
+// TODO add transferInterval
+// TODO add completedAt
 export type CreatePaymentFormData = {
   creditor: string;
   memo: string;
@@ -26,10 +28,12 @@ const DEFAULT_FORM_DATA = {
   nextTransferAt: ""
 };
 
-function isValid(formData: CreatePaymentFormData) {
+function isFormDataValid(formData: CreatePaymentFormData) {
   try {
     new PublicKey(formData.creditor);
     parseFloat(formData.amount);
+    const d = new Date(formData.nextTransferAt);
+    if (d.toString() === "Invalid Date") throw new Error("Invalid date");
     return true;
   } catch (e) {
     console.log(e);
@@ -48,17 +52,18 @@ export function CreatePaymentModal({ open, setOpen }: CreatePaymentModalProps) {
   const [step, setStep] = useState(CreatePaymentStep.Input);
   const [formData, setFormData] = useState<CreatePaymentFormData>(DEFAULT_FORM_DATA);
 
+  const d = new Date(formData.nextTransferAt);
+  console.log("Date is ", d.toString() === "Invalid Date");
+
   const request = useMemo<CreatePaymentRequest | null>(() => {
-    if (!isValid(formData)) return null;
-    console.log("Date: ", formData.nextTransferAt);
-    console.log(Date.parse(formData.nextTransferAt));
+    if (!isFormDataValid(formData)) return null;
     return {
       debtor: faktor.provider.wallet.publicKey,
       creditor: new PublicKey(formData.creditor),
       memo: formData.memo,
       amount: parseFloat(formData.amount) * LAMPORTS_PER_SOL,
-      nextTransferAt: new Date(), // formData.nextTransferAt,
-      completedAt: new Date(), // formData.nextTransferAt,
+      nextTransferAt: new Date(formData.nextTransferAt),
+      completedAt: new Date(formData.nextTransferAt),
       recurrenceInterval: 0
     };
   }, [formData]);

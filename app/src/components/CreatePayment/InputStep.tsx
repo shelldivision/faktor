@@ -84,13 +84,11 @@ export function InputStep({ formData, onCancel, onSubmit }: InputStepProps) {
           value={nextTransferAt}
           onChange={(v) => setNextTransferAt(v)}
         />
-        <TransferRateInput />
+        {/* <TransferRateInput /> */}
       </div>
       <div className="flex items-center justify-between w-full space-x-3">
-        <SecondaryAction className="w-1/2" onClick={onCancel}>
-          Cancel
-        </SecondaryAction>
-        <PrimaryAction className="w-1/2" disabled={!isSubmitEnabled} onClick={_onSubmit}>
+        <SecondaryAction onClick={onCancel}>Cancel</SecondaryAction>
+        <PrimaryAction disabled={!isSubmitEnabled} onClick={_onSubmit}>
           Continue
         </PrimaryAction>
       </div>

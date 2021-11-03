@@ -8,12 +8,13 @@ export const PrimaryAction: React.FC<ActionProps> = ({
   children,
   disabled = false,
   type = "button",
-  className = "",
   ...props
 }) => {
   return (
     <button
-      className={`px-4 h-14 flex items-center justify-center bg-gradient-primary disabled:bg-none rounded-lg font-bold text-lg disabled:bg-gray-300 disabled:text-gray-500 text-white hover:bg-indigo-700 ${className}`}
+      className={`w-full px-5 py-3 text-lg font-semibold text-white transition duration-200 bg-orange-500 rounded-lg disabled:bg-none disabled:bg-gray-300 disabled:text-gray-500 ${
+        !disabled && "shadow hover:bg-orange-400 hover:shadow-lg"
+      }`}
       {...{ disabled, type }}
       {...props}
     >
@@ -25,13 +26,12 @@ export const PrimaryAction: React.FC<ActionProps> = ({
 export const SecondaryAction: React.FC<ActionProps> = ({
   children,
   disabled = false,
-  className = "",
   type = "button",
   ...props
 }) => {
   return (
     <button
-      className={`px-4 h-14 flex items-center justify-center rounded-lg font-bold text-lg text-gray-700 hover:bg-gray-100 ${className}`}
+      className="flex items-center justify-center w-full px-4 text-lg font-semibold text-gray-700 transition rounded-lg h-14 hover:bg-gray-200"
       {...{ disabled, type }}
       {...props}
     >
