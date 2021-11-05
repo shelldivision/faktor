@@ -69,8 +69,12 @@ export function CreatePaymentModal({ open, setOpen, refresh }: CreatePaymentModa
   }, [formData]);
 
   useEffect(() => {
-    if (!request) setStep(CreatePaymentStep.Input);
-    else setStep(CreatePaymentStep.Confirmation);
+    if (!request) {
+      setIsBusy(false);
+      setStep(CreatePaymentStep.Input);
+    } else {
+      setStep(CreatePaymentStep.Confirmation);
+    }
   }, [request]);
 
   function onSubmit(data: CreatePaymentFormData) {
