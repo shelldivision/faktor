@@ -59,7 +59,7 @@ pub mod faktor {
         idempotency_key: String,
         memo: String, 
         amount: u64,
-        transfer_interval: u64,
+        recurrence_interval: u64,
         next_transfer_at: u64,
         completed_at: u64,
         bump: u8,
@@ -76,7 +76,7 @@ pub mod faktor {
         let clock = &ctx.accounts.clock;
 
         // Validate request data.
-        if transfer_interval == 0 {
+        if recurrence_interval == 0 {
             require!(
                 completed_at == next_transfer_at,
                 ErrorCode::InvalidRequest
@@ -87,15 +87,15 @@ pub mod faktor {
                 ErrorCode::InvalidRequest
             );
             require!(
-                transfer_interval < completed_at - next_transfer_at,
+                recurrence_interval < completed_at - next_transfer_at,
                 ErrorCode::InvalidRequest
             );
         }
         
         // Validate debtor has sufficient lamports to cover the transfer fee.
-        let num_transfers = match transfer_interval {
+        let num_transfers = match recurrence_interval {
             0 => 1,
-            _ => (completed_at - next_transfer_at) / transfer_interval,
+            _ => (completed_at - next_transfer_at) / recurrence_interval,
         };
         let transfer_fee = num_transfers * (TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_PROGRAM);
         require!(
@@ -113,7 +113,7 @@ pub mod faktor {
         payment.mint = mint.key();
         payment.status = PaymentStatus::Scheduled;
         payment.amount = amount;
-        payment.transfer_interval = transfer_interval;
+        payment.recurrence_interval = recurrence_interval;
         payment.next_transfer_at = next_transfer_at;
         payment.completed_at = completed_at;
         payment.created_at = clock.unix_timestamp as u64;
@@ -193,7 +193,7 @@ pub mod faktor {
         **treasury.to_account_info().try_borrow_mut_lamports()? += TRANSFER_FEE_PROGRAM;
 
         // Set timestamp for next transfer attempt.
-        payment.next_transfer_at += payment.transfer_interval;
+        payment.next_transfer_at += payment.recurrence_interval;
 
         // Update payment status
         if payment.next_transfer_at >= payment.completed_at {
@@ -232,7 +232,7 @@ pub struct InitializeTreasury<'info> {
     idempotency_key: String,
     memo: String, 
     amount: u64,
-    transfer_interval: u64,
+    recurrence_interval: u64,
     next_transfer_at: u64,
     completed_at: u64,
     bump: u8,
@@ -321,7 +321,7 @@ pub struct Payment {
     pub mint: Pubkey,
     pub status: PaymentStatus,
     pub amount: u64,
-    pub transfer_interval: u64,
+    pub recurrence_interval: u64,
     pub next_transfer_at: u64,
     pub completed_at: u64,
     pub created_at: u64,

@@ -25,7 +25,7 @@ export type CreatePaymentRequest = {
 export const createPayment = async (faktor: Program, req: CreatePaymentRequest): Promise<any> => {
   // Generate payment PDA
   const [paymentAddress, paymentBump] = await PublicKey.findProgramAddress(
-    [PAYMENT_SEED, req.debtor.toBuffer(), req.creditor.toBuffer()],
+    [PAYMENT_SEED, Buffer.from(req.idempotencyKey), req.debtor.toBuffer(), req.creditor.toBuffer()],
     FAKTOR_PROGRAM_ID
   );
 

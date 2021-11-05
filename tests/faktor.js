@@ -157,7 +157,7 @@ describe("faktor", () => {
     idempotencyKey,
     memo,
     amount,
-    transferInterval,
+    recurrenceInterval,
     nextTransferAt,
     completedAt
   ) {
@@ -180,7 +180,7 @@ describe("faktor", () => {
       idempotencyKey,
       memo,
       new BN(amount),
-      new BN(transferInterval),
+      new BN(recurrenceInterval),
       new BN(nextTransferAt),
       new BN(completedAt),
       bump,
@@ -249,7 +249,7 @@ describe("faktor", () => {
     const initialBalances = await getBalances(accounts);
     const memo = "Abc";
     const amount = 100;
-    const transferInterval = 0;
+    const recurrenceInterval = 0;
     const now = new Date();
     const nextTransferAt = dateToSeconds(now);
     const completedAt = dateToSeconds(now);
@@ -258,7 +258,7 @@ describe("faktor", () => {
       IDEMPOTENCY_KEY_1,
       memo,
       amount,
-      transferInterval,
+      recurrenceInterval,
       nextTransferAt,
       completedAt
     );
@@ -286,7 +286,7 @@ describe("faktor", () => {
     assert.ok(payment.mint.toString() === WSOL_MINT.toString());
     assert.ok(Object.keys(payment.status)[0] === "scheduled");
     assert.ok(payment.amount.toNumber() === amount);
-    assert.ok(payment.transferInterval.toNumber() === transferInterval);
+    assert.ok(payment.recurrenceInterval.toNumber() === recurrenceInterval);
     assert.ok(payment.nextTransferAt.toNumber() === nextTransferAt);
     assert.ok(payment.completedAt.toNumber() === completedAt);
 
@@ -320,7 +320,7 @@ describe("faktor", () => {
     const initialBalances = await getBalances(accounts);
     const memo = "Abc";
     const amount = 100;
-    const transferInterval = 24 * 60 * 60; // Every 24 hours
+    const recurrenceInterval = 24 * 60 * 60; // Every 24 hours
     const now = new Date();
     const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
     const nextTransferAt = dateToSeconds(now);
@@ -330,7 +330,7 @@ describe("faktor", () => {
       IDEMPOTENCY_KEY_1,
       memo,
       amount,
-      transferInterval,
+      recurrenceInterval,
       nextTransferAt,
       completedAt
     );
@@ -360,7 +360,7 @@ describe("faktor", () => {
     assert.ok(payment.mint.toString() === WSOL_MINT.toString());
     assert.ok(Object.keys(payment.status)[0] === "scheduled");
     assert.ok(payment.amount.toNumber() === amount);
-    assert.ok(payment.transferInterval.toNumber() === transferInterval);
+    assert.ok(payment.recurrenceInterval.toNumber() === recurrenceInterval);
     assert.ok(payment.nextTransferAt.toNumber() === nextTransferAt);
     assert.ok(payment.completedAt.toNumber() === completedAt);
 
@@ -394,7 +394,7 @@ describe("faktor", () => {
     const initialBalances = await getBalances(accounts);
     const memo = "Abc";
     const amount = 100;
-    const transferInterval = 0;
+    const recurrenceInterval = 0;
     const now = new Date();
     const nextTransferAt = dateToSeconds(now);
     const completedAt = dateToSeconds(now);
@@ -403,7 +403,7 @@ describe("faktor", () => {
       IDEMPOTENCY_KEY_1,
       memo,
       amount,
-      transferInterval,
+      recurrenceInterval,
       nextTransferAt,
       completedAt
     );
@@ -412,7 +412,7 @@ describe("faktor", () => {
       IDEMPOTENCY_KEY_2,
       memo,
       amount,
-      transferInterval,
+      recurrenceInterval,
       nextTransferAt,
       completedAt
     );
@@ -440,7 +440,7 @@ describe("faktor", () => {
     assert.ok(payment1.mint.toString() === WSOL_MINT.toString());
     assert.ok(Object.keys(payment1.status)[0] === "scheduled");
     assert.ok(payment1.amount.toNumber() === amount);
-    assert.ok(payment1.transferInterval.toNumber() === transferInterval);
+    assert.ok(payment1.recurrenceInterval.toNumber() === recurrenceInterval);
     assert.ok(payment1.nextTransferAt.toNumber() === nextTransferAt);
     assert.ok(payment1.completedAt.toNumber() === completedAt);
 
@@ -465,7 +465,7 @@ describe("faktor", () => {
     assert.ok(payment2.mint.toString() === WSOL_MINT.toString());
     assert.ok(Object.keys(payment2.status)[0] === "scheduled");
     assert.ok(payment2.amount.toNumber() === amount);
-    assert.ok(payment2.transferInterval.toNumber() === transferInterval);
+    assert.ok(payment2.recurrenceInterval.toNumber() === recurrenceInterval);
     assert.ok(payment2.nextTransferAt.toNumber() === nextTransferAt);
     assert.ok(payment2.completedAt.toNumber() === completedAt);
 
@@ -500,7 +500,7 @@ describe("faktor", () => {
     const accounts = await createAccounts();
     const memo = "Abc";
     const amount = 100;
-    const transferInterval = 0;
+    const recurrenceInterval = 0;
     const now = new Date();
     const nextTransferAt = dateToSeconds(now);
     const completedAt = dateToSeconds(now);
@@ -509,7 +509,7 @@ describe("faktor", () => {
       IDEMPOTENCY_KEY_1,
       memo,
       amount,
-      transferInterval,
+      recurrenceInterval,
       nextTransferAt,
       completedAt
     );
@@ -540,9 +540,9 @@ describe("faktor", () => {
     assert.ok(payment.mint.toString() === WSOL_MINT.toString());
     assert.ok(Object.keys(payment.status)[0] === "completed");
     assert.ok(payment.amount.toNumber() === amount);
-    assert.ok(payment.transferInterval.toNumber() === transferInterval);
+    assert.ok(payment.recurrenceInterval.toNumber() === recurrenceInterval);
     assert.ok(
-      payment.nextTransferAt.toNumber() === nextTransferAt + transferInterval
+      payment.nextTransferAt.toNumber() === nextTransferAt + recurrenceInterval
     );
     assert.ok(payment.completedAt.toNumber() === completedAt);
 
@@ -578,7 +578,7 @@ describe("faktor", () => {
     const accounts = await createAccounts();
     const memo = "Abc";
     const amount = 100;
-    const transferInterval = 24 * 60 * 60; // Every 24 hours
+    const recurrenceInterval = 24 * 60 * 60; // Every 24 hours
     const now = new Date();
     const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
     const nextTransferAt = dateToSeconds(now);
@@ -588,7 +588,7 @@ describe("faktor", () => {
       IDEMPOTENCY_KEY_1,
       memo,
       amount,
-      transferInterval,
+      recurrenceInterval,
       nextTransferAt,
       completedAt
     );
@@ -619,9 +619,9 @@ describe("faktor", () => {
     assert.ok(payment.mint.toString() === WSOL_MINT.toString());
     assert.ok(Object.keys(payment.status)[0] === "scheduled");
     assert.ok(payment.amount.toNumber() === amount);
-    assert.ok(payment.transferInterval.toNumber() === transferInterval);
+    assert.ok(payment.recurrenceInterval.toNumber() === recurrenceInterval);
     assert.ok(
-      payment.nextTransferAt.toNumber() === nextTransferAt + transferInterval
+      payment.nextTransferAt.toNumber() === nextTransferAt + recurrenceInterval
     );
     assert.ok(payment.completedAt.toNumber() === completedAt);
 
@@ -657,7 +657,7 @@ describe("faktor", () => {
     const accounts = await createAccounts();
     const memo = "Abc";
     const amount = 100;
-    const transferInterval = 5; // Every 5 seconds
+    const recurrenceInterval = 5; // Every 5 seconds
     const now = new Date();
     const twentySecondsFromNow = new Date(now.getTime() + 20 * 1000);
     const nextTransferAt = dateToSeconds(now);
@@ -667,7 +667,7 @@ describe("faktor", () => {
       IDEMPOTENCY_KEY_1,
       memo,
       amount,
-      transferInterval,
+      recurrenceInterval,
       nextTransferAt,
       completedAt
     );
@@ -705,10 +705,10 @@ describe("faktor", () => {
     assert.ok(payment.mint.toString() === WSOL_MINT.toString());
     assert.ok(Object.keys(payment.status)[0] === "completed");
     assert.ok(payment.amount.toNumber() === amount);
-    assert.ok(payment.transferInterval.toNumber() === transferInterval);
+    assert.ok(payment.recurrenceInterval.toNumber() === recurrenceInterval);
     assert.ok(
       payment.nextTransferAt.toNumber() ===
-        nextTransferAt + transferInterval * numTransfers
+        nextTransferAt + recurrenceInterval * numTransfers
     );
     assert.ok(payment.completedAt.toNumber() === completedAt);
 

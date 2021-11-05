@@ -48,7 +48,7 @@ export function PaymentsTable({ currentFilter }: PaymentsTableProps) {
   }
 
   return (
-    <div className="flex flex-col min-w-full overflow-hidden overflow-x-auto">
+    <div className="flex flex-col min-w-full overflow-x-scroll">
       {visiblePayments.length > 0 ? (
         <>
           <table className="min-w-full divide-y divide-gray-200">
