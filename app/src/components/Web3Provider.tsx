@@ -20,7 +20,6 @@ import { FaktorIdl, FAKTOR_IDL, FAKTOR_PROGRAM_ID } from "@api";
 export function Web3Provider({ children }: React.PropsWithChildren<{}>) {
   // Can be set to 'devnet', 'testnet', or 'mainnet-beta'
   const endpoint = useMemo(() => clusterApiUrl(WalletAdapterNetwork.Devnet), []);
-  // process.env.NODE_ENV === "development" ? "http://localhost:8899" :
 
   // @solana/wallet-adapter-wallets includes all the adapters but supports tree shaking --
   // Only the wallets you configure here will be compiled into your application

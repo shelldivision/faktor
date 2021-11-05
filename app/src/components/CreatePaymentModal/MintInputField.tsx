@@ -1,6 +1,25 @@
-import { useRef, useState } from "react";
+import { InputContainer } from "@components";
 import { useOnClickOutside } from "@hooks";
 import { Mint, MINTS } from "@utils";
+import { useRef, useState } from "react";
+
+interface MintInputFieldProps {
+  error: string | null;
+  onChange: (val: string) => void;
+}
+
+export function MintInputField({ error, onChange }: MintInputFieldProps) {
+  async function _onChange(e: any) {
+    // TODO link this to MintSelect
+    onChange(e.target.value);
+  }
+
+  return (
+    <InputContainer label={"Mint"} error={error}>
+      <MintSelect />
+    </InputContainer>
+  );
+}
 
 export function MintSelect() {
   const [selectedMint, setSelectedMint] = useState(MINTS.WSOL);
