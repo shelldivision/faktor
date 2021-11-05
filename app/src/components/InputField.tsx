@@ -21,7 +21,7 @@ export function InputField({ type, error, label, placeholder, value, onChange }:
         placeholder={placeholder}
         onChange={_onChange}
         value={value}
-        className="flex items-center text-xl text-black placeholder-gray-400 bg-white border-none rounded-lg outline-none focus:ring-0"
+        className="flex items-center p-2 text-base text-black placeholder-gray-400 border-none rounded outline-none focus:ring-0"
       />
     </InputContainer>
   );
@@ -48,22 +48,24 @@ export function InputBox({
   label = ""
 }: React.PropsWithChildren<{ error: string | undefined | null; label?: string }>) {
   return (
-    <div
-      className={`pt-2 flex flex-col flex-1 bg-white rounded-lg ${
-        error ? "border-2 border-red-600" : "border border-gray-200"
-      }`}
-    >
+    <div className="flex flex-col space-y-2">
       <InputLabel title={label} />
-      {children}
+      <div
+        className={`flex flex-col flex-1 rounded ${
+          error ? "border-2 border-red-600" : "border border-gray-200"
+        }`}
+      >
+        {children}
+      </div>
     </div>
   );
 }
 
 export function InputLabel({ title }: { title: string }) {
-  return <label className={`mt-2 ml-3 text-gray-600 font-medium text-sm leading-3`}>{title}</label>;
+  return <label className={`text-gray-900 font-medium text-sm`}>{title}</label>;
 }
 
 export function InputErrorLabel({ error }: { error: string | undefined | null }) {
   if (!error) return null;
-  return <label className="mx-1 mt-1 text-base text-red-600">{error}</label>;
+  return <label className="mt-2 text-sm text-left text-red-600">{error}</label>;
 }

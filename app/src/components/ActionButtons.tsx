@@ -12,8 +12,8 @@ export const PrimaryAction: React.FC<ActionProps> = ({
 }) => {
   return (
     <button
-      className={`w-full px-5 py-3 text-lg font-semibold text-white transition duration-200 bg-orange-500 rounded-lg disabled:bg-none disabled:bg-gray-300 disabled:text-gray-500 ${
-        !disabled && "shadow hover:bg-orange-400 hover:shadow-lg"
+      className={`w-full px-4 py-2 text-base font-semibold text-white transition duration-200 bg-orange-500 rounded disabled:bg-gray-200 disabled:text-gray-400 ${
+        !disabled && "hover:bg-gray-900"
       }`}
       {...{ disabled, type }}
       {...props}
@@ -31,7 +31,9 @@ export const SecondaryAction: React.FC<ActionProps> = ({
 }) => {
   return (
     <button
-      className="flex items-center justify-center w-full px-4 text-lg font-semibold text-gray-700 transition rounded-lg h-14 hover:bg-gray-200"
+      className={`w-full px-4 py-2 text-base font-semibold text-gray-900 transition duration-200 bg-transparent rounded disabled:bg-gray-200 disabled:text-gray-400 ${
+        !disabled && "hover:bg-gray-100"
+      }`}
       {...{ disabled, type }}
       {...props}
     >

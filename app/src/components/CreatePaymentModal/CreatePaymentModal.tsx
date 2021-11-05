@@ -52,9 +52,6 @@ export function CreatePaymentModal({ open, setOpen }: CreatePaymentModalProps) {
   const [step, setStep] = useState(CreatePaymentStep.Input);
   const [formData, setFormData] = useState<CreatePaymentFormData>(DEFAULT_FORM_DATA);
 
-  const d = new Date(formData.nextTransferAt);
-  console.log("Date is ", d.toString() === "Invalid Date");
-
   const request = useMemo<CreatePaymentRequest | null>(() => {
     if (!isFormDataValid(formData)) return null;
     return {
@@ -126,7 +123,7 @@ export function CreatePaymentModal({ open, setOpen }: CreatePaymentModalProps) {
             leaveFrom="opacity-100 translate-y-0 sm:scale-100"
             leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
           >
-            <div className="inline-block w-full max-w-2xl px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-gray-100 rounded-lg shadow-xl sm:my-8 sm:align-middle sm:p-6">
+            <div className="inline-block w-full max-w-2xl px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded shadow-xl sm:my-8 sm:align-middle sm:p-6">
               <div className="flex items-center my-4 divide-x-2">
                 {step === CreatePaymentStep.Input && (
                   <InputStep formData={formData} onCancel={onClose} onSubmit={onSubmit} />

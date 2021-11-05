@@ -58,7 +58,7 @@ function PaymentStatusColumn({ status }: PaymentStatusColumnProps) {
       break;
     case "scheduled":
       title = "Scheduled";
-      tagClassName += " text-gray-500 text-gray-200";
+      tagClassName += " bg-gray-200 text-gray-700";
       break;
     default:
       break;

@@ -52,12 +52,12 @@ export function InputStep({ formData, onCancel, onSubmit }: InputStepProps) {
   return (
     <form onSubmit={_onSubmit} className="w-full space-y-8">
       <h1 className="text-3xl font-bold text-gray-900">New Payment</h1>
-      <div className="flex flex-col space-y-4">
+      <div className="flex flex-col space-y-6">
         <InputField
           error={creditorError}
           label="To"
           type="text"
-          placeholder="Public address"
+          placeholder="Recipient address"
           value={creditor}
           onChange={(v) => setCreditor(v)}
         />
@@ -74,6 +74,7 @@ export function InputStep({ formData, onCancel, onSubmit }: InputStepProps) {
             label="Amount"
             type="number"
             placeholder="0.00"
+            value={amount}
             onChange={(v) => setAmount(v)}
           />
         </div>
