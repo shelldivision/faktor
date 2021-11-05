@@ -52,7 +52,7 @@ export function PaymentsTable({ currentFilter }: PaymentsTableProps) {
       {visiblePayments.length > 0 ? (
         <>
           <table className="min-w-full divide-y divide-gray-200">
-            <PaymentsTableHeader />
+            <PaymentsTableHeader currentFilter={currentFilter} />
             <PaymentsTableBody currentFilter={currentFilter} visiblePayments={visiblePayments} />
           </table>
         </>
@@ -63,13 +63,15 @@ export function PaymentsTable({ currentFilter }: PaymentsTableProps) {
   );
 }
 
-function PaymentsTableHeader() {
+function PaymentsTableHeader({ currentFilter }: PaymentsTableProps) {
   return (
     <thead>
       <tr className="py-2 text-xs text-left text-gray-900 uppercase ">
         <th className="px-4 py-2 font-semibold">Memo</th>
         <th className="px-4 py-2 font-semibold">Amount</th>
-        <th className="px-4 py-2 font-semibold">To</th>
+        <th className="px-4 py-2 font-semibold">
+          {currentFilter === PaymentsFilter.Incoming ? "From" : "To"}
+        </th>
         <th className="px-4 py-2 font-semibold">Date</th>
         <th className="px-4 py-2 font-semibold">Status</th>
       </tr>

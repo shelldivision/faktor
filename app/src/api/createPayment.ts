@@ -69,9 +69,21 @@ export const createPayment = async (faktor: Program, req: CreatePaymentRequest):
       instructions
     }
   );
-  return await faktor.account.payment.fetch(paymentAddress);
+  const payment = await faktor.account.payment.fetch(paymentAddress);
+
+  // Replicate payment to distributor
+  await replicatePayment(paymentAddress);
+  return payment;
 };
 
 function dateToSeconds(date: Date) {
   return Math.floor(date.getTime() / 1000);
+}
+
+async function replicatePayment(address: PublicKey) {
+  const url = "https://distributor.faktor.finance/payments/" + address.toString();
+  await fetch(url, { method: "POST" })
+    .then((res) => res.json())
+    .then((payment) => console.log("Replicated payment: ", payment))
+    .catch((err) => console.log("Failed to replicate payment to distributor: ", err));
 }

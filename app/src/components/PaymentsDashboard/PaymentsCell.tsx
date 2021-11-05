@@ -34,7 +34,11 @@ export function PaymentCell({ currentFilter, payment }: PaymentCellProps) {
         </span>
       </td>
       <td className="px-4 py-3 text-gray-700">
-        <span className="flex w-32">{abbreviate(payment.account.creditor)}</span>
+        <span className="flex w-32">
+          {currentFilter === PaymentsFilter.Incoming
+            ? abbreviate(payment.account.debtor)
+            : abbreviate(payment.account.creditor)}
+        </span>
       </td>
       <td className="px-4 py-3 text-gray-700">
         <span className="flex w-48">{nextTransferAt.toLocaleString()}</span>
