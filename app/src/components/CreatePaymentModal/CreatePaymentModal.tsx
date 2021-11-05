@@ -56,7 +56,7 @@ export function CreatePaymentModal({ open, setOpen }: CreatePaymentModalProps) {
   const request = useMemo<CreatePaymentRequest | null>(() => {
     if (!isFormDataValid(formData)) return null;
     return {
-      idempotencyKey: generateIdempotencyKey(),
+      idempotencyKey: generateIdempotencyKey(8),
       debtor: faktor.provider.wallet.publicKey,
       creditor: new PublicKey(formData.creditor),
       memo: formData.memo,
@@ -146,8 +146,12 @@ export function CreatePaymentModal({ open, setOpen }: CreatePaymentModalProps) {
   );
 }
 
-function generateIdempotencyKey() {
-  let hexString = uuidv4();
-  hexString = hexString.replace(/-/g, "");
-  return Buffer.from(hexString, "hex").toString("base64");
+function generateIdempotencyKey(length: number) {
+  let result = "";
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const charactersLength = characters.length;
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
 }
