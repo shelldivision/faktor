@@ -5,7 +5,6 @@ import { InputStep } from "./InputStep";
 import { ConfirmationStep } from "./ConfirmationStep";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { useFaktor } from "@components";
-import { v4 as uuidv4 } from "uuid";
 
 export enum CreatePaymentStep {
   Input = 0,
@@ -45,11 +44,13 @@ function isFormDataValid(formData: CreatePaymentFormData) {
 interface CreatePaymentModalProps {
   open: any;
   setOpen: any;
+  refresh: () => void;
 }
 
-export function CreatePaymentModal({ open, setOpen }: CreatePaymentModalProps) {
+export function CreatePaymentModal({ open, setOpen, refresh }: CreatePaymentModalProps) {
   const faktor = useFaktor();
 
+  const [isBusy, setIsBusy] = useState(false);
   const [step, setStep] = useState(CreatePaymentStep.Input);
   const [formData, setFormData] = useState<CreatePaymentFormData>(DEFAULT_FORM_DATA);
 
@@ -78,10 +79,11 @@ export function CreatePaymentModal({ open, setOpen }: CreatePaymentModalProps) {
 
   async function onConfirm() {
     if (!request) return;
+    setIsBusy(true);
     createPayment(faktor, request)
       .then(() => {
         onClose();
-        // refresh();
+        refresh();
       })
       .catch((error) => {
         console.warn("Failed to create payment: ", error.message);
@@ -91,6 +93,7 @@ export function CreatePaymentModal({ open, setOpen }: CreatePaymentModalProps) {
   function onClose() {
     setOpen(false);
     setFormData(DEFAULT_FORM_DATA);
+    setIsBusy(false);
   }
 
   return (
@@ -133,6 +136,7 @@ export function CreatePaymentModal({ open, setOpen }: CreatePaymentModalProps) {
                 {step === CreatePaymentStep.Confirmation && request && (
                   <ConfirmationStep
                     request={request}
+                    isBusy={isBusy}
                     onBack={() => setStep(step - 1)}
                     onConfirm={onConfirm}
                   />

@@ -5,11 +5,12 @@ import React from "react";
 
 export interface ConfirmationStepProps {
   request: CreatePaymentRequest;
+  isBusy: boolean;
   onBack: () => void;
   onConfirm: () => void;
 }
 
-export function ConfirmationStep({ request, onBack, onConfirm }: ConfirmationStepProps) {
+export function ConfirmationStep({ request, isBusy, onBack, onConfirm }: ConfirmationStepProps) {
   if (!request) return null;
   return (
     <div className="w-full space-y-8">
@@ -34,7 +35,9 @@ export function ConfirmationStep({ request, onBack, onConfirm }: ConfirmationSte
       </div>
       <div className="flex items-center justify-between w-full space-x-3">
         <SecondaryAction onClick={onBack}>Back</SecondaryAction>
-        <PrimaryAction onClick={onConfirm}>Confirm</PrimaryAction>
+        <PrimaryAction disabled={isBusy} onClick={onConfirm}>
+          Confirm
+        </PrimaryAction>
       </div>
     </div>
   );

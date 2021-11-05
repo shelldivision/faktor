@@ -1,9 +1,30 @@
-import { CreatePaymentModal, PaymentsFilter, PaymentsTable, PaymentsToolbar } from "@components";
-import { useState } from "react";
+import {
+  CreatePaymentModal,
+  PaymentsFilter,
+  PaymentsTable,
+  PaymentsToolbar,
+  useFaktor
+} from "@components";
+import { useEffect, useState } from "react";
 
 export function PaymentsDashboard() {
+  // Get Faktor program
+  const faktor = useFaktor();
+
+  const [allPayments, setAllPayments] = useState([]);
   const [currentFilter, setCurrentFilter] = useState(PaymentsFilter.Outgoing);
   const [isCreatePaymentModalOpen, setIsCreatePaymentModalOpen] = useState(false);
+
+  // Refresh page on load
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  async function refresh() {
+    if (!faktor) return;
+    const payments: any = await faktor.account.payment.all();
+    setAllPayments(payments);
+  }
 
   return (
     <>
@@ -13,9 +34,13 @@ export function PaymentsDashboard() {
           setCurrentFilter={setCurrentFilter}
           setIsCreatePaymentModalOpen={setIsCreatePaymentModalOpen}
         />
-        <PaymentsTable currentFilter={currentFilter} />
+        <PaymentsTable allPayments={allPayments} currentFilter={currentFilter} />
       </div>
-      <CreatePaymentModal open={isCreatePaymentModalOpen} setOpen={setIsCreatePaymentModalOpen} />
+      <CreatePaymentModal
+        open={isCreatePaymentModalOpen}
+        setOpen={setIsCreatePaymentModalOpen}
+        refresh={() => refresh()}
+      />
     </>
   );
 }

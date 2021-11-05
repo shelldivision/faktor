@@ -10,10 +10,11 @@ export enum PaymentsFilter {
 export const PAYMENTS_FILTERS = [PaymentsFilter.Outgoing, PaymentsFilter.Incoming];
 
 export type PaymentsTableProps = {
+  allPayments: any[];
   currentFilter: PaymentsFilter;
 };
 
-export function PaymentsTable({ currentFilter }: PaymentsTableProps) {
+export function PaymentsTable({ allPayments, currentFilter }: PaymentsTableProps) {
   // Get Faktor program
   const faktor = useFaktor();
 
@@ -28,24 +29,17 @@ export function PaymentsTable({ currentFilter }: PaymentsTableProps) {
     [payments, currentFilter]
   );
 
-  // Refresh page on load
   useEffect(() => {
-    refresh();
-  }, []);
-
-  async function refresh() {
-    if (!faktor) return;
-    const payments: any = await faktor.account.payment.all();
     const wallet = faktor.provider.wallet;
     setPayments({
-      Incoming: payments.filter(
+      Incoming: allPayments.filter(
         (inv: any) => inv.account.creditor.toString() === wallet.publicKey.toString()
       ),
-      Outgoing: payments.filter(
+      Outgoing: allPayments.filter(
         (inv: any) => inv.account.debtor.toString() === wallet.publicKey.toString()
       )
     });
-  }
+  }, [allPayments]);
 
   return (
     <div className="flex flex-col min-w-full overflow-x-scroll">
@@ -63,7 +57,11 @@ export function PaymentsTable({ currentFilter }: PaymentsTableProps) {
   );
 }
 
-function PaymentsTableHeader({ currentFilter }: PaymentsTableProps) {
+export type PaymentsTableHeaderProps = {
+  currentFilter: PaymentsFilter;
+};
+
+function PaymentsTableHeader({ currentFilter }: PaymentsTableHeaderProps) {
   return (
     <thead>
       <tr className="py-2 text-xs text-left text-gray-900 uppercase ">
@@ -94,7 +92,11 @@ function PaymentsTableBody({ currentFilter, visiblePayments }: PaymentsTableBody
   );
 }
 
-function PaymentsTableEmptyPrompt({ currentFilter }: PaymentsTableProps) {
+export type PaymentsTableEmptyPromptProps = {
+  currentFilter: PaymentsFilter;
+};
+
+function PaymentsTableEmptyPrompt({ currentFilter }: PaymentsTableEmptyPromptProps) {
   return (
     <div className="p-8">
       <div className="flex items-center justify-center w-12 h-12 mx-auto bg-gray-200 rounded-full">
