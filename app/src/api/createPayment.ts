@@ -12,6 +12,7 @@ import { getOrCreateATA, MINTS } from "@utils";
 const PAYMENT_SEED: Buffer = Buffer.from("payment");
 
 export type CreatePaymentRequest = {
+  idempotencyKey: string;
   debtor: PublicKey;
   creditor: PublicKey;
   memo: string;
@@ -48,6 +49,7 @@ export const createPayment = async (faktor: Program, req: CreatePaymentRequest):
 
   // Execute RPC
   await faktor.rpc.createPayment(
+    req.idempotencyKey,
     req.memo,
     new BN(req.amount),
     new BN(req.recurrenceInterval),

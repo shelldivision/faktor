@@ -56,6 +56,7 @@ pub mod faktor {
 
     pub fn create_payment(
         ctx: Context<CreatePayment>, 
+        idempotency_key: String,
         memo: String, 
         amount: u64,
         transfer_interval: u64,
@@ -103,6 +104,7 @@ pub mod faktor {
         );
 
         // Initialize payment account.
+        payment.idempotency_key = idempotency_key;
         payment.memo = memo;
         payment.debtor = debtor.key();
         payment.debtor_tokens = debtor_tokens.key();
@@ -177,7 +179,7 @@ pub mod faktor {
                     from: debtor_tokens.to_account_info(),
                     to: creditor_tokens.to_account_info(),
                 },
-                &[&[PAYMENT_SEED, payment.debtor.as_ref(), payment.creditor.as_ref(), &[payment.bump]]]
+                &[&[PAYMENT_SEED, payment.idempotency_key.as_bytes(), payment.debtor.as_ref(), payment.creditor.as_ref(), &[payment.bump]]]
             ),
             payment.amount,
         )?;
@@ -227,6 +229,7 @@ pub struct InitializeTreasury<'info> {
 
 #[derive(Accounts)]
 #[instruction(
+    idempotency_key: String,
     memo: String, 
     amount: u64,
     transfer_interval: u64,
@@ -237,10 +240,10 @@ pub struct InitializeTreasury<'info> {
 pub struct CreatePayment<'info> {
     #[account(
         init,
-        seeds = [PAYMENT_SEED, debtor.key().as_ref(), creditor.key().as_ref()],
+        seeds = [PAYMENT_SEED, idempotency_key.as_bytes(), debtor.key().as_ref(), creditor.key().as_ref()],
         bump = bump,
         payer = debtor,
-        space = 8 + (4 + memo.len()) + 32 + 32 + 32 + 32 + 32 + 8 + 8 + 8 + 8 + 8 + 8 + 1,
+        space = 8 + (4 + memo.len()) + (4 + memo.len()) + 32 + 32 + 32 + 32 + 32 + 8 + 8 + 8 + 8 + 8 + 8 + 1,
     )]
     pub payment: Account<'info, Payment>,
     #[account(mut)]
@@ -269,7 +272,7 @@ pub struct CreatePayment<'info> {
 pub struct DistributePayment<'info> {
     #[account(
         mut,
-        seeds = [PAYMENT_SEED, debtor.key().as_ref(), creditor.key().as_ref()],
+        seeds = [PAYMENT_SEED, payment.idempotency_key.as_bytes(), debtor.key().as_ref(), creditor.key().as_ref()],
         bump = payment.bump,
         has_one = debtor,
         has_one = debtor_tokens,
@@ -309,6 +312,7 @@ pub struct DistributePayment<'info> {
 
 #[account]
 pub struct Payment {
+    pub idempotency_key: String,
     pub memo: String,
     pub debtor: Pubkey,
     pub debtor_tokens: Pubkey,

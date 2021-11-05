@@ -5,6 +5,7 @@ import { InputStep } from "./InputStep";
 import { ConfirmationStep } from "./ConfirmationStep";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { useFaktor } from "@components";
+import { randomUUID } from "crypto";
 
 export enum CreatePaymentStep {
   Input = 0,
@@ -55,6 +56,7 @@ export function CreatePaymentModal({ open, setOpen }: CreatePaymentModalProps) {
   const request = useMemo<CreatePaymentRequest | null>(() => {
     if (!isFormDataValid(formData)) return null;
     return {
+      idempotencyKey: randomUUID(),
       debtor: faktor.provider.wallet.publicKey,
       creditor: new PublicKey(formData.creditor),
       memo: formData.memo,
