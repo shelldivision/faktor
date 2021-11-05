@@ -3,6 +3,7 @@ export * from "./ConnectWalletPrompt";
 export * from "./CreatePayment";
 export * from "./Header";
 export * from "./HomeLink";
+export * from "./Icon";
 export * from "./InputField";
 export * from "./MintInputField";
 export * from "./MintSelect";

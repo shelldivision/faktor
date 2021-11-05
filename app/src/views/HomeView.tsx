@@ -6,7 +6,9 @@ import {
   PAYMENTS_FILTERS,
   PaymentsFilter,
   ConnectWalletPrompt,
-  Header
+  Header,
+  IconName,
+  Icon
 } from "@components";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
@@ -86,9 +88,10 @@ function NewPaymentButton({ showModal }: { showModal: () => void }) {
     <button
       onClick={showModal}
       type="button"
-      className="px-4 py-2 text-base font-semibold text-white transition duration-200 bg-orange-500 rounded hover:bg-gray-900 hover:text-white"
+      className="flex flex-row px-4 py-2 space-x-2 text-base font-semibold text-white transition bg-orange-500 rounded hover:bg-gray-900"
     >
-      New Payment
+      <Icon name={IconName.Plus} className="w-4 h-4 my-auto" />
+      <span>New Payment</span>
     </button>
   );
 }
