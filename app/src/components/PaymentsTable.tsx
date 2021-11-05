@@ -66,10 +66,19 @@ export function PaymentsTable({ currentFilter }: PaymentsTableProps) {
   }
 
   return (
-    <div className="flex flex-col min-w-full overflow-hidden overflow-x-auto bg-white rounded-lg shadow">
+    <div className="flex flex-col min-w-full overflow-hidden overflow-x-auto">
       {visiblePayments.length > 0 ? (
         <>
           <table className="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr className="py-2 space-x-4 text-sm font-medium text-gray-900">
+                <th className="tracking-wider">Memo</th>
+                <th className="tracking-wider">Memo</th>
+                <th className="tracking-wider">Memo</th>
+                <th className="tracking-wider">Memo</th>
+                <th className="tracking-wider">Memo</th>
+              </tr>
+            </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {(visiblePayments ?? []).map((payment: any, i: number) => {
                 return <PaymentCell key={i} currentFilter={currentFilter} payment={payment} />;
@@ -109,9 +118,16 @@ function PaymentCell({ currentFilter, payment }: PaymentCellProps) {
     setIsOpen(!isOpen);
   }
 
+  // border-t border-b
+
   return (
-    <button className={`flex flex-row w-full px-6 py-4 space-x-8`} onClick={onClick}>
-      <td className="my-auto mr-auto font-medium text-gray-900 truncate">{payment.account.memo}</td>
+    <tr
+      className={`flex flex-row w-full p-4 space-x-8 hover:bg-gray-50 transition`}
+      onClick={onClick}
+    >
+      <td className="w-full my-auto mr-auto font-medium text-gray-900 truncate">
+        {payment.account.memo}
+      </td>
       <span className="flex flex-row my-auto space-x-2">
         <td className="my-auto text-gray-500 truncate">{amount}</td>
         <td className="my-auto text-gray-500 truncate">wSOL</td>
@@ -121,7 +137,29 @@ function PaymentCell({ currentFilter, payment }: PaymentCellProps) {
       <td className="flex flex-row my-auto text-gray-500 truncate">
         {nextTransferAt.toLocaleString()}
       </td>
-      <td className="flex flex-row my-auto text-gray-500 truncate">{status}</td>
-    </button>
+      <PaymentStatusColumn status={status} />
+    </tr>
   );
+}
+
+type PaymentStatusColumnProps = {
+  status: string;
+};
+
+function PaymentStatusColumn({ status }: PaymentStatusColumnProps) {
+  let title = "";
+  let className = "flex flex-row px-3 py-1 my-auto font-medium truncate rounded";
+  switch (status) {
+    case "completed":
+      title = "Completed";
+      className += " bg-green-100 text-green-600";
+      break;
+    case "scheduled":
+      title = "Scheduled";
+      className += " text-gray-500 text-gray-200";
+      break;
+    default:
+      break;
+  }
+  return <td className={className}>{title}</td>;
 }

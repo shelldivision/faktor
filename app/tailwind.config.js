@@ -7,13 +7,18 @@ module.exports = {
   theme: {
     colors: {
       ...defaultColors,
+      green: {
+        100: "#D2F0CB",
+        600: "#2D6047"
+      },
       orange: {
         ...defaultColors.orange,
         500: "#FD833A"
       },
       gray: {
         ...defaultColors.gray,
-        100: "#F7F9FC",
+        100: "#F1F1F1",
+        200: "#EDEDED",
         800: "#292929",
         900: "#1F1F1F"
       },

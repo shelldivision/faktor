@@ -5,7 +5,6 @@ import {
   SecondaryAction,
   PrimaryAction,
   InputField,
-  TransferRateInput,
   CreatePaymentFormData
 } from "@components";
 

@@ -1,5 +1,3 @@
-import { InputField } from "./InputField";
-
 export function TransferRateInput() {
   return (
     <div className="space-y-3">
