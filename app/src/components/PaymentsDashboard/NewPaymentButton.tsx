@@ -1,5 +1,3 @@
-import { Icon, IconName } from "@components";
-
 import { PlusIcon } from "@heroicons/react/solid";
 
 export function NewPaymentButton({ showModal }: { showModal: () => void }) {

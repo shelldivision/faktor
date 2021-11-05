@@ -1,15 +1,20 @@
 import { PaymentsFilter, PAYMENTS_FILTERS } from "@components";
 import { NewPaymentButton } from "./NewPaymentButton";
+import { RefreshIcon } from "@heroicons/react/outline";
+
+type PaymentsToolbarProps = {
+  currentFilter: PaymentsFilter;
+  refresh: () => void;
+  setCurrentFilter: (filter: PaymentsFilter) => void;
+  setIsCreatePaymentModalOpen: (val: boolean) => void;
+};
 
 export function PaymentsToolbar({
   currentFilter,
+  refresh,
   setCurrentFilter,
   setIsCreatePaymentModalOpen
-}: {
-  currentFilter: PaymentsFilter;
-  setCurrentFilter: (filter: PaymentsFilter) => void;
-  setIsCreatePaymentModalOpen: (val: boolean) => void;
-}) {
+}: PaymentsToolbarProps) {
   return (
     <div className="flex items-center justify-between">
       {/* Left side */}
@@ -33,9 +38,26 @@ export function PaymentsToolbar({
         ))}
       </nav>
       {/* Right side */}
-      <div className="space-x-2">
+      <div className="flex flex-row space-x-4">
+        <RefreshButton refresh={refresh} />
         <NewPaymentButton showModal={() => setIsCreatePaymentModalOpen(true)} />
       </div>
     </div>
+  );
+}
+
+type RefreshButtonProps = {
+  refresh: () => void;
+};
+
+function RefreshButton({ refresh }: RefreshButtonProps) {
+  return (
+    <button
+      className="flex flex-row px-2 px-4 space-x-2 text-base font-medium text-gray-900 rounded hover:bg-gray-200"
+      onClick={() => refresh()}
+    >
+      <RefreshIcon className="w-5 h-5 m-auto" />
+      <span className="my-auto ">Refresh</span>
+    </button>
   );
 }

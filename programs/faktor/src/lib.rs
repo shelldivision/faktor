@@ -23,7 +23,7 @@ use {
     std::clone::Clone,
 };
 
-declare_id!("DpXRoReF48SN7G85tf2QXQzaEisBQWSMmncYdrRngyvB");
+declare_id!("5jFpi79U5469zL14EgCiuXnLMuKZsnD7ixSL4z6zoLcG");
 
 // PDA seeds
 static TREASURY_SEED: &[u8] = b"treasury";
@@ -119,6 +119,7 @@ pub mod faktor {
         payment.bump = bump;
 
         // Approve program authority to initiate transfers from the debtor's token account.
+        let total_transfer_amount = num_transfers * amount;
         approve(
             CpiContext::new(
                 token_program.to_account_info(),
@@ -128,7 +129,7 @@ pub mod faktor {
                     to: debtor_tokens.to_account_info(),
                 }
             ),
-            num_transfers * amount,
+            total_transfer_amount
         )?;
 
         // Collect total transfer fee from debtor.

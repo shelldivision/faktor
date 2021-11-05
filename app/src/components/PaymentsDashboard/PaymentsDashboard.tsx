@@ -31,6 +31,7 @@ export function PaymentsDashboard() {
       <div className="py-4 space-y-8">
         <PaymentsToolbar
           currentFilter={currentFilter}
+          refresh={refresh}
           setCurrentFilter={setCurrentFilter}
           setIsCreatePaymentModalOpen={setIsCreatePaymentModalOpen}
         />
