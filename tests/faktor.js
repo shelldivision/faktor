@@ -18,7 +18,6 @@ const TRANSFER_FEE_DISTRIBUTOR = 1000;
 const TRANSFER_FEE_TREASURY = 1000;
 
 // Seeds
-const PAYMENT_SEED = Buffer.from("payment");
 const TREASURY_SEED = Buffer.from("treasury");
 
 // Keys
@@ -62,7 +61,6 @@ describe("faktor", () => {
     const dana = await createAccount();
     const [payment1, payment1Bump] = await PublicKey.findProgramAddress(
       [
-        PAYMENT_SEED,
         Buffer.from(IDEMPOTENCY_KEY_1),
         alice.keys.publicKey.toBuffer(),
         bob.keys.publicKey.toBuffer(),
@@ -71,7 +69,6 @@ describe("faktor", () => {
     );
     const [payment2, payment2Bump] = await PublicKey.findProgramAddress(
       [
-        PAYMENT_SEED,
         Buffer.from(IDEMPOTENCY_KEY_2),
         alice.keys.publicKey.toBuffer(),
         bob.keys.publicKey.toBuffer(),

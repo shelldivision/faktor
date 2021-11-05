@@ -5,7 +5,7 @@ import { InputStep } from "./InputStep";
 import { ConfirmationStep } from "./ConfirmationStep";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { useFaktor } from "@components";
-import { randomUUID } from "crypto";
+import { v4 as uuidv4 } from "uuid";
 
 export enum CreatePaymentStep {
   Input = 0,
@@ -56,7 +56,7 @@ export function CreatePaymentModal({ open, setOpen }: CreatePaymentModalProps) {
   const request = useMemo<CreatePaymentRequest | null>(() => {
     if (!isFormDataValid(formData)) return null;
     return {
-      idempotencyKey: randomUUID(),
+      idempotencyKey: generateIdempotencyKey(),
       debtor: faktor.provider.wallet.publicKey,
       creditor: new PublicKey(formData.creditor),
       memo: formData.memo,
@@ -144,4 +144,10 @@ export function CreatePaymentModal({ open, setOpen }: CreatePaymentModalProps) {
       </Dialog>
     </Transition.Root>
   );
+}
+
+function generateIdempotencyKey() {
+  let hexString = uuidv4();
+  hexString = hexString.replace(/-/g, "");
+  return Buffer.from(hexString, "hex").toString("base64");
 }

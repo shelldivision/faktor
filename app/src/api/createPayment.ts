@@ -9,8 +9,6 @@ import {
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { getOrCreateATA, MINTS } from "@utils";
 
-const PAYMENT_SEED: Buffer = Buffer.from("payment");
-
 export type CreatePaymentRequest = {
   idempotencyKey: string;
   debtor: PublicKey;
@@ -25,7 +23,7 @@ export type CreatePaymentRequest = {
 export const createPayment = async (faktor: Program, req: CreatePaymentRequest): Promise<any> => {
   // Generate payment PDA
   const [paymentAddress, paymentBump] = await PublicKey.findProgramAddress(
-    [PAYMENT_SEED, Buffer.from(req.idempotencyKey), req.debtor.toBuffer(), req.creditor.toBuffer()],
+    [Buffer.from(req.idempotencyKey), req.debtor.toBuffer(), req.creditor.toBuffer()],
     FAKTOR_PROGRAM_ID
   );
 

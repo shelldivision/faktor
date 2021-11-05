@@ -79,6 +79,10 @@
       ],
       "args": [
         {
+          "name": "idempotencyKey",
+          "type": "string"
+        },
+        {
           "name": "memo",
           "type": "string"
         },
@@ -87,7 +91,7 @@
           "type": "u64"
         },
         {
-          "name": "transferInterval",
+          "name": "recurrenceInterval",
           "type": "u64"
         },
         {
@@ -163,6 +167,10 @@
         "kind": "struct",
         "fields": [
           {
+            "name": "idempotencyKey",
+            "type": "string"
+          },
+          {
             "name": "memo",
             "type": "string"
           },
@@ -197,7 +205,7 @@
             "type": "u64"
           },
           {
-            "name": "transferInterval",
+            "name": "recurrenceInterval",
             "type": "u64"
           },
           {
@@ -341,6 +349,6 @@
     }
   ],
   "metadata": {
-    "address": "ChgVP3grvVY4JxYQBh3eauSBHTfw8HpYwx3ejvCe7hVm"
+    "address": "DpXRoReF48SN7G85tf2QXQzaEisBQWSMmncYdrRngyvB"
   }
 }

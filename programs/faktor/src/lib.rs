@@ -23,10 +23,9 @@ use {
     std::clone::Clone,
 };
 
-declare_id!("ChgVP3grvVY4JxYQBh3eauSBHTfw8HpYwx3ejvCe7hVm");
+declare_id!("DpXRoReF48SN7G85tf2QXQzaEisBQWSMmncYdrRngyvB");
 
 // PDA seeds
-static PAYMENT_SEED: &[u8] = b"payment";
 static TREASURY_SEED: &[u8] = b"treasury";
 
 // Fees
@@ -179,7 +178,7 @@ pub mod faktor {
                     from: debtor_tokens.to_account_info(),
                     to: creditor_tokens.to_account_info(),
                 },
-                &[&[PAYMENT_SEED, payment.idempotency_key.as_bytes(), payment.debtor.as_ref(), payment.creditor.as_ref(), &[payment.bump]]]
+                &[&[payment.idempotency_key.as_bytes(), payment.debtor.as_ref(), payment.creditor.as_ref(), &[payment.bump]]]
             ),
             payment.amount,
         )?;
@@ -240,7 +239,7 @@ pub struct InitializeTreasury<'info> {
 pub struct CreatePayment<'info> {
     #[account(
         init,
-        seeds = [PAYMENT_SEED, idempotency_key.as_bytes(), debtor.key().as_ref(), creditor.key().as_ref()],
+        seeds = [idempotency_key.as_bytes(), debtor.key().as_ref(), creditor.key().as_ref()],
         bump = bump,
         payer = debtor,
         space = 8 + (4 + memo.len()) + (4 + memo.len()) + 32 + 32 + 32 + 32 + 32 + 8 + 8 + 8 + 8 + 8 + 8 + 1,
@@ -272,7 +271,7 @@ pub struct CreatePayment<'info> {
 pub struct DistributePayment<'info> {
     #[account(
         mut,
-        seeds = [PAYMENT_SEED, payment.idempotency_key.as_bytes(), debtor.key().as_ref(), creditor.key().as_ref()],
+        seeds = [payment.idempotency_key.as_bytes(), debtor.key().as_ref(), creditor.key().as_ref()],
         bump = payment.bump,
         has_one = debtor,
         has_one = debtor_tokens,
