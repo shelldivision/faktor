@@ -57,7 +57,7 @@ export function PaymentsTable({ currentFilter }: PaymentsTableProps) {
           </table>
         </>
       ) : (
-        <PaymentsTableEmptyPrompt />
+        <PaymentsTableEmptyPrompt currentFilter={currentFilter} />
       )}
     </div>
   );
@@ -94,13 +94,15 @@ function PaymentsTableBody({ currentFilter, visiblePayments }: PaymentsTableBody
   );
 }
 
-function PaymentsTableEmptyPrompt() {
+function PaymentsTableEmptyPrompt({ currentFilter }: PaymentsTableProps) {
   return (
     <div className="p-8">
       <div className="flex items-center justify-center w-12 h-12 mx-auto bg-gray-200 rounded-full">
         <CashIcon className="w-6 h-6 text-gray-500" aria-hidden="true" />
       </div>
-      <h3 className="mt-4 text-base font-medium text-center text-gray-900">No payments found</h3>
+      <h3 className="mt-4 text-base font-medium text-center text-gray-900">
+        No {currentFilter.toLowerCase()} payments
+      </h3>
     </div>
   );
 }
