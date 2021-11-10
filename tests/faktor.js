@@ -740,6 +740,94 @@ describe("faktor", () => {
     assert.ok(finalBalances.charlie.wSOL === initialBalances.charlie.wSOL);
     assert.ok(finalBalances.dana.wSOL === initialBalances.dana.wSOL);
   });
+
+  it("Assert payment fails if Alice revokes Faktor's transfer delegation.", async () => {
+    // Setup
+    const accounts = await createAccounts();
+    const memo = "Abc";
+    const amount = 100;
+    const recurrenceInterval = 0;
+    const now = new Date();
+    const nextTransferAt = dateToSeconds(now);
+    const completedAt = dateToSeconds(now);
+    await createPayment(
+      accounts,
+      IDEMPOTENCY_KEY_1,
+      memo,
+      amount,
+      recurrenceInterval,
+      nextTransferAt,
+      completedAt
+    );
+
+    // Revoke Faktor permissions to transfer Alice's tokens.
+    const token = new Token(
+      provider.connection,
+      WSOL_MINT,
+      TOKEN_PROGRAM_ID,
+      accounts.alice.keys
+    );
+    await token.revoke(accounts.alice.tokens, accounts.alice.keys.publicKey, [
+      accounts.alice.keys,
+    ]);
+
+    await sleep(1000); // Wait 1s for the blockchain time to go past the nextTransferAt
+
+    // Attempt to distribute the payment.
+    const initialBalances = await getBalances(accounts);
+    await distributePayment(accounts);
+
+    // Validate payment data.
+    const payment = await program.account.payment.fetch(
+      accounts.payment1.keys.publicKey
+    );
+    assert.ok(payment.idempotencyKey === IDEMPOTENCY_KEY_1);
+    assert.ok(payment.memo === "Abc");
+    assert.ok(
+      payment.debtor.toString() === accounts.alice.keys.publicKey.toString()
+    );
+    assert.ok(
+      payment.debtorTokens.toString() === accounts.alice.tokens.toString()
+    );
+    assert.ok(
+      payment.creditor.toString() === accounts.bob.keys.publicKey.toString()
+    );
+    assert.ok(
+      payment.creditorTokens.toString() === accounts.bob.tokens.toString()
+    );
+    assert.ok(payment.mint.toString() === WSOL_MINT.toString());
+    assert.ok(Object.keys(payment.status)[0] === "failed");
+    assert.ok(payment.amount.toNumber() === amount);
+    assert.ok(payment.recurrenceInterval.toNumber() === recurrenceInterval);
+    assert.ok(payment.nextTransferAt.toNumber() === nextTransferAt);
+    assert.ok(payment.completedAt.toNumber() === completedAt);
+
+    // Validate SOL balances.
+    const finalBalances = await getBalances(accounts);
+    assert.ok(finalBalances.alice.SOL === initialBalances.alice.SOL);
+    assert.ok(finalBalances.bob.SOL === initialBalances.bob.SOL);
+    assert.ok(finalBalances.charlie.SOL === initialBalances.charlie.SOL);
+    assert.ok(
+      finalBalances.dana.SOL ===
+        initialBalances.dana.SOL + TRANSFER_FEE_DISTRIBUTOR
+    );
+    assert.ok(
+      finalBalances.payment1.SOL ===
+        initialBalances.payment1.SOL -
+          TRANSFER_FEE_DISTRIBUTOR -
+          TRANSFER_FEE_TREASURY
+    );
+    assert.ok(
+      finalBalances.treasury.SOL ===
+        initialBalances.treasury.SOL + TRANSFER_FEE_TREASURY
+    );
+
+    // Validate wSOL balances.
+    assert.ok(finalBalances.alice.wSOL === initialBalances.alice.wSOL);
+    assert.ok(finalBalances.bob.wSOL === initialBalances.bob.wSOL);
+    assert.ok(finalBalances.charlie.wSOL === initialBalances.charlie.wSOL);
+    assert.ok(finalBalances.dana.wSOL === initialBalances.dana.wSOL);
+  });
 });
 
 /** UTILITIES **/

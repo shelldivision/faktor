@@ -21,6 +21,7 @@ use {
         transfer
     },
     std::clone::Clone,
+    std::cmp::min,
 };
 
 declare_id!("5jFpi79U5469zL14EgCiuXnLMuKZsnD7ixSL4z6zoLcG");
@@ -76,18 +77,18 @@ pub mod faktor {
 
         // Validate request data.
         if recurrence_interval == 0 {
+            // This is a one-time request. 
+            // Validate the completed_at period matches the next_transfer_at.
             require!(
                 completed_at == next_transfer_at,
-                ErrorCode::InvalidRequest
+                ErrorCode::InvalidChronology
             );
         } else {
+            // This is a recurring payment.
+            // Validate the timestamps and recurrence interval are chronologically valid.
             require!(
-                completed_at > next_transfer_at,
-                ErrorCode::InvalidRequest
-            );
-            require!(
-                recurrence_interval < completed_at - next_transfer_at,
-                ErrorCode::InvalidRequest
+                next_transfer_at <= completed_at - recurrence_interval,
+                ErrorCode::InvalidChronology
             );
         }
         
@@ -99,7 +100,7 @@ pub mod faktor {
         let transfer_fee = num_transfers * (TRANSFER_FEE_DISTRIBUTOR + TRANSFER_FEE_PROGRAM);
         require!(
             debtor.to_account_info().lamports() >= transfer_fee,
-            ErrorCode::InsufficientLamports
+            ErrorCode::InsufficientBalance
         );
 
         // Initialize payment account.
@@ -155,53 +156,51 @@ pub mod faktor {
         let distributor = &ctx.accounts.distributor;
         let treasury = &ctx.accounts.treasury;
         let token_program = &ctx.accounts.token_program;
-        let clock = &ctx.accounts.clock;
 
-        // Validate payment is schedued.
-        require!(
-            payment.status == PaymentStatus::Scheduled,
-            ErrorCode::PaymentNotScheduled
-        );
+        // Validate the payment has sufficient authorizion to initiate a transfer from the debtor's token account.
+        if debtor_tokens.delegate.is_some() && 
+            debtor_tokens.delegate.unwrap() == payment.key() &&
+            debtor_tokens.delegated_amount >= payment.amount {
 
-        // Validate current timestamp.
-        let now = clock.unix_timestamp as u64;
-        require!(
-            payment.next_transfer_at <= now,
-            ErrorCode::TooEarly
-        );
+            // Transfer tokens from debtor to creditor.
+            transfer(
+                CpiContext::new_with_signer(
+                    token_program.to_account_info(),
+                    Transfer {
+                        authority: payment.to_account_info(),
+                        from: debtor_tokens.to_account_info(),
+                        to: creditor_tokens.to_account_info(),
+                    },
+                    &[&[payment.idempotency_key.as_bytes(), payment.debtor.as_ref(), payment.creditor.as_ref(), &[payment.bump]]]
+                ),
+                payment.amount,
+            )?;
 
-        // Transfer tokens from debtor to creditor.
-        transfer(
-            CpiContext::new_with_signer(
-                token_program.to_account_info(),
-                Transfer {
-                    authority: payment.to_account_info(),
-                    from: debtor_tokens.to_account_info(),
-                    to: creditor_tokens.to_account_info(),
-                },
-                &[&[payment.idempotency_key.as_bytes(), payment.debtor.as_ref(), payment.creditor.as_ref(), &[payment.bump]]]
-            ),
-            payment.amount,
-        )?;
+            // Update the timestamp for the next transfer attempt.
+            payment.next_transfer_at = min(
+                payment.next_transfer_at + payment.recurrence_interval,
+                payment.completed_at
+            );
+            
+            // If the next transfer timestamp has reached the completed at timestamp, mark the payment as completed.
+            if payment.next_transfer_at == payment.completed_at {
+                payment.status = PaymentStatus::Completed;
+            }
+        } else {
+            // Mark the payment as failed.
+            payment.status = PaymentStatus::Failed;
+        }
 
-        // Pay distributor transfer fee from payment to distributor.
+        // Pay transfer fee to the distributor.
         **payment.to_account_info().try_borrow_mut_lamports()? -= TRANSFER_FEE_DISTRIBUTOR;
         **distributor.to_account_info().try_borrow_mut_lamports()? += TRANSFER_FEE_DISTRIBUTOR;
         
-        // Pay program transfer fee from payment to treasury.
+        // Pay transfer fee to the treasury.
         **payment.to_account_info().try_borrow_mut_lamports()? -= TRANSFER_FEE_PROGRAM;
         **treasury.to_account_info().try_borrow_mut_lamports()? += TRANSFER_FEE_PROGRAM;
 
-        // Set timestamp for next transfer attempt.
-        payment.next_transfer_at += payment.recurrence_interval;
-
-        // Update payment status
-        if payment.next_transfer_at >= payment.completed_at {
-            payment.status = PaymentStatus::Completed;
-        }
-
         return Ok(());
-    } 
+    }
 }
 
 
@@ -277,14 +276,16 @@ pub struct DistributePayment<'info> {
         has_one = debtor,
         has_one = debtor_tokens,
         has_one = creditor,
-        has_one = creditor_tokens
+        has_one = creditor_tokens,
+        constraint = payment.status == PaymentStatus::Scheduled,
+        constraint = payment.next_transfer_at <= (clock.unix_timestamp as u64)
     )]
     pub payment: Account<'info, Payment>,
     pub debtor: AccountInfo<'info>,
     #[account(
         mut,
         constraint = debtor_tokens.owner == payment.debtor,
-        constraint = debtor_tokens.mint == payment.mint
+        constraint = debtor_tokens.mint == payment.mint,
     )]
     pub debtor_tokens: Account<'info, TokenAccount>,
     #[account(mut)]
@@ -332,6 +333,7 @@ pub struct Payment {
 pub enum PaymentStatus {
     Scheduled,
     Completed,
+    Failed,
 }
 
 #[account]
@@ -368,16 +370,8 @@ pub struct Treasury {
 
 #[error]
 pub enum ErrorCode {
-    #[msg("Insufficient balance")]
+    #[msg("Insufficient SOL to pay transfer fees.")]
     InsufficientBalance,
-    #[msg("Insufficient bounty")]
-    InsufficientBounty,
-    #[msg("Insufficient lamports")]
-    InsufficientLamports,
-    #[msg("Invalid request")]
-    InvalidRequest,
-    #[msg("Too early to distribute")]
-    TooEarly,
-    #[msg("Payment is not scheduled for distribution")]
-    PaymentNotScheduled
+    #[msg("The timestamps and recurrence interval must be chronological.")]
+    InvalidChronology,
 }
