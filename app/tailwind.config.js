@@ -9,7 +9,7 @@ module.exports = {
       ...defaultColors,
       green: {
         100: "#D2F0CB",
-        600: "#2D6047"
+        700: "#2D6047"
       },
       orange: {
         ...defaultColors.orange,
@@ -25,6 +25,11 @@ module.exports = {
       indigo: {
         ...defaultColors.indigo,
         600: "#3733FF"
+      },
+      red: {
+        ...defaultColors.red,
+        100: "#F9E3DE",
+        700: "#982A4F"
       }
     },
     extend: {}

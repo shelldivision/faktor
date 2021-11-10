@@ -58,7 +58,11 @@ function PaymentStatusColumn({ status }: PaymentStatusColumnProps) {
   switch (status) {
     case "completed":
       title = "Completed";
-      tagClassName += " bg-green-100 text-green-600";
+      tagClassName += " bg-green-100 text-green-700";
+      break;
+    case "failed":
+      title = "Failed";
+      tagClassName += " bg-red-100 text-red-700";
       break;
     case "scheduled":
       title = "Scheduled";
