@@ -30,21 +30,6 @@ export function InputField({ type, error, label, placeholder, value, onChange }:
 export function InputContainer({
   children,
   error,
-  label
-}: React.PropsWithChildren<{ error: string | undefined | null; label?: string }>) {
-  return (
-    <div className="flex flex-col flex-1">
-      <InputBox label={label} error={error}>
-        {children}
-      </InputBox>
-      <InputErrorLabel error={error} />
-    </div>
-  );
-}
-
-export function InputBox({
-  children,
-  error,
   label = ""
 }: React.PropsWithChildren<{ error: string | undefined | null; label?: string }>) {
   return (
@@ -57,6 +42,7 @@ export function InputBox({
       >
         {children}
       </div>
+      <InputErrorLabel error={error} />
     </div>
   );
 }
