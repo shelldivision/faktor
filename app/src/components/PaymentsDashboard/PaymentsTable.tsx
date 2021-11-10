@@ -32,12 +32,12 @@ export function PaymentsTable({ allPayments, currentFilter }: PaymentsTableProps
   useEffect(() => {
     const wallet = faktor.provider.wallet;
     setPayments({
-      Incoming: allPayments.filter(
-        (inv: any) => inv.account.creditor.toString() === wallet.publicKey.toString()
-      ),
-      Outgoing: allPayments.filter(
-        (inv: any) => inv.account.debtor.toString() === wallet.publicKey.toString()
-      )
+      Incoming: allPayments
+        .filter((inv: any) => inv.account.creditor.toString() === wallet.publicKey.toString())
+        .sort((a, b) => (a.account.nextTransferAt > b.account.nextTransferAt ? -1 : 1)),
+      Outgoing: allPayments
+        .filter((inv: any) => inv.account.debtor.toString() === wallet.publicKey.toString())
+        .sort((a, b) => (a.account.nextTransferAt > b.account.nextTransferAt ? -1 : 1))
     });
   }, [allPayments]);
 
