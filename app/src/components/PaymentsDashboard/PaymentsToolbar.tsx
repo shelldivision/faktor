@@ -53,7 +53,7 @@ type RefreshButtonProps = {
 function RefreshButton({ refresh }: RefreshButtonProps) {
   return (
     <button
-      className="flex flex-row px-2 px-4 space-x-2 text-base font-medium text-gray-900 rounded hover:bg-gray-200"
+      className="flex flex-row px-2 px-4 space-x-2 text-base font-medium text-gray-900 transition rounded hover:bg-gray-200"
       onClick={() => refresh()}
     >
       <RefreshIcon className="w-5 h-5 m-auto" />
