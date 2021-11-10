@@ -297,6 +297,9 @@
           },
           {
             "name": "Completed"
+          },
+          {
+            "name": "Failed"
           }
         ]
       }
@@ -320,32 +323,12 @@
     {
       "code": 300,
       "name": "InsufficientBalance",
-      "msg": "Insufficient balance"
+      "msg": "Insufficient SOL to pay transfer fees."
     },
     {
       "code": 301,
-      "name": "InsufficientBounty",
-      "msg": "Insufficient bounty"
-    },
-    {
-      "code": 302,
-      "name": "InsufficientLamports",
-      "msg": "Insufficient lamports"
-    },
-    {
-      "code": 303,
-      "name": "InvalidRequest",
-      "msg": "Invalid request"
-    },
-    {
-      "code": 304,
-      "name": "TooEarly",
-      "msg": "Too early to distribute"
-    },
-    {
-      "code": 305,
-      "name": "PaymentNotScheduled",
-      "msg": "Payment is not scheduled for distribution"
+      "name": "InvalidChronology",
+      "msg": "The timestamps and recurrence interval must be chronological."
     }
   ],
   "metadata": {

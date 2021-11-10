@@ -285,7 +285,7 @@ pub struct DistributePayment<'info> {
     #[account(
         mut,
         constraint = debtor_tokens.owner == payment.debtor,
-        constraint = debtor_tokens.mint == payment.mint,
+        constraint = debtor_tokens.mint == payment.mint
     )]
     pub debtor_tokens: Account<'info, TokenAccount>,
     #[account(mut)]
