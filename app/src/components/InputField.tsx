@@ -33,13 +33,9 @@ export function InputContainer({
   label = ""
 }: React.PropsWithChildren<{ error: string | undefined | null; label?: string }>) {
   return (
-    <div className="flex flex-col space-y-2">
+    <div className="flex flex-col flex-1 space-y-2">
       <InputLabel title={label} />
-      <div
-        className={`flex flex-col flex-1 rounded ${
-          error ? "border-2 border-red-600" : "border border-gray-200"
-        }`}
-      >
+      <div className={`rounded ${error ? "border-2 border-red-600" : "border border-gray-200"}`}>
         {children}
       </div>
       <InputErrorLabel error={error} />
