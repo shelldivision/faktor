@@ -21,7 +21,7 @@ export function InputField({ type, error, label, placeholder, value, onChange }:
         placeholder={placeholder}
         onChange={_onChange}
         value={value}
-        className="flex items-center p-2 text-base text-black placeholder-gray-400 border-none rounded outline-none focus:ring-0"
+        className="flex items-center w-full p-2 text-base text-black placeholder-gray-400 border-none rounded outline-none focus:ring-0"
       />
     </InputContainer>
   );
