@@ -7,6 +7,8 @@ import {
   InputField,
   CreatePaymentFormData
 } from "@components";
+import { TokenBalance } from "./TokenBalance";
+import { MINTS } from "@utils";
 
 export interface InputStepProps {
   formData: CreatePaymentFormData;
@@ -70,13 +72,16 @@ export function InputStep({ formData, onCancel, onSubmit }: InputStepProps) {
         />
         <div className="flex flex-row flex-1 space-x-2">
           <MintInputField error={null} onChange={() => {}} />
-          <InputField
-            label="Amount"
-            type="number"
-            placeholder="0.00"
-            value={amount}
-            onChange={(v) => setAmount(v)}
-          />
+          <div className="flex-col flex-1 space-y-2">
+            <InputField
+              label="Amount"
+              type="number"
+              placeholder="0.00"
+              value={amount}
+              onChange={(v) => setAmount(v)}
+            />
+            <TokenBalance mint={MINTS.WSOL.address} />
+          </div>
         </div>
         <InputField
           type="datetime-local"
