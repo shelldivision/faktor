@@ -160,7 +160,8 @@ pub mod faktor {
         // Validate the payment has sufficient authorizion to initiate a transfer from the debtor's token account.
         if debtor_tokens.delegate.is_some() && 
             debtor_tokens.delegate.unwrap() == payment.key() &&
-            debtor_tokens.delegated_amount >= payment.amount {
+            debtor_tokens.delegated_amount >= payment.amount &&
+            debtor_tokens.amount >= payment.amount {
 
             // Transfer tokens from debtor to creditor.
             transfer(
