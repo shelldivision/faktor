@@ -1,6 +1,5 @@
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { abbreviate } from "@utils";
-import UserImg from "@components/user-solid.svg";
 import { Icon, IconName } from "@components";
 
 export function WalletButton() {

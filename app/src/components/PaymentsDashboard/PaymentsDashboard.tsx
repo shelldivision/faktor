@@ -38,8 +38,8 @@ export function PaymentsDashboard() {
         <PaymentsTable allPayments={allPayments} currentFilter={currentFilter} />
       </div>
       <CreatePaymentModal
-        open={isCreatePaymentModalOpen}
-        setOpen={setIsCreatePaymentModalOpen}
+        isOpen={isCreatePaymentModalOpen}
+        setIsOpen={setIsCreatePaymentModalOpen}
         refresh={() => refresh()}
       />
     </>

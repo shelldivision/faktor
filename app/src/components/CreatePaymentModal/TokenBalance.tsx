@@ -1,11 +1,10 @@
-import { Connection, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { PublicKey } from "@solana/web3.js";
+import { useEffect, useMemo, useState } from "react";
 import { useFaktor } from "@components";
 import { AccountInfo, MintInfo, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { Program, web3 } from "@project-serum/anchor";
 import { getATAAddress } from "@utils";
-import BN from "bn.js";
 
 // async function fetchBalance(conn: Connection, pubkey: PublicKey) {
 //   try {

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { ConnectWalletPrompt, Header, PaymentsDashboard } from "@components";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 
