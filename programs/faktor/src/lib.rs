@@ -78,21 +78,21 @@ pub mod faktor {
         // Validate request data.
         if recurrence_interval == 0 {
             // This is a one-time request. 
-            // Validate the completed_at period matches the next_transfer_at.
+            // Validate completed_at period is equal to the next_transfer_at.
             require!(
                 completed_at == next_transfer_at,
                 ErrorCode::InvalidChronology
             );
         } else {
             // This is a recurring payment.
-            // Validate the timestamps and recurrence interval are chronologically valid.
+            // Validate timestamps and recurrence interval are chronologically valid.
             require!(
                 next_transfer_at <= completed_at - recurrence_interval,
                 ErrorCode::InvalidChronology
             );
         }
         
-        // Validate debtor has sufficient lamports to cover the transfer fee.
+        // Validate debtor has sufficient lamports to cover transfer fee.
         let num_transfers = match recurrence_interval {
             0 => 1,
             _ => (completed_at - next_transfer_at) / recurrence_interval,
@@ -111,7 +111,6 @@ pub mod faktor {
         payment.creditor = creditor.key();
         payment.creditor_tokens = creditor_tokens.key();
         payment.mint = mint.key();
-        payment.status = PaymentStatus::Scheduled;
         payment.amount = amount;
         payment.recurrence_interval = recurrence_interval;
         payment.next_transfer_at = next_transfer_at;
@@ -119,7 +118,7 @@ pub mod faktor {
         payment.created_at = clock.unix_timestamp as u64;
         payment.bump = bump;
 
-        // Approve program authority to initiate transfers from the debtor's token account.
+        // Authorize payment to transfer from debtor's token account.
         let total_transfer_amount = num_transfers * amount;
         approve(
             CpiContext::new(
@@ -147,56 +146,61 @@ pub mod faktor {
     }
 
     pub fn distribute_payment(
-        ctx: Context<DistributePayment>
+        ctx: Context<DistributePayment>,
+        bump: u8
     ) -> ProgramResult {
         // Get accounts.
         let payment = &mut ctx.accounts.payment;
+        let transfer_log = &mut ctx.accounts.transfer_log;
         let debtor_tokens = &ctx.accounts.debtor_tokens;
         let creditor_tokens = &ctx.accounts.creditor_tokens;
         let distributor = &ctx.accounts.distributor;
         let treasury = &ctx.accounts.treasury;
         let token_program = &ctx.accounts.token_program;
+        let clock = &ctx.accounts.clock;
 
-        // Validate the payment has sufficient authorizion to initiate a transfer from the debtor's token account.
-        if debtor_tokens.delegate.is_some() && 
-            debtor_tokens.delegate.unwrap() == payment.key() &&
-            debtor_tokens.delegated_amount >= payment.amount &&
-            debtor_tokens.amount >= payment.amount {
+        // Initialize transfer log account.
+        transfer_log.payment = payment.key();
+        transfer_log.distributor = distributor.key();
+        transfer_log.timestamp = clock.unix_timestamp as u64;
+        transfer_log.bump = bump;
 
-            // Transfer tokens from debtor to creditor.
-            transfer(
-                CpiContext::new_with_signer(
-                    token_program.to_account_info(),
-                    Transfer {
-                        authority: payment.to_account_info(),
-                        from: debtor_tokens.to_account_info(),
-                        to: creditor_tokens.to_account_info(),
-                    },
-                    &[&[payment.idempotency_key.as_bytes(), payment.debtor.as_ref(), payment.creditor.as_ref(), &[payment.bump]]]
-                ),
-                payment.amount,
-            )?;
+        // Transfer tokens from debtor to creditor.
+        let transfer_result = transfer(
+            CpiContext::new_with_signer(
+                token_program.to_account_info(),
+                Transfer {
+                    authority: payment.to_account_info(),
+                    from: debtor_tokens.to_account_info(),
+                    to: creditor_tokens.to_account_info(),
+                },
+                &[&[payment.idempotency_key.as_bytes(), payment.debtor.as_ref(), payment.creditor.as_ref(), &[payment.bump]]]
+            ),
+            payment.amount,
+        );
 
-            // Update the timestamp for the next transfer attempt.
-            payment.next_transfer_at = min(
-                payment.next_transfer_at + payment.recurrence_interval,
-                payment.completed_at
-            );
-            
-            // If the next transfer timestamp has reached the completed at timestamp, mark the payment as completed.
-            if payment.next_transfer_at == payment.completed_at {
-                payment.status = PaymentStatus::Completed;
-            }
-        } else {
-            // Mark the payment as failed.
-            payment.status = PaymentStatus::Failed;
+        // Set transfer log status.
+        match transfer_result {
+            Ok(()) => transfer_log.status = TransferStatus::Succeeded,
+            Err(_error) => transfer_log.status = TransferStatus::Failed
         }
 
-        // Pay transfer fee to the distributor.
+        // Update timestamp for next transfer attempt.
+        payment.next_transfer_at = min(
+            payment.next_transfer_at + payment.recurrence_interval,
+            payment.completed_at
+        );
+
+        // If payment is completed, update next transfer timestamp to 0.
+        if payment.next_transfer_at == payment.completed_at {
+            payment.next_transfer_at = 0;
+        }
+
+        // Pay transfer fee to distributor.
         **payment.to_account_info().try_borrow_mut_lamports()? -= TRANSFER_FEE_DISTRIBUTOR;
         **distributor.to_account_info().try_borrow_mut_lamports()? += TRANSFER_FEE_DISTRIBUTOR;
-        
-        // Pay transfer fee to the treasury.
+         
+        // Pay transfer fee to treasury.
         **payment.to_account_info().try_borrow_mut_lamports()? -= TRANSFER_FEE_PROGRAM;
         **treasury.to_account_info().try_borrow_mut_lamports()? += TRANSFER_FEE_PROGRAM;
 
@@ -243,7 +247,7 @@ pub struct CreatePayment<'info> {
         seeds = [idempotency_key.as_bytes(), debtor.key().as_ref(), creditor.key().as_ref()],
         bump = bump,
         payer = debtor,
-        space = 8 + (4 + memo.len()) + (4 + memo.len()) + 32 + 32 + 32 + 32 + 32 + 8 + 8 + 8 + 8 + 8 + 8 + 1,
+        space = 8 + (4 + memo.len()) + (4 + memo.len()) + 32 + 32 + 32 + 32 + 32 + 8 + 8 + 8 + 8 + 8 + 1,
     )]
     pub payment: Account<'info, Payment>,
     #[account(mut)]
@@ -269,6 +273,7 @@ pub struct CreatePayment<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(bump: u8)]
 pub struct DistributePayment<'info> {
     #[account(
         mut,
@@ -278,10 +283,20 @@ pub struct DistributePayment<'info> {
         has_one = debtor_tokens,
         has_one = creditor,
         has_one = creditor_tokens,
-        constraint = payment.status == PaymentStatus::Scheduled,
-        constraint = payment.next_transfer_at <= (clock.unix_timestamp as u64)
+        // constraint = payment.status == PaymentStatus::Scheduled,
+        // constraint = payment.next_transfer_at < payment.completed_at,
+        constraint = payment.next_transfer_at <= (clock.unix_timestamp as u64),
+        constraint = payment.next_transfer_at != 0,
     )]
     pub payment: Account<'info, Payment>,
+    #[account(
+        init,
+        seeds = [payment.key().as_ref(), payment.next_transfer_at.to_string().as_bytes()],
+        bump = bump,
+        payer = distributor,
+        space = 8 + 32 + 32 + 8 + 32 + 1,
+    )]
+    pub transfer_log: Account<'info, TransferLog>,
     pub debtor: AccountInfo<'info>,
     #[account(
         mut,
@@ -301,6 +316,8 @@ pub struct DistributePayment<'info> {
     pub distributor: Signer<'info>,
     #[account(mut, seeds = [TREASURY_SEED], bump = treasury.bump)]
     pub treasury: Account<'info, Treasury>,
+    #[account(address = SYSTEM_PROGRAM_ID)]
+    pub system_program: Program<'info, System>,
     #[account(address = TOKEN_PROGRAM_ID)]
     pub token_program: Program<'info, Token>,
     pub clock: Sysvar<'info, Clock>,
@@ -321,7 +338,6 @@ pub struct Payment {
     pub creditor: Pubkey,
     pub creditor_tokens: Pubkey,
     pub mint: Pubkey,
-    pub status: PaymentStatus,
     pub amount: u64,
     pub recurrence_interval: u64,
     pub next_transfer_at: u64,
@@ -330,27 +346,19 @@ pub struct Payment {
     pub bump: u8,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq)]
-pub enum PaymentStatus {
-    Scheduled,
-    Completed,
-    Failed,
-}
-
 #[account]
 pub struct TransferLog {
     pub payment: Pubkey,
     pub distributor: Pubkey,
     pub status: TransferStatus,
-    pub amount: u64,
     pub timestamp: u64,
     pub bump: u8,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub enum TransferStatus {
-    Failed,
     Succeeded,
+    Failed
 }
 
 #[account]
@@ -362,7 +370,6 @@ pub struct ProgramAuthority {
 pub struct Treasury {
     pub bump: u8,
 }
-
 
 
 //////////////
