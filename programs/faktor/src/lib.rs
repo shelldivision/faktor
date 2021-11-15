@@ -159,32 +159,35 @@ pub mod faktor {
         let token_program = &ctx.accounts.token_program;
         let clock = &ctx.accounts.clock;
 
-        // Initialize transfer log account.
+        // Initialize transfer log account. Assume failure unless transfer provably succeeded.
         transfer_log.payment = payment.key();
         transfer_log.distributor = distributor.key();
         transfer_log.timestamp = clock.unix_timestamp as u64;
+        transfer_log.status = TransferStatus::Failed;
         transfer_log.bump = bump;
 
+        let is_valid = debtor_tokens.delegate.is_some() && 
+            debtor_tokens.delegate.unwrap() == payment.key() &&
+            debtor_tokens.delegated_amount >= payment.amount &&
+            debtor_tokens.amount >= payment.amount;
+
         // Transfer tokens from debtor to creditor.
-        let transfer_result = transfer(
-            CpiContext::new_with_signer(
-                token_program.to_account_info(),
-                Transfer {
-                    authority: payment.to_account_info(),
-                    from: debtor_tokens.to_account_info(),
-                    to: creditor_tokens.to_account_info(),
-                },
-                &[&[payment.idempotency_key.as_bytes(), payment.debtor.as_ref(), payment.creditor.as_ref(), &[payment.bump]]]
-            ),
-            payment.amount,
-        );
-
-        // Set transfer log status.
-        match transfer_result {
-            Ok(()) => transfer_log.status = TransferStatus::Succeeded,
-            Err(_error) => transfer_log.status = TransferStatus::Failed
-        }
-
+        if is_valid {
+            transfer(
+                CpiContext::new_with_signer(
+                    token_program.to_account_info(),
+                    Transfer {
+                        authority: payment.to_account_info(),
+                        from: debtor_tokens.to_account_info(),
+                        to: creditor_tokens.to_account_info(),
+                    },
+                    &[&[payment.idempotency_key.as_bytes(), payment.debtor.as_ref(), payment.creditor.as_ref(), &[payment.bump]]]
+                ),
+                payment.amount,
+            )?;
+            transfer_log.status = TransferStatus::Succeeded;
+        } 
+        
         // Update timestamp for next transfer attempt.
         payment.next_transfer_at = min(
             payment.next_transfer_at + payment.recurrence_interval,
@@ -283,10 +286,8 @@ pub struct DistributePayment<'info> {
         has_one = debtor_tokens,
         has_one = creditor,
         has_one = creditor_tokens,
-        // constraint = payment.status == PaymentStatus::Scheduled,
-        // constraint = payment.next_transfer_at < payment.completed_at,
-        constraint = payment.next_transfer_at <= (clock.unix_timestamp as u64),
         constraint = payment.next_transfer_at != 0,
+        constraint = payment.next_transfer_at <= (clock.unix_timestamp as u64),
     )]
     pub payment: Account<'info, Payment>,
     #[account(
