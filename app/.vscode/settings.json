@@ -1,3 +1,26 @@
 {
-	"typescript.tsdk": "node_modules/typescript/lib"
+	"typescript.tsdk": "node_modules/typescript/lib",
+	"workbench.colorCustomizations": {
+		"activityBar.activeBackground": "#3f18fd",
+		"activityBar.activeBorder": "#fd2d02",
+		"activityBar.background": "#3f18fd",
+		"activityBar.foreground": "#e7e7e7",
+		"activityBar.inactiveForeground": "#e7e7e799",
+		"activityBarBadge.background": "#fd2d02",
+		"activityBarBadge.foreground": "#e7e7e7",
+		"editorGroup.border": "#3f18fd",
+		"panel.border": "#3f18fd",
+		"sash.hoverBorder": "#3f18fd",
+		"sideBar.border": "#3f18fd",
+		"statusBar.background": "#2802e0",
+		"statusBar.foreground": "#e7e7e7",
+		"statusBarItem.hoverBackground": "#3f18fd",
+		"statusBarItem.remoteBackground": "#2802e0",
+		"statusBarItem.remoteForeground": "#e7e7e7",
+		"titleBar.activeBackground": "#2802e0",
+		"titleBar.activeForeground": "#e7e7e7",
+		"titleBar.inactiveBackground": "#2802e099",
+		"titleBar.inactiveForeground": "#e7e7e799"
+	},
+	"peacock.color": "#2802e0"
 }

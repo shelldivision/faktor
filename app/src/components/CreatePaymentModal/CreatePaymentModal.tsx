@@ -4,27 +4,21 @@ import { InputStep } from "./InputStep";
 import { ConfirmationStep } from "./ConfirmationStep";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { Modal, useFaktor } from "@components";
+import { CreatePaymentFormData } from "./types";
 
 export enum CreatePaymentStep {
   Input = 0,
   Confirmation = 1
 }
 
-// TODO add mint
-// TODO add transferInterval
-// TODO add completedAt
-export type CreatePaymentFormData = {
-  creditor: string;
-  memo: string;
-  amount: string;
-  nextTransferAt: string;
-};
-
-const DEFAULT_FORM_DATA = {
+const DEFAULT_FORM_DATA: CreatePaymentFormData = {
   creditor: "",
   memo: "",
   amount: "",
-  nextTransferAt: ""
+  nextTransferAt: "",
+  interval: "day",
+  frequency: 0,
+  endDate: ""
 };
 
 function isFormDataValid(formData: CreatePaymentFormData) {

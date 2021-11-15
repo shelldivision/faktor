@@ -1,53 +1,103 @@
-import React from "react";
+import { ErrorMessage } from "@components";
+import React, { HTMLAttributes, useEffect, useMemo, useState } from "react";
 
-export interface InputFieldProps {
-  type: string;
-  value?: any;
-  label: string;
-  placeholder?: string;
-  error?: string;
-  onChange?: (val: any) => void;
+export interface InputFieldProps extends HTMLAttributes<HTMLInputElement> {
+  label?: string;
+  onChange: (val: any) => void;
+  validator?: (val: string) => string | null;
+  value: string;
+  required?: boolean;
+  type?: string;
 }
 
-export function InputField({ type, error, label, placeholder, value, onChange }: InputFieldProps) {
-  async function _onChange(e: React.ChangeEvent<HTMLInputElement>) {
-    onChange && onChange(e.target.value);
+export function InputField({
+  label,
+  onChange,
+  validator,
+  value,
+  required = false,
+  className = "",
+  ...inputProps
+}: InputFieldProps) {
+  const [touched, setTouched] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function handleChange({ currentTarget: { value } }: React.ChangeEvent<HTMLInputElement>) {
+    onChange(value);
   }
 
+  function handleBlur() {
+    setTouched(true);
+  }
+
+  useEffect(() => {
+    if (!value) return;
+    const fieldError = getFieldError(value, required, validator);
+    setTimeout(() => {
+      setError(fieldError);
+    }, 300);
+  }, [value]);
+
+  const displayErrorMessage = useMemo(() => Boolean(touched && error), [error, touched]);
+
   return (
-    <InputContainer label={label} error={error}>
-      <input
-        type={type}
-        placeholder={placeholder}
-        onChange={_onChange}
-        value={value}
-        className="flex items-center w-full p-2 text-base text-black placeholder-gray-400 border-none rounded outline-none focus:ring-0"
-      />
-    </InputContainer>
+    <InputGroup className={className} showError={displayErrorMessage}>
+      <div className={`flex flex-col justify-center`}>
+        {label && <InputLabel className="mt-2" title={label} />}
+        <div className="flex-1">
+          <input
+            {...inputProps}
+            className={`flex items-center text-xl text-black placeholder-gray-400 bg-white border-none rounded-lg outline-none focus:ring-0`}
+            value={value}
+            required={required}
+            onChange={handleChange}
+            onBlur={handleBlur}
+          />
+        </div>
+      </div>
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+    </InputGroup>
   );
 }
 
-export function InputContainer({
+export function getFieldError(
+  value: string,
+  required: boolean,
+  validator?: ((val: string) => string | null) | undefined
+): string | null {
+  let error: string | null = null;
+
+  if (required) {
+    error = validateRequiredField(value);
+  } else if (validator) {
+    error = validator(value);
+  }
+  return error;
+}
+
+export function validateRequiredField(val: string) {
+  return !val ? "This is a required field." : null;
+}
+
+export function InputLabel({ title, className = "" }: { title: string; className?: string }) {
+  return <label className={`${className} ml-3 text-gray-600 font-medium text-sm`}>{title}</label>;
+}
+
+export function InputGroup({
   children,
-  error,
-  label = ""
-}: React.PropsWithChildren<{ error: string | undefined | null; label?: string }>) {
+  className = "",
+  showError = false
+}: React.PropsWithChildren<{
+  className?: string;
+  showError?: boolean;
+}>) {
   return (
-    <div className="flex flex-col flex-1 space-y-2">
-      <InputLabel title={label} />
-      <div className={`rounded ${error ? "border-2 border-red-600" : "border border-gray-200"}`}>
-        {children}
-      </div>
-      <InputErrorLabel error={error} />
+    <div
+      className={`${className} bg-white rounded-lg ${
+        showError ? "border-2 border-red-500" : "border border-gray-200"
+      } min-h-[4.5rem] flex flex-col flex-1 justify-center`}
+    >
+      {children}
     </div>
   );
-}
-
-export function InputLabel({ title }: { title: string }) {
-  return <label className={`text-gray-900 font-medium text-sm`}>{title}</label>;
-}
-
-export function InputErrorLabel({ error }: { error: string | undefined | null }) {
-  if (!error) return null;
-  return <label className="mt-2 text-sm text-left text-red-600">{error}</label>;
 }
