@@ -363,11 +363,6 @@ pub enum TransferStatus {
 }
 
 #[account]
-pub struct ProgramAuthority {
-    pub bump: u8,
-}
-
-#[account]
 pub struct Treasury {
     pub bump: u8,
 }
